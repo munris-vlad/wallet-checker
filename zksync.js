@@ -44,6 +44,7 @@ const p = new Table({
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
 
 let stats = []
+let totalGas = 0
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 
 async function getBalances(wallet) {
@@ -132,6 +133,14 @@ const wallets = readWallets('./addresses/zksync.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
+let total = {
+    eth: 0,
+    usdc: 0,
+    usdt: 0,
+    dai: 0,
+    gas: 0
+}
+
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 progressBar.start(iterations, 0)
 
@@ -146,6 +155,13 @@ for (let wallet of wallets) {
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
+
+    total.gas += stats[wallet].total_gas
+    total.eth += stats[wallet].balances['ETH']
+    total.usdt += stats[wallet].balances['USDT']
+    total.usdc += stats[wallet].balances['USDC']
+    total.dai += stats[wallet].balances['DAI']
+
     let row
     if (stats[wallet].txcount) {
         row = {
@@ -168,6 +184,25 @@ for (let wallet of wallets) {
 
     if (!--iterations) {
         progressBar.stop()
+        p.addRow({})
+
+        row = {
+            wallet: 'Total',
+            'ETH': total.eth + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+            'USDC': total.usdc,
+            'USDT': total.usdt,
+            'DAI': total.dai,
+            'TX Count': '',
+            'Unique days': '',
+            'Unique weeks': '',
+            'Unique months': '',
+            'First tx': '',
+            'Last tx': '',
+            'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+        }
+
+        p.addRow(row)
+
         p.printTable()
 
         p.table.rows.map((row) => {

@@ -41,7 +41,7 @@ const p = new Table({
   ]
 })
 
-const apiUrl = "https://voyager.online/api/"
+const apiUrl = "https://voyager.online/api"
 
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
@@ -141,6 +141,14 @@ const wallets = readWallets('./addresses/starknet.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
+let total = {
+    eth: 0,
+    usdc: 0,
+    usdt: 0,
+    dai: 0,
+    gas: 0
+}
+
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 progressBar.start(iterations, 0);
 
@@ -152,6 +160,12 @@ for (let wallet of wallets) {
     await getTxs(wallet)
     await sleep(4 * 1000)
     progressBar.update(iteration++);
+
+    total.gas += stats[wallet].total_gas
+    total.eth += parseFloat(stats[wallet].balances['ETH'])
+    total.usdt += parseFloat(stats[wallet].balances['USDT'])
+    total.usdc += parseFloat(stats[wallet].balances['USDC'])
+    total.dai += parseFloat(stats[wallet].balances['DAI'])
 
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
@@ -177,6 +191,26 @@ for (let wallet of wallets) {
 
     if (!--iterations) {
         progressBar.stop();
+
+        p.addRow({})
+
+        row = {
+            wallet: 'Total',
+            'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+            'USDC': total.usdc.toFixed(2),
+            'USDT': total.usdt.toFixed(2),
+            'DAI': total.dai.toFixed(2),
+            'TX Count': '',
+            'Unique days': '',
+            'Unique weeks': '',
+            'Unique months': '',
+            'First tx': '',
+            'Last tx': '',
+            'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+        }
+
+        p.addRow(row)
+
         p.printTable()
 
         p.table.rows.map((row) => {
