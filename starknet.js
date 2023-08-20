@@ -101,8 +101,10 @@ async function getTxs(wallet) {
             } else {
                 page++
             }
-        }).catch(function (error) {
-            console.log(error)
+        }).catch(async function (error) {
+            console.log('')
+            console.log(`Ошибка получения транзакций, ждем 2 минуты и пробуем еще раз...`)
+            await sleep(120 * 1000)
         })
     }
 
