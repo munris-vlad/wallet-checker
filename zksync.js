@@ -128,7 +128,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
     ethPrice = response.data.USD
 })
 
-const wallets = readWallets('./addresses/evm.txt')
+const wallets = readWallets('./addresses/zksync.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
