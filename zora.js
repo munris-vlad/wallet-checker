@@ -15,12 +15,13 @@ const csvWriter = createObjectCsvWriter({
         { id: 'wallet', title: 'wallet'},
         { id: 'ETH', title: 'ETH'},
         { id: 'TX Count', title: 'TX Count'},
+        { id: 'Collection count', title: 'Collection count'},
+        { id: 'NFT count', title: 'NFT count'},
         { id: 'Unique days', title: 'Unique days'},
         { id: 'Unique weeks', title: 'Unique weeks'},
         { id: 'Unique months', title: 'Unique months'},
         { id: 'First tx', title: 'First tx'},
         { id: 'Last tx', title: 'Last tx'},
-        { id: 'Total value', title: 'Total value'}
     ]
 })
 
@@ -29,12 +30,13 @@ const p = new Table({
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Collection count', alignment: 'right', color: 'cyan'},
+    { name: 'NFT count', alignment: 'right', color: 'cyan'},
     { name: 'Unique days', alignment: 'right', color: 'cyan'},
     { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
     { name: 'Unique months', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    { name: 'Total value', alignment: 'right', color: 'cyan'},
   ]
 })
 
@@ -50,6 +52,19 @@ async function getBalances(wallet) {
     }).catch(function (error) {
         console.log(error)
     })
+
+    await axios.get(apiUrl+'/addresses/'+wallet+'/token-balances', {
+        httpsAgent: agent
+    }).then(response => {
+        let tokens = response.data
+
+        Object.values(tokens).forEach(token => {
+            stats[wallet].collection_count++
+            stats[wallet].nft_count += parseInt(token.value)
+        })
+    }).catch(function (error) {
+        console.log(error)
+    })
 }
 
 async function getTxs(wallet) {
@@ -57,7 +72,6 @@ async function getTxs(wallet) {
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
 
-    let totalGasUsed = 0
     let txs = []
     let params = {
         block_number: '',
@@ -93,7 +107,6 @@ async function getTxs(wallet) {
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        totalGasUsed += parseInt(tx.value) / Math.pow(10, 18)
     })
 
     const numUniqueDays = uniqueDays.size
@@ -106,7 +119,6 @@ async function getTxs(wallet) {
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
-        stats[wallet].total_gas = totalGasUsed
     }
 }
 
@@ -124,7 +136,9 @@ progressBar.start(iterations, 0)
 
 for (let wallet of wallets) {
     stats[wallet] = {
-        balance: 0
+        balance: 0,
+        collection_count: 0,
+        nft_count: 0
     }
 
     await getBalances(wallet)
@@ -132,19 +146,19 @@ for (let wallet of wallets) {
     progressBar.update(iteration++)
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
-    let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
     let row
     if (stats[wallet].txcount) {
         row = {
             wallet: wallet,
             'ETH': stats[wallet].balance + ` ($${usdEthValue})`,
             'TX Count': stats[wallet].txcount,
+            'Collection count': stats[wallet].collection_count,
+            'NFT count': stats[wallet].nft_count,
             'Unique days': stats[wallet].unique_days,
             'Unique weeks': stats[wallet].unique_weeks,
             'Unique months': stats[wallet].unique_months,
             'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
             'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total value': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
         }
 
         p.addRow(row)
