@@ -1,10 +1,11 @@
 import './common.js'
-import {wait, sleep, random, readWallets, writeLineToFile, getBalance, timestampToDate} from './common.js'
+import {readWallets, sleep, timestampToDate} from './common.js'
 import axios from "axios"
-import { Table } from 'console-table-printer'
-import { createObjectCsvWriter } from 'csv-writer'
+import {Table} from 'console-table-printer'
+import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
+import {HttpsProxyAgent} from "https-proxy-agent"
 
 const csvWriter = createObjectCsvWriter({
     path: './results/starknet.csv',
@@ -46,10 +47,15 @@ const apiUrl = "https://voyager.online/api"
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 
-async function getBalances(wallet) {
+async function getBalances(wallet, proxy= null) {
     let isBalancesFetched = false
+    let config = {}
+    if (proxy) {
+        config.httpsAgent = new HttpsProxyAgent(proxy)
+    }
+
     while (!isBalancesFetched) {
-        await axios.get(apiUrl + '/contract/' + wallet + '/balances').then(response => {
+        await axios.get(apiUrl + '/contract/' + wallet + '/balances', config).then(async response => {
             let balances = response.data
             stats[wallet].balances = []
 
@@ -65,15 +71,14 @@ async function getBalances(wallet) {
                     }
                 })
             }
+            await sleep(1.5 * 1000)
         }).catch(async function (error) {
-            console.log('')
-            console.log(`Ошибка получения балансов, ждем 2 минуты и пробуем еще раз...`)
-            await sleep(120 * 1000)
+            await sleep(3 * 1000)
         })
     }
 }
 
-async function getTxs(wallet) {
+async function getTxs(wallet, proxy) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -83,13 +88,19 @@ async function getTxs(wallet) {
     let page = 1
     let isAllTxCollected = false
 
+    let config = {
+        params: {
+            to: wallet,
+            page: page
+        }
+    }
+
+    if (proxy) {
+        config.httpsAgent = new HttpsProxyAgent(proxy)
+    }
+
     while (!isAllTxCollected) {
-        await axios.get(apiUrl + '/txns', {
-            params: {
-                to: wallet,
-                page: page
-            }
-        }).then(response => {
+        await axios.get(apiUrl + '/txns', config).then(async response => {
             let items = response.data.items
             let lastPage = response.data.lastPage
             Object.values(items).forEach(tx => {
@@ -101,10 +112,9 @@ async function getTxs(wallet) {
             } else {
                 page++
             }
+            await sleep(1.5 * 1000)
         }).catch(async function (error) {
-            console.log('')
-            console.log(`Ошибка получения транзакций, ждем 2 минуты и пробуем еще раз...`)
-            await sleep(120 * 1000)
+            await sleep(3 * 1000)
         })
     }
 
@@ -138,6 +148,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 })
 
 const wallets = readWallets('./addresses/starknet.txt')
+const proxies = readWallets('./proxy.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -154,10 +165,14 @@ progressBar.start(iterations, 0);
 
 for (let wallet of wallets) {
     stats[wallet] = {}
+    let proxy = null
+    if (proxies.length && proxies[iteration-1]) {
+        proxy = proxies[iteration-1]
+    }
 
-    await getBalances(wallet)
+    await getBalances(wallet, proxy)
     await sleep(4 * 1000)
-    await getTxs(wallet)
+    await getTxs(wallet, proxy)
     await sleep(4 * 1000)
     progressBar.update(iteration++);
 
