@@ -90,7 +90,8 @@ async function getTxs(wallet, proxy) {
     let config = {
         params: {
             to: wallet,
-            page: 1
+            p: 1,
+            ps: 100
         }
     }
 
@@ -106,10 +107,10 @@ async function getTxs(wallet, proxy) {
                 txs.push(tx)
             })
 
-            if (config.params.page === lastPage) {
+            if (config.params.p === lastPage) {
                 isAllTxCollected = true
             } else {
-                config.params.page++
+                config.params.p++
             }
             await sleep(1.5 * 1000)
         }).catch(async function (error) {
