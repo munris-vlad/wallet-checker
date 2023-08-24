@@ -64,3 +64,56 @@ Date.prototype.getWeek = function (dowOffset) {
     }
     return weeknum;
 };
+
+export function getNativeToken(network) {
+    let token = 'ETH'
+    switch (network) {
+        case 'polygon':
+            token = 'MATIC'
+            break
+        case 'bsc':
+            token = 'BNB'
+            break
+        case 'avalanche':
+            token = 'AVAX'
+            break
+    }
+
+    return token
+}
+
+export function balanceNative(balances, network) {
+    return balances[network] && balances[network][getNativeToken(network)] ? balances[network][getNativeToken(network)] : '$0'
+}
+
+export function balance(balances, network, token) {
+    return balances[network] && balances[network]['tokens'][token] ? balances[network]['tokens'][token] : '$0'
+}
+
+export function balanceTotal(totalBalances, network, token) {
+    return totalBalances[network] && totalBalances[network][token] ?
+        '$'+parseFloat(totalBalances[network][token].usd).toFixed(2) +
+        ' / ' + parseFloat(totalBalances[network][token].amount).toFixed(3) +
+        ' ' + totalBalances[network][token].symbol : '$0'
+}
+
+export function balanceTopToken(balances, network, iteration = 0) {
+    if (balances[network] && balances[network]['tokens'] && Object.keys(balances[network]['tokens'])[iteration]) {
+        let skip = 0
+        let obj = balances[network]['tokens']
+        if (obj[Object.keys(obj)[iteration]]) {
+            if (obj[Object.keys(obj)[iteration]].includes('USD')) {
+                skip = 1
+            }
+        }
+        if (obj[Object.keys(obj)[iteration + 1]]) {
+            if (obj[Object.keys(obj)[iteration + 1]].includes('USD')) {
+                skip = 2
+            }
+        }
+
+        return obj[Object.keys(obj)[iteration+skip]]
+    }
+
+    return ''
+}
