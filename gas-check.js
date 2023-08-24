@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import {getNativeToken, readWallets, sleep} from "./common.js"
 import {Table} from "console-table-printer";
 import cliProgress from "cli-progress";
+import {createObjectCsvWriter} from "csv-writer";
 
 dotenv.config()
 
@@ -22,6 +23,16 @@ const p = new Table({
 
 const args = process.argv.slice(2);
 const network = args[0];
+
+const csvWriter = createObjectCsvWriter({
+    path: `./results/gas_${network}.csv`,
+    header: [
+        { id: 'Wallet', title: 'Wallet'},
+        { id: 'TX Count', title: 'TX Count'},
+        { id: 'Gas spent', title: 'Gas spent'}
+    ]
+});
+
 let chain = EvmChain.ETHEREUM
 switch (network) {
     case "polygon":
@@ -76,6 +87,7 @@ async function checkGasSpent(address) {
 
 const wallets = readWallets('./addresses/evm.txt')
 
+let csvData = []
 let iteration = 1;
 let iterations = wallets.length
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
@@ -87,15 +99,23 @@ for (let wallet of wallets) {
 
     if (!--iterations) {
         progressBar.stop();
-
+        total = total / Math.pow(10, 18)
         const totalRow = {
             'Wallet': 'TOTAL',
             'TX Count': '',
-            'Gas spent': `${ethers.utils.formatEther(total.toString())} ${getNativeToken(network)}`
+            'Gas spent': `${total.toFixed(4)} ${getNativeToken(network)}`
         }
 
         p.addRow(totalRow)
 
         p.printTable()
+
+        p.table.rows.map((row) => {
+            csvData.push(row.text);
+        })
+
+        csvWriter.writeRecords(csvData)
+            .then(() => console.log('Запись в CSV файл завершена'))
+            .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error));
     }
 }
