@@ -85,13 +85,12 @@ async function getTxs(wallet, proxy) {
 
     let totalGasUsed = 0
     let txs = []
-    let page = 1
     let isAllTxCollected = false
 
     let config = {
         params: {
             to: wallet,
-            page: page
+            page: 1
         }
     }
 
@@ -107,10 +106,10 @@ async function getTxs(wallet, proxy) {
                 txs.push(tx)
             })
 
-            if (page === lastPage) {
+            if (config.params.page === lastPage) {
                 isAllTxCollected = true
             } else {
-                page++
+                config.params.page++
             }
             await sleep(1.5 * 1000)
         }).catch(async function (error) {

@@ -15,6 +15,8 @@ const csvWriter = createObjectCsvWriter({
         { id: 'USDT', title: 'USDT'},
         { id: 'DAI', title: 'DAI'},
         { id: 'TX Count', title: 'TX Count'},
+        { id: 'Volume', title: 'Volume'},
+        { id: 'Unique contracts', title: 'Unique contracts'},
         { id: 'Unique days', title: 'Unique days'},
         { id: 'Unique weeks', title: 'Unique weeks'},
         { id: 'Unique months', title: 'Unique months'},
@@ -32,6 +34,8 @@ const p = new Table({
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Volume', alignment: 'right', color: 'cyan'},
+    { name: 'Unique contracts', alignment: 'right', color: 'cyan'},
     { name: 'Unique days', alignment: 'right', color: 'cyan'},
     { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
     { name: 'Unique months', alignment: 'right', color: 'cyan'},
@@ -71,8 +75,10 @@ async function getTxs(wallet) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
+    const uniqueContracts = new Set()
 
     let totalGasUsed = 0
+    let totalValue = 0
     let txs = []
     let page = 1
     let isAllTxCollected = false
@@ -108,19 +114,22 @@ async function getTxs(wallet) {
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
         totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
-    })
 
-    const numUniqueDays = uniqueDays.size
-    const numUniqueWeeks = uniqueWeeks.size
-    const numUniqueMonths = uniqueMonths.size
+        if (tx.data !== '0x') { // not transfer
+            uniqueContracts.add(tx.to)
+            totalValue += parseInt(tx.value) / Math.pow(10, 18)
+        }
+    })
 
     if (txs.length) {
         stats[wallet].first_tx_date = new Date(txs[txs.length - 1].receivedAt)
         stats[wallet].last_tx_date = new Date(txs[0].receivedAt)
-        stats[wallet].unique_days = numUniqueDays
-        stats[wallet].unique_weeks = numUniqueWeeks
-        stats[wallet].unique_months = numUniqueMonths
+        stats[wallet].unique_days = uniqueDays.size
+        stats[wallet].unique_weeks = uniqueWeeks.size
+        stats[wallet].unique_months = uniqueMonths.size
+        stats[wallet].unique_contracts = uniqueContracts.size
         stats[wallet].total_gas = totalGasUsed
+        stats[wallet].total_value = totalValue
     }
 }
 
@@ -155,6 +164,7 @@ for (let wallet of wallets) {
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
+    let usdValue = (stats[wallet].total_value*ethPrice).toFixed(2)
 
     total.gas += stats[wallet].total_gas
     total.eth += stats[wallet].balances['ETH']
@@ -171,6 +181,8 @@ for (let wallet of wallets) {
             'USDT': stats[wallet].balances['USDT'].toFixed(2),
             'DAI': stats[wallet].balances['DAI'].toFixed(2),
             'TX Count': stats[wallet].txcount,
+            'Volume': stats[wallet].total_value.toFixed(4)  + ` ($${usdValue})`,
+            'Unique contracts': stats[wallet].unique_contracts,
             'Unique days': stats[wallet].unique_days,
             'Unique weeks': stats[wallet].unique_weeks,
             'Unique months': stats[wallet].unique_months,
@@ -193,6 +205,8 @@ for (let wallet of wallets) {
             'USDT': total.usdt,
             'DAI': total.dai,
             'TX Count': '',
+            'Volume': '',
+            'Unique contracts': '',
             'Unique days': '',
             'Unique weeks': '',
             'Unique months': '',
