@@ -1,4 +1,5 @@
 import fs from "fs";
+import axios from "axios";
 
 export const wait = ms => new Promise(r => setTimeout(r, ms));
 export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis));
@@ -116,4 +117,35 @@ export function balanceTopToken(balances, network, iteration = 0) {
     }
 
     return ''
+}
+
+export async function getEthPriceForDate(date) {
+    const ethereumId = "ethereum"
+    const currency = "usd"
+    const historicalPriceEndpoint = `https://api.coingecko.com/api/v3/coins/${ethereumId}/market_chart`
+    let isDone = false
+    while (!isDone) {
+        try {
+            const response = await axios.get(historicalPriceEndpoint, {
+                params: {
+                    vs_currency: currency,
+                    from: date,
+                    to: date,
+                    interval: "daily",
+                    days: 1
+                }
+            })
+
+            await sleep(1000)
+
+            if (response.data.prices && response.data.prices.length > 0) {
+                isDone = true
+                return response.data.prices[0][1];
+            } else {
+                return null;
+            }
+        } catch (error) {
+            await sleep(10 * 1000)
+        }
+    }
 }

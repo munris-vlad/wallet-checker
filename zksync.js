@@ -1,5 +1,14 @@
 import './common.js'
-import {wait, sleep, random, readWallets, writeLineToFile, getBalance, timestampToDate} from './common.js'
+import {
+    wait,
+    sleep,
+    random,
+    readWallets,
+    writeLineToFile,
+    getBalance,
+    timestampToDate,
+    getEthPriceForDate
+} from './common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -101,25 +110,49 @@ async function getTxs(wallet) {
             } else {
                 page++
             }
-        }).catch(function (error) {
-            console.log(error)
-        })
+        }).catch()
     }
 
     stats[wallet].txcount = txs.length
+    const stables = ['USDT', 'USDC', 'BUSD', 'DAI']
 
-    Object.values(txs).forEach(tx => {
-        const date = new Date(tx.receivedAt)
-        uniqueDays.add(date.toDateString())
-        uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-        uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
-
-        if (tx.data !== '0x') { // not transfer
+    for (const tx of Object.values(txs)) {
+        if (tx.status === 'verified') {
+            const date = new Date(tx.receivedAt)
+            let value = parseInt(tx.value) / Math.pow(10, 18)
+            const targetDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+            uniqueDays.add(date.toDateString())
+            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
             uniqueContracts.add(tx.to)
-            totalValue += parseInt(tx.value) / Math.pow(10, 18)
+
+            if (value > 0.003) {
+                const ethPrice = await getEthPriceForDate(targetDate)
+                totalValue += value * ethPrice
+            }
+
+            await axios.get(apiUrl + '/transactions/'+tx.hash+'/transfers', {
+                params: {
+                    limit: 100,
+                    page: 1
+                }
+            }).then(response => {
+                for (const transfer of response.data.items) {
+                    if (transfer.type === 'transfer') {
+                        if (transfer.token) {
+                            if (stables.includes(transfer.token.symbol)) {
+                                let amount = parseInt(transfer.amount) / Math.pow(10, transfer.token.decimals)
+                                totalValue += amount
+                                break
+                            }
+                        }
+                    }
+                }
+            }).catch()
         }
-    })
+
+        totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
+    }
 
     if (txs.length) {
         stats[wallet].first_tx_date = new Date(txs[txs.length - 1].receivedAt)
@@ -133,11 +166,6 @@ async function getTxs(wallet) {
     }
 }
 
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
-
 const wallets = readWallets('./addresses/zksync.txt')
 let iterations = wallets.length
 let iteration = 1
@@ -149,6 +177,11 @@ let total = {
     dai: 0,
     gas: 0
 }
+
+let ethPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
+    ethPrice = response.data.USD
+})
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 progressBar.start(iterations, 0)
@@ -164,7 +197,6 @@ for (let wallet of wallets) {
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
-    let usdValue = (stats[wallet].total_value*ethPrice).toFixed(2)
 
     total.gas += stats[wallet].total_gas
     total.eth += stats[wallet].balances['ETH']
@@ -181,7 +213,7 @@ for (let wallet of wallets) {
             'USDT': stats[wallet].balances['USDT'].toFixed(2),
             'DAI': stats[wallet].balances['DAI'].toFixed(2),
             'TX Count': stats[wallet].txcount,
-            'Volume': stats[wallet].total_value.toFixed(4)  + ` ($${usdValue})`,
+            'Volume': '$'+stats[wallet].total_value.toFixed(2),
             'Unique contracts': stats[wallet].unique_contracts,
             'Unique days': stats[wallet].unique_days,
             'Unique weeks': stats[wallet].unique_weeks,
