@@ -48,20 +48,22 @@ const filterSymbol = ['APT', 'USDT', 'USDC', 'DAI']
 
 async function getBalances(wallet) {
     await axios.get(apiUrl+'/accounts?address=eq.'+wallet).then(response => {
-        let balances = response.data[0].all_balances
+        if (response.data.length) {
+            let balances = response.data[0].all_balances
 
-        filterSymbol.forEach(symbol => {
-            stats[wallet].balances[symbol] = 0
-        })
+            filterSymbol.forEach(symbol => {
+                stats[wallet].balances[symbol] = 0
+            })
 
-        Object.values(balances).forEach(balance => {
-            if (filterSymbol.includes(balance.coin_info.symbol)) {
-                stats[wallet].balances[balance.coin_info.symbol] = getBalance(balance.balance, balance.coin_info.decimals)
-            }
-        })
-    }).catch(function (error) {
-        console.log(error)
-    })
+            Object.values(balances).forEach(balance => {
+                if (balance.coin_info) {
+                    if (filterSymbol.includes(balance.coin_info.symbol)) {
+                        stats[wallet].balances[balance.coin_info.symbol] = getBalance(balance.balance, balance.coin_info.decimals)
+                    }
+                }
+            })
+        }
+    }).catch()
 }
 
 async function getTxs(wallet) {
@@ -90,9 +92,7 @@ async function getTxs(wallet) {
             } else {
                 isAllTxCollected = true
             }
-        }).catch(function (error) {
-            console.log(error)
-        })
+        }).catch()
     }
 
     stats[wallet].txcount = txs.length
