@@ -189,9 +189,9 @@ for (let wallet of wallets) {
         row = {
             wallet: wallet,
             'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
-            'USDC': stats[wallet].balances['USDC'],
-            'USDT': stats[wallet].balances['USDT'],
-            'DAI': stats[wallet].balances['DAI'],
+            'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+            'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+            'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
             'TX Count': stats[wallet].txcount,
             'Unique days': stats[wallet].unique_days,
             'Unique weeks': stats[wallet].unique_weeks,

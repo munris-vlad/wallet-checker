@@ -208,10 +208,10 @@ for (let wallet of wallets) {
     if (stats[wallet].txcount) {
         row = {
             wallet: wallet,
-            'ETH': stats[wallet].balances['ETH'] + ` ($${usdEthValue})`,
-            'USDC': stats[wallet].balances['USDC'].toFixed(2),
-            'USDT': stats[wallet].balances['USDT'].toFixed(2),
-            'DAI': stats[wallet].balances['DAI'].toFixed(2),
+            'ETH': stats[wallet].balances['ETH'].toFixed(4) + ` ($${usdEthValue})`,
+            'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+            'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+            'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
             'TX Count': stats[wallet].txcount,
             'Volume': '$'+stats[wallet].total_value.toFixed(2),
             'Unique contracts': stats[wallet].unique_contracts,
