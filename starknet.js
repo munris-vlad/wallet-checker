@@ -140,8 +140,10 @@ async function getTxs(wallet, proxy) {
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
 
-        if (tx.node.main_calls.length) {
-            uniqueContracts.add(tx.node.main_calls[0].contract_identifier)
+        if (tx.node.main_calls) {
+            if (tx.node.main_calls.length) {
+                uniqueContracts.add(tx.node.main_calls[0].contract_identifier)
+            }
         }
 
         if (withGas) {
