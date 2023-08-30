@@ -232,10 +232,10 @@ for (let wallet of wallets) {
 
         row = {
             wallet: 'Total',
-            'ETH': total.eth + ` ($${(total.eth*ethPrice).toFixed(2)})`,
-            'USDC': total.usdc,
-            'USDT': total.usdt,
-            'DAI': total.dai,
+            'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+            'USDC': total.usdc.toFixed(2),
+            'USDT': total.usdt.toFixed(2),
+            'DAI': total.dai.toFixed(2),
             'TX Count': '',
             'Volume': '',
             'Unique contracts': '',
