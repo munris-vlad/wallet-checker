@@ -255,9 +255,9 @@ for (let wallet of wallets) {
             'USDT': total.usdt.toFixed(2),
             'DAI': total.dai.toFixed(2),
             'TX Count': '',
-            'days': '',
-            'weeks': '',
-            'months': '',
+            'Days': '',
+            'Weeks': '',
+            'Months': '',
             'First tx': '',
             'Last tx': '',
         }
