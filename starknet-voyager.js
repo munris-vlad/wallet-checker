@@ -1,26 +1,11 @@
 import './common.js'
-import {
-    random,
-    readWallets,
-    sleep,
-    starknetAccountQuery,
-    starknetApiUrl, starknetBalanceQuery,
-    starknetHeaders, starknetTxQuery,
-    timestampToDate
-} from './common.js'
+import {readWallets, sleep, timestampToDate} from './common.js'
 import axios from "axios"
 import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import {HttpsProxyAgent} from "https-proxy-agent"
-import fetch from "node-fetch"
-
-const args = process.argv.slice(2)
-let withGas = false
-if (args.length) {
-    withGas = args[0]
-}
 
 const csvWriter = createObjectCsvWriter({
     path: './results/starknet.csv',
@@ -59,35 +44,38 @@ const p = new Table({
   ]
 })
 
+const apiUrl = "https://voyager.online/api"
+
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 
-async function getBalances(wallet) {
-    filterSymbol.forEach(symbol => {
-        stats[wallet].balances[symbol] = 0
-    })
+async function getBalances(wallet, proxy= null) {
+    let isBalancesFetched = false
+    let config = {}
+    if (proxy) {
+        config.httpsAgent = new HttpsProxyAgent(proxy)
+    }
 
-    let parseBalances = await fetch(starknetApiUrl, {
-        method: "POST",
-        // agent: proxy,
-        headers: starknetHeaders,
-        body: JSON.stringify({
-            query: starknetBalanceQuery,
-            variables: {
-                input: { owner_address: wallet },
-            },
-        }),
-    })
+    while (!isBalancesFetched) {
+        await axios.get(apiUrl + '/contract/' + wallet + '/balances', config).then(async response => {
+            let balances = response.data
+            stats[wallet].balances = []
 
-    let balancesParse = await parseBalances.json()
+            filterSymbol.forEach(symbol => {
+                stats[wallet].balances[symbol] = 0
+            })
 
-    const balances = balancesParse.data.erc20BalancesByOwnerAddress
-
-    if (balances) {
-        Object.values(balances).forEach(balance => {
-            if (filterSymbol.includes(balance.contract_erc20_contract.symbol)) {
-                stats[wallet].balances[balance.contract_erc20_contract.symbol] = balance.balance_display
+            if (balances) {
+                isBalancesFetched = true
+                Object.values(balances).forEach(balance => {
+                    if (filterSymbol.includes(balance.symbol)) {
+                        stats[wallet].balances[balance.symbol] = balance.amount
+                    }
+                })
             }
+            await sleep(1.5 * 1000)
+        }).catch(async function (error) {
+            await sleep(3 * 1000)
         })
     }
 }
@@ -99,58 +87,56 @@ async function getTxs(wallet, proxy) {
 
     let totalGasUsed = 0
     let txs = []
+    let isAllTxCollected = false
 
-    let parseTransactions = await fetch(starknetApiUrl, {
-        method: "POST",
-        // agent: proxy,
-        headers: starknetHeaders,
-        body: JSON.stringify({
-            query: starknetTxQuery,
-            variables: {
-                'first': 1000,
-                'after': null,
-                'input': {
-                    'initiator_address': wallet,
-                    'sort_by': 'timestamp',
-                    'order_by': 'desc',
-                    'min_block_number': null,
-                    'max_block_number': null,
-                    'min_timestamp': null,
-                    'max_timestamp': null
-                }
-            },
-        }),
-    })
-    let transactions = await parseTransactions.json()
-    txs = transactions.data.transactions.edges
+    let config = {
+        params: {
+            to: wallet,
+            p: 1,
+            ps: 100
+        }
+    }
+
+    if (proxy) {
+        config.httpsAgent = new HttpsProxyAgent(proxy)
+    }
+
+    while (!isAllTxCollected) {
+        await axios.get(apiUrl + '/txns', config).then(async response => {
+            let items = response.data.items
+            let lastPage = response.data.lastPage
+            Object.values(items).forEach(tx => {
+                txs.push(tx)
+            })
+
+            if (config.params.p === lastPage) {
+                isAllTxCollected = true
+            } else {
+                config.params.p++
+            }
+            await sleep(1.5 * 1000)
+        }).catch(async function (error) {
+            await sleep(3 * 1000)
+        })
+    }
 
     stats[wallet].txcount = txs.length
 
-    for (const tx of Object.values(txs)) {
-        const date = new Date(tx.node.timestamp * 1000)
+    Object.values(txs).forEach(tx => {
+        const date = new Date(timestampToDate(tx.timestamp))
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-
-        if (withGas) {
-            await axios.get('https://alpha-mainnet.starknet.io/feeder_gateway/get_transaction_receipt', {
-                params: {
-                    'transactionHash': tx.node.transaction_hash
-                }
-            }).then(response => {
-                totalGasUsed += parseInt(response.data.actual_fee, 16) / Math.pow(10, 18)
-            })
-            await sleep(1000)
-        }
-    }
+        totalGasUsed += parseInt(tx.actual_fee) / Math.pow(10, 18)
+    })
 
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
     const numUniqueMonths = uniqueMonths.size
 
     if (txs.length) {
-        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].node.timestamp*1000)
-        stats[wallet].last_tx_date = new Date(txs[0].node.timestamp*1000)
+        stats[wallet].first_tx_date = new Date(timestampToDate(txs[txs.length - 1].timestamp))
+        stats[wallet].last_tx_date = new Date(timestampToDate(txs[0].timestamp))
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
@@ -180,17 +166,17 @@ const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_cla
 progressBar.start(iterations, 0);
 
 for (let wallet of wallets) {
-    stats[wallet] = {
-        balances: []
-    }
+    stats[wallet] = {}
     let proxy = null
     if (proxies.length && proxies[iteration-1]) {
         proxy = proxies[iteration-1]
     }
 
     await getBalances(wallet, proxy)
+    await sleep(4 * 1000)
     await getTxs(wallet, proxy)
-    progressBar.update(iteration)
+    await sleep(4 * 1000)
+    progressBar.update(iteration);
 
     total.gas += stats[wallet].total_gas
     total.eth += parseFloat(stats[wallet].balances['ETH'])
