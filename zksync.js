@@ -222,6 +222,7 @@ for (let wallet of wallets) {
     total.usdt += stats[wallet].balances['USDT']
     total.usdc += stats[wallet].balances['USDC']
     total.dai += stats[wallet].balances['DAI']
+    total.lite_eth += stats[wallet].lite_tx
 
     let row
     if (stats[wallet].txcount) {
@@ -260,6 +261,7 @@ for (let wallet of wallets) {
             'USDC': total.usdc.toFixed(2),
             'USDT': total.usdt.toFixed(2),
             'DAI': total.dai.toFixed(2),
+            'Lite ETH': total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`,
             'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
         }
 
