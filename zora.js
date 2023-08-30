@@ -12,6 +12,7 @@ const agent = new HttpsProxyAgent('http://munris:munrisproxy@65.109.29.224:3128'
 const csvWriter = createObjectCsvWriter({
     path: './results/zora.csv',
     header: [
+        { id: 'n', title: '№'},
         { id: 'wallet', title: 'wallet'},
         { id: 'ETH', title: 'ETH'},
         { id: 'TX Count', title: 'TX Count'},
@@ -27,6 +28,7 @@ const csvWriter = createObjectCsvWriter({
 
 const p = new Table({
   columns: [
+    { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
@@ -143,14 +145,15 @@ for (let wallet of wallets) {
 
     await getBalances(wallet)
     await getTxs(wallet)
-    progressBar.update(iteration++)
+    progressBar.update(iteration)
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let row
     if (stats[wallet].txcount) {
         row = {
+            n: iteration,
             wallet: wallet,
-            'ETH': stats[wallet].balance + ` ($${usdEthValue})`,
+            'ETH': stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})`,
             'TX Count': stats[wallet].txcount,
             'Collection count': stats[wallet].collection_count,
             'NFT count': stats[wallet].nft_count,
@@ -163,6 +166,8 @@ for (let wallet of wallets) {
 
         p.addRow(row)
     }
+
+    iteration++
 
     if (!--iterations) {
         progressBar.stop()

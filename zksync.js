@@ -18,6 +18,7 @@ import cliProgress from 'cli-progress'
 const csvWriter = createObjectCsvWriter({
     path: './results/zksync.csv',
     header: [
+        { id: 'n', title: '№'},
         { id: 'wallet', title: 'wallet'},
         { id: 'ETH', title: 'ETH'},
         { id: 'USDC', title: 'USDC'},
@@ -37,6 +38,7 @@ const csvWriter = createObjectCsvWriter({
 
 const p = new Table({
   columns: [
+    { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
@@ -193,7 +195,7 @@ for (let wallet of wallets) {
 
     await getBalances(wallet)
     await getTxs(wallet)
-    progressBar.update(iteration++)
+    progressBar.update(iteration)
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
@@ -207,6 +209,7 @@ for (let wallet of wallets) {
     let row
     if (stats[wallet].txcount) {
         row = {
+            n: iteration,
             wallet: wallet,
             'ETH': stats[wallet].balances['ETH'].toFixed(4) + ` ($${usdEthValue})`,
             'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -225,6 +228,8 @@ for (let wallet of wallets) {
 
         p.addRow(row)
     }
+
+    iteration++
 
     if (!--iterations) {
         progressBar.stop()

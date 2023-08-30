@@ -9,6 +9,7 @@ import cliProgress from 'cli-progress'
 const csvWriter = createObjectCsvWriter({
     path: './results/aptos.csv',
     header: [
+        { id: 'n', title: '№'},
         { id: 'wallet', title: 'wallet'},
         { id: 'APT', title: 'APT'},
         { id: 'USDC', title: 'USDC'},
@@ -26,6 +27,7 @@ const csvWriter = createObjectCsvWriter({
 
 const p = new Table({
   columns: [
+    { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'APT', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
@@ -138,15 +140,16 @@ for (let wallet of wallets) {
 
     await getBalances(wallet)
     await getTxs(wallet)
-    progressBar.update(iteration++)
+    progressBar.update(iteration)
     await sleep(1.5 * 1000)
     let usdAptValue = (stats[wallet].balances['APT']*aptPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*aptPrice).toFixed(2)
     let row
     if (stats[wallet].txcount) {
         row = {
+            n: iteration,
             wallet: wallet,
-            'APT': stats[wallet].balances['APT'] + ` ($${usdAptValue})`,
+            'APT': stats[wallet].balances['APT'].toFixed(2) + ` ($${usdAptValue})`,
             'USDC': stats[wallet].balances['USDC'].toFixed(2),
             'USDT': stats[wallet].balances['USDT'].toFixed(2),
             'DAI': stats[wallet].balances['DAI'].toFixed(2),
@@ -161,6 +164,8 @@ for (let wallet of wallets) {
 
         p.addRow(row)
     }
+
+    iteration++
 
     if (!--iterations) {
         progressBar.stop()
