@@ -135,6 +135,7 @@ let iteration = 1
 let csvData = []
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 progressBar.start(iterations, 0)
+let totalEth = 0
 
 for (let wallet of wallets) {
     stats[wallet] = {
@@ -150,6 +151,7 @@ for (let wallet of wallets) {
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let row
     if (stats[wallet].txcount) {
+        totalEth += stats[wallet].balance
         row = {
             n: iteration,
             wallet: wallet,
@@ -171,6 +173,12 @@ for (let wallet of wallets) {
 
     if (!--iterations) {
         progressBar.stop()
+
+        row = {
+            wallet: 'Total',
+            'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
+        }
+        p.addRow(row)
         p.printTable()
 
         p.table.rows.map((row) => {
