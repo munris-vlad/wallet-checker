@@ -30,9 +30,10 @@ let columns = [
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
-    { name: 'Unique days', alignment: 'right', color: 'cyan'},
-    { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
-    { name: 'Unique months', alignment: 'right', color: 'cyan'},
+    { name: 'Contracts', alignment: 'right', color: 'cyan'},
+    { name: 'Days', alignment: 'right', color: 'cyan'},
+    { name: 'Weeks', alignment: 'right', color: 'cyan'},
+    { name: 'Months', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
 ]
@@ -45,9 +46,10 @@ let headers = [
     { id: 'USDT', title: 'USDT'},
     { id: 'DAI', title: 'DAI'},
     { id: 'TX Count', title: 'TX Count'},
-    { id: 'Unique days', title: 'Unique days'},
-    { id: 'Unique weeks', title: 'Unique weeks'},
-    { id: 'Unique months', title: 'Unique months'},
+    { id: 'Contracts', title: 'Contracts'},
+    { id: 'Days', title: 'Days'},
+    { id: 'Weeks', title: 'Weeks'},
+    { id: 'Months', title: 'Months'},
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
 ]
@@ -103,6 +105,7 @@ async function getTxs(wallet, proxy) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
+    const uniqueContracts = new Set()
 
     let totalGasUsed = 0
     let txs = []
@@ -139,6 +142,10 @@ async function getTxs(wallet, proxy) {
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
 
+        if (tx.node.main_calls.length) {
+            uniqueContracts.add(tx.node.main_calls[0].contract_identifier)
+        }
+
         if (withGas) {
             await axios.get('https://alpha-mainnet.starknet.io/feeder_gateway/get_transaction_receipt', {
                 params: {
@@ -154,6 +161,7 @@ async function getTxs(wallet, proxy) {
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
     const numUniqueMonths = uniqueMonths.size
+    const numUniqueContracts = uniqueContracts.size
 
     if (txs.length) {
         stats[wallet].first_tx_date = new Date(txs[txs.length - 1].node.timestamp*1000)
@@ -161,6 +169,7 @@ async function getTxs(wallet, proxy) {
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
+        stats[wallet].unique_contracts = numUniqueContracts
         stats[wallet].total_gas = totalGasUsed
     }
 }
@@ -217,9 +226,10 @@ for (let wallet of wallets) {
             'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
             'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
             'TX Count': stats[wallet].txcount,
-            'Unique days': stats[wallet].unique_days,
-            'Unique weeks': stats[wallet].unique_weeks,
-            'Unique months': stats[wallet].unique_months,
+            'Contracts': stats[wallet].unique_contracts,
+            'Days': stats[wallet].unique_days,
+            'Weeks': stats[wallet].unique_weeks,
+            'Months': stats[wallet].unique_months,
             'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
             'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
         }
@@ -245,9 +255,9 @@ for (let wallet of wallets) {
             'USDT': total.usdt.toFixed(2),
             'DAI': total.dai.toFixed(2),
             'TX Count': '',
-            'Unique days': '',
-            'Unique weeks': '',
-            'Unique months': '',
+            'days': '',
+            'weeks': '',
+            'months': '',
             'First tx': '',
             'Last tx': '',
         }
