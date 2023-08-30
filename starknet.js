@@ -13,8 +13,6 @@ import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import {HttpsProxyAgent} from "https-proxy-agent"
-import fetch from "node-fetch"
 
 const args = process.argv.slice(2)
 let withGas = false
