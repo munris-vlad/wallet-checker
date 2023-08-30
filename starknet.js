@@ -22,27 +22,7 @@ if (args.length) {
     withGas = args[0]
 }
 
-const csvWriter = createObjectCsvWriter({
-    path: './results/starknet.csv',
-    header: [
-        { id: 'n', title: '№'},
-        { id: 'wallet', title: 'wallet'},
-        { id: 'ETH', title: 'ETH'},
-        { id: 'USDC', title: 'USDC'},
-        { id: 'USDT', title: 'USDT'},
-        { id: 'DAI', title: 'DAI'},
-        { id: 'TX Count', title: 'TX Count'},
-        { id: 'Unique days', title: 'Unique days'},
-        { id: 'Unique weeks', title: 'Unique weeks'},
-        { id: 'Unique months', title: 'Unique months'},
-        { id: 'First tx', title: 'First tx'},
-        { id: 'Last tx', title: 'Last tx'},
-        { id: 'Total gas spent', title: 'Total gas spent'}
-    ]
-});
-
-const p = new Table({
-  columns: [
+let columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
@@ -55,8 +35,35 @@ const p = new Table({
     { name: 'Unique months', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-  ]
+]
+
+let headers = [
+    { id: 'n', title: '№'},
+    { id: 'wallet', title: 'wallet'},
+    { id: 'ETH', title: 'ETH'},
+    { id: 'USDC', title: 'USDC'},
+    { id: 'USDT', title: 'USDT'},
+    { id: 'DAI', title: 'DAI'},
+    { id: 'TX Count', title: 'TX Count'},
+    { id: 'Unique days', title: 'Unique days'},
+    { id: 'Unique weeks', title: 'Unique weeks'},
+    { id: 'Unique months', title: 'Unique months'},
+    { id: 'First tx', title: 'First tx'},
+    { id: 'Last tx', title: 'Last tx'},
+]
+
+if (withGas) {
+    headers.push({ id: 'Total gas spent', title: 'Total gas spent'})
+    columns.push({ name: 'Total gas spent', alignment: 'right', color: 'cyan'})
+}
+
+const csvWriter = createObjectCsvWriter({
+    path: './results/starknet.csv',
+    header: headers
+})
+
+const p = new Table({
+  columns: columns
 })
 
 let stats = []
@@ -215,7 +222,10 @@ for (let wallet of wallets) {
             'Unique months': stats[wallet].unique_months,
             'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
             'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+        }
+
+        if (stats[wallet].total_gas > 0) {
+            row['Total gas spent'] = stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
         }
 
         p.addRow(row)
@@ -240,7 +250,10 @@ for (let wallet of wallets) {
             'Unique months': '',
             'First tx': '',
             'Last tx': '',
-            'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+        }
+
+        if (total.gas > 0) {
+            row['Total gas spent'] = total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
         }
 
         p.addRow(row)
