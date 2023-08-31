@@ -10,7 +10,13 @@ const csvWriter = createObjectCsvWriter({
     header: [
         { id: 'n', title: '№'},
         { id: 'wallet', title: 'wallet'},
-        { id: 'score', title: 'score'},
+        { id: 'Score', title: 'Score'},
+        { id: 'Transactions', title: 'Transactions'},
+        { id: 'Transfers', title: 'Transfers'},
+        { id: 'NFT Transfers', title: 'NFT Transfers'},
+        { id: 'Volume', title: 'Volume'},
+        { id: 'Counterparties Count', title: 'Counterparties Count'},
+        { id: 'Age', title: 'Age'},
     ]
 })
 
@@ -18,7 +24,13 @@ const p = new Table({
   columns: [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'score', color: 'green', alignment: "right"},
+    { name: 'Score', color: 'green', alignment: "right"},
+    { name: 'Transactions', color: 'green', alignment: "right"},
+    { name: 'Transfers', color: 'green', alignment: "right"},
+    { name: 'NFT Transfers', color: 'green', alignment: "right"},
+    { name: 'Volume', color: 'green', alignment: "right"},
+    { name: 'Counterparties Count', color: 'green', alignment: "right"},
+    { name: 'Age', color: 'green', alignment: "right"},
   ]
 })
 
@@ -39,7 +51,14 @@ async function getStats(wallet) {
                 'X-Clientid': '01c4b509-4990-44c0-b9dc-a09dcb0bab5f'
             }
         }).then(response => {
+            // console.log(response.data.data.stats)
             stats[wallet].score = response.data.data.score
+            stats[wallet].transactions = response.data.data.stats.totalTransactions
+            stats[wallet].transfers = response.data.data.stats.totalCounterpartiesTransfers
+            stats[wallet].nft_transfers = response.data.data.stats.totalCounterpartiesNFTTransfers
+            stats[wallet].volume = response.data.data.stats.totalCounterpartiesTurnoverUSD
+            stats[wallet].age = response.data.data.stats.walletAge
+            stats[wallet].counterparties_count = response.data.data.stats.totalCounterpartiesUsed
             isStatsReady = true
         }).catch(async function (e) {
             await sleep(5 * 1000)
@@ -68,7 +87,13 @@ for (let wallet of wallets) {
         row = {
             n: iteration,
             wallet: wallet,
-            score: stats[wallet].score.toFixed(2)
+            'Score': stats[wallet].score.toFixed(2).replace('0.', ''),
+            'Transactions': stats[wallet].transactions,
+            'Transfers': stats[wallet].transfers,
+            'NFT Transfers': stats[wallet].nft_transfers,
+            'Volume': '$'+stats[wallet].volume.toFixed(),
+            'Counterparties Count': stats[wallet].counterparties_count,
+            'Age': stats[wallet].age
         }
 
         p.addRow(row)
