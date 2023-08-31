@@ -26,15 +26,16 @@ const csvWriter = createObjectCsvWriter({
         { id: 'DAI', title: 'DAI'},
         { id: 'TX Count', title: 'TX Count'},
         { id: 'Volume', title: 'Volume'},
-        { id: 'Lite ETH', title: 'Lite ETH'},
-        { id: 'Lite TX', title: 'Lite TX'},
         { id: 'Contracts', title: 'Contracts'},
         { id: 'Days', title: 'Days'},
         { id: 'Weeks', title: 'Weeks'},
         { id: 'Months', title: 'Months'},
         { id: 'First tx', title: 'First tx'},
         { id: 'Last tx', title: 'Last tx'},
-        { id: 'Total gas spent', title: 'Total gas spent'}
+        { id: 'Total gas spent', title: 'Total gas spent'},
+        { id: 'Lite ETH', title: 'Lite ETH'},
+        { id: 'Lite TX', title: 'Lite TX'},
+        { id: 'Lite last TX', title: 'Lite TX'}
     ]
 })
 
@@ -48,8 +49,6 @@ const p = new Table({
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
     { name: 'Volume', alignment: 'right', color: 'cyan'},
-    { name: 'Lite ETH', alignment: 'right', color: 'cyan'},
-    { name: 'Lite TX', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
@@ -57,6 +56,9 @@ const p = new Table({
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
+    { name: 'Lite ETH', alignment: 'right', color: 'cyan'},
+    { name: 'Lite TX', alignment: 'right', color: 'cyan'},
+    { name: 'Lite last TX', alignment: 'right', color: 'cyan'}
   ]
 })
 
@@ -181,6 +183,19 @@ async function lite(wallet) {
         stats[wallet].lite_eth = getBalance(parseFloat(response.data.result?.committed?.balances?.ETH || 0), 18)
         stats[wallet].lite_tx = parseInt(response.data.result?.committed?.nonce || 0)
     })
+
+    await axios.get(`https://api.zksync.io/api/v0.2/accounts/${wallet}/transactions`, {
+        params: {
+            "from": 'latest',
+            "limit": "1",
+            "direction": "older"
+        }
+    }).then(response => {
+        if (response.data.result.list.length) {
+            stats[wallet].lite_last_tx = new Date(response.data.result.list[0].createdAt)
+        }
+    })
+
 }
 
 const wallets = readWallets('./addresses/zksync.txt')
@@ -192,7 +207,8 @@ let total = {
     usdc: 0,
     usdt: 0,
     dai: 0,
-    gas: 0
+    gas: 0,
+    lite_eth: 0
 }
 
 let ethPrice = 0
@@ -222,7 +238,7 @@ for (let wallet of wallets) {
     total.usdt += stats[wallet].balances['USDT']
     total.usdc += stats[wallet].balances['USDC']
     total.dai += stats[wallet].balances['DAI']
-    total.lite_eth += stats[wallet].lite_tx
+    total.lite_eth += stats[wallet].lite_eth || 0
 
     let row
     if (stats[wallet].txcount) {
@@ -235,15 +251,16 @@ for (let wallet of wallets) {
             'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
             'TX Count': stats[wallet].txcount,
             'Volume': '$'+stats[wallet].total_value.toFixed(2),
-            'Lite ETH': stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})`,
-            'Lite TX': stats[wallet].lite_tx,
             'Contracts': stats[wallet].unique_contracts,
             'Days': stats[wallet].unique_days,
             'Weeks': stats[wallet].unique_weeks,
             'Months': stats[wallet].unique_months,
             'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
             'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`,
+            'Lite ETH': stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})`,
+            'Lite TX': stats[wallet].lite_tx,
+            'Lite last TX': stats[wallet].lite_last_tx ? moment(stats[wallet].lite_last_tx).format("DD.MM.YY") : '',
         }
 
         p.addRow(row)
@@ -261,8 +278,8 @@ for (let wallet of wallets) {
             'USDC': total.usdc.toFixed(2),
             'USDT': total.usdt.toFixed(2),
             'DAI': total.dai.toFixed(2),
-            'Lite ETH': total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`,
-            'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+            'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`,
+            'Lite ETH': total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`
         }
 
         p.addRow(row)
