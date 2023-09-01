@@ -20,6 +20,11 @@ if (args.length) {
     withGas = args[0]
 }
 
+let ethPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
+    ethPrice = response.data.USD
+})
+
 let columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
@@ -27,6 +32,7 @@ let columns = [
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
+    { name: 'Volume', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
@@ -43,6 +49,7 @@ let headers = [
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
     { id: 'DAI', title: 'DAI'},
+    { id: 'Volume', title: 'Volume'},
     { id: 'TX Count', title: 'TX Count'},
     { id: 'Contracts', title: 'Contracts'},
     { id: 'Days', title: 'Days'},
@@ -68,6 +75,33 @@ const p = new Table({
 
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
+
+const contracts = [
+    {
+        name: 'ETH',
+        address: '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7'
+    },
+    {
+        name: 'DAI',
+        address: '0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3'
+    },
+    {
+        name: 'USDC',
+        address: '0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8'
+    },
+    {
+        name: 'USDT',
+        address: '0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8'
+    },
+    {
+        name: 'ZkLend ETH',
+        address: '0x04c0a5193d58f74fbace4b74dcf65481e734ed1714121bdc571da345540efa05'
+    },
+    {
+        name: 'MySwapPool',
+        address: '0x022b05f9396d2c48183f6deaf138a57522bcc8b35b67dee919f76403d1783136'
+    }
+]
 
 async function getBalances(wallet) {
     filterSymbol.forEach(symbol => {
@@ -106,11 +140,11 @@ async function getTxs(wallet, proxy) {
     const uniqueContracts = new Set()
 
     let totalGasUsed = 0
+    let volume = 0
     let txs = []
 
     let parseTransactions = await fetch(starknetApiUrl, {
         method: "POST",
-        // agent: proxy,
         headers: starknetHeaders,
         body: JSON.stringify({
             query: starknetTxQuery,
@@ -144,6 +178,32 @@ async function getTxs(wallet, proxy) {
             if (tx.node.main_calls.length) {
                 uniqueContracts.add(tx.node.main_calls[0].contract_identifier)
             }
+
+            for (const call of Object.values(tx.node.main_calls)) {
+                contracts.forEach(contract => {
+                    if (call.contract_address === contract.address) {
+                        for (const data of Object.values(call.calldata_decoded)) {
+                            if (data.name === 'amount') {
+                                let txVolume
+                                let value
+                                if (typeof data.value === 'string') {
+                                    value = data.value
+                                } else {
+                                    value = data.value[0].value
+                                }
+
+                                if (contract.name.includes('ETH')) {
+                                    txVolume = (parseInt(value, 16) / Math.pow(10, 18)) * ethPrice
+                                } else {
+                                    txVolume = parseInt(value, 16) / Math.pow(10, 18)
+                                }
+
+                                volume += txVolume
+                            }
+                        }
+                    }
+                })
+            }
         }
 
         if (withGas) {
@@ -171,13 +231,9 @@ async function getTxs(wallet, proxy) {
         stats[wallet].unique_months = numUniqueMonths
         stats[wallet].unique_contracts = numUniqueContracts
         stats[wallet].total_gas = totalGasUsed
+        stats[wallet].volume = volume
     }
 }
-
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
 
 const wallets = readWallets('./addresses/starknet.txt')
 const proxies = readWallets('./proxy.txt')
@@ -226,6 +282,7 @@ for (let wallet of wallets) {
             'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
             'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
             'TX Count': stats[wallet].txcount,
+            'Volume': '$'+stats[wallet].volume.toFixed(),
             'Contracts': stats[wallet].unique_contracts,
             'Days': stats[wallet].unique_days,
             'Weeks': stats[wallet].unique_weeks,
