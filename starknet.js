@@ -192,6 +192,7 @@ async function getTxs(wallet, proxy) {
 
                                 if (contract.name.includes('ETH')) {
                                     txVolume = (parseInt(value, 16) / Math.pow(10, 18)) * ethPrice
+                                    if (txVolume > 10000000) { txVolume = 0 }
                                 } else {
                                     txVolume = parseInt(value, 16) / Math.pow(10, 18)
                                 }
