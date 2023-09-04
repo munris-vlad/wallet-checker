@@ -15,32 +15,25 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 
-const csvWriter = createObjectCsvWriter({
-    path: './results/zksync.csv',
-    header: [
-        { id: 'n', title: '№'},
-        { id: 'wallet', title: 'wallet'},
-        { id: 'ETH', title: 'ETH'},
-        { id: 'USDC', title: 'USDC'},
-        { id: 'USDT', title: 'USDT'},
-        { id: 'DAI', title: 'DAI'},
-        { id: 'TX Count', title: 'TX Count'},
-        { id: 'Volume', title: 'Volume'},
-        { id: 'Contracts', title: 'Contracts'},
-        { id: 'Days', title: 'Days'},
-        { id: 'Weeks', title: 'Weeks'},
-        { id: 'Months', title: 'Months'},
-        { id: 'First tx', title: 'First tx'},
-        { id: 'Last tx', title: 'Last tx'},
-        { id: 'Total gas spent', title: 'Total gas spent'},
-        { id: 'Lite ETH', title: 'Lite ETH'},
-        { id: 'Lite TX', title: 'Lite TX'},
-        { id: 'Lite last TX', title: 'Lite TX'}
-    ]
-})
+let headers = [
+    { id: 'n', title: '№'},
+    { id: 'wallet', title: 'wallet'},
+    { id: 'ETH', title: 'ETH'},
+    { id: 'USDC', title: 'USDC'},
+    { id: 'USDT', title: 'USDT'},
+    { id: 'DAI', title: 'DAI'},
+    { id: 'TX Count', title: 'TX Count'},
+    { id: 'Contracts', title: 'Contracts'},
+    { id: 'Days', title: 'Days'},
+    { id: 'Weeks', title: 'Weeks'},
+    { id: 'Months', title: 'Months'},
+    { id: 'First tx', title: 'First tx'},
+    { id: 'Last tx', title: 'Last tx'},
+    { id: 'Total gas spent', title: 'Total gas spent'},
 
-const p = new Table({
-  columns: [
+]
+
+let columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
@@ -48,18 +41,38 @@ const p = new Table({
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
-    { name: 'Volume', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
     { name: 'Months', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-    { name: 'Lite ETH', alignment: 'right', color: 'cyan'},
-    { name: 'Lite TX', alignment: 'right', color: 'cyan'},
-    { name: 'Lite last TX', alignment: 'right', color: 'cyan'}
-  ]
+    { name: 'Total gas spent', alignment: 'right', color: 'cyan'}
+]
+
+const args = process.argv.slice(2)
+
+if (!args.includes('no-volume')) {
+    headers.push({ id: 'Volume', title: 'Volume'})
+    columns.push({ name: 'Volume', alignment: 'right', color: 'cyan'})
+}
+
+if (!args.includes('no-lite')) {
+    headers.push({ id: 'Lite ETH', title: 'Lite ETH'})
+    headers.push({ id: 'Lite TX', title: 'Lite TX'})
+    headers.push({ id: 'Lite last TX', title: 'Lite last TX'})
+    columns.push({ name: 'Lite ETH', alignment: 'right', color: 'cyan'})
+    columns.push({ name: 'Lite TX', alignment: 'right', color: 'cyan'})
+    columns.push({ name: 'Lite last TX', alignment: 'right', color: 'cyan'})
+}
+
+const csvWriter = createObjectCsvWriter({
+    path: './results/zksync.csv',
+    header: headers
+})
+
+const p = new Table({
+  columns: columns
 })
 
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
@@ -103,6 +116,7 @@ async function getTxs(wallet) {
         await axios.get(apiUrl + '/transactions', {
             params: {
                 address: wallet,
+                limit: 100,
                 page: page
             }
         }).then(response => {
@@ -124,21 +138,22 @@ async function getTxs(wallet) {
     const stables = ['USDT', 'USDC', 'BUSD', 'DAI']
 
     for (const tx of Object.values(txs)) {
-        if (tx.status === 'verified') {
-            const date = new Date(tx.receivedAt)
-            let value = parseInt(tx.value) / Math.pow(10, 18)
-            const targetDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
-            uniqueDays.add(date.toDateString())
-            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-            uniqueContracts.add(tx.to)
+        const date = new Date(tx.receivedAt)
+        let value = parseInt(tx.value) / Math.pow(10, 18)
+        const targetDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+        uniqueDays.add(date.toDateString())
+        uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+        uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+        uniqueContracts.add(tx.to)
 
+
+        if (!args.includes('no-volume')) {
             if (value > 0.003) {
                 const ethPrice = await getEthPriceForDate(targetDate)
                 totalValue += value * ethPrice
             }
 
-            await axios.get(apiUrl + '/transactions/'+tx.hash+'/transfers', {
+            await axios.get(apiUrl + '/transactions/' + tx.hash + '/transfers', {
                 params: {
                     limit: 100,
                     page: 1
@@ -226,7 +241,9 @@ for (let wallet of wallets) {
 
     await getBalances(wallet)
     await getTxs(wallet)
-    await lite(wallet)
+    if (!args.includes('no-lite')) {
+        await lite(wallet)
+    }
     progressBar.update(iteration)
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
@@ -250,17 +267,23 @@ for (let wallet of wallets) {
             'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
             'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
             'TX Count': stats[wallet].txcount,
-            'Volume': '$'+stats[wallet].total_value.toFixed(2),
             'Contracts': stats[wallet].unique_contracts,
             'Days': stats[wallet].unique_days,
             'Weeks': stats[wallet].unique_weeks,
             'Months': stats[wallet].unique_months,
             'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
             'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`,
-            'Lite ETH': stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})`,
-            'Lite TX': stats[wallet].lite_tx,
-            'Lite last TX': stats[wallet].lite_last_tx ? moment(stats[wallet].lite_last_tx).format("DD.MM.YY") : '',
+            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+        }
+
+        if (!args.includes('no-volume')) {
+            row['Volume'] = '$'+stats[wallet].total_value.toFixed(2)
+        }
+
+        if (!args.includes('no-lite')) {
+            row['Lite ETH'] = stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})`
+            row['Lite TX'] = stats[wallet].lite_tx
+            row['Lite last TX'] = stats[wallet].lite_last_tx ? moment(stats[wallet].lite_last_tx).format("DD.MM.YY") : ''
         }
 
         p.addRow(row)
@@ -279,7 +302,10 @@ for (let wallet of wallets) {
             'USDT': total.usdt.toFixed(2),
             'DAI': total.dai.toFixed(2),
             'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`,
-            'Lite ETH': total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`
+        }
+
+        if (!args.includes('no-lite')) {
+            row['Lite ETH'] = total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`
         }
 
         p.addRow(row)

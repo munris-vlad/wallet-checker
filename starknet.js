@@ -3,7 +3,6 @@ import {
     random,
     readWallets,
     sleep,
-    starknetAccountQuery,
     starknetApiUrl, starknetBalanceQuery,
     starknetHeaders, starknetTxQuery,
     timestampToDate
@@ -28,18 +27,18 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 let columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'ETH', alignment: 'right', color: 'cyan'},
-    { name: 'USDC', alignment: 'right', color: 'cyan'},
-    { name: 'USDT', alignment: 'right', color: 'cyan'},
-    { name: 'DAI', alignment: 'right', color: 'cyan'},
-    { name: 'Volume', alignment: 'right', color: 'cyan'},
-    { name: 'TX Count', alignment: 'right', color: 'cyan'},
-    { name: 'Contracts', alignment: 'right', color: 'cyan'},
-    { name: 'Days', alignment: 'right', color: 'cyan'},
-    { name: 'Weeks', alignment: 'right', color: 'cyan'},
-    { name: 'Months', alignment: 'right', color: 'cyan'},
-    { name: 'First tx', alignment: 'right', color: 'cyan'},
-    { name: 'Last tx', alignment: 'right', color: 'cyan'},
+    { name: 'ETH', alignment: 'right'},
+    { name: 'USDC', alignment: 'right'},
+    { name: 'USDT', alignment: 'right'},
+    { name: 'DAI', alignment: 'right'},
+    { name: 'Volume', alignment: 'right'},
+    { name: 'TX Count', alignment: 'right'},
+    { name: 'Contracts', alignment: 'right'},
+    { name: 'Days', alignment: 'right'},
+    { name: 'Weeks', alignment: 'right'},
+    { name: 'Months', alignment: 'right'},
+    { name: 'First tx', alignment: 'right'},
+    { name: 'Last tx', alignment: 'right'},
 ]
 
 let headers = [
@@ -110,7 +109,6 @@ async function getBalances(wallet) {
 
     let parseBalances = await fetch(starknetApiUrl, {
         method: "POST",
-        // agent: proxy,
         headers: starknetHeaders,
         body: JSON.stringify({
             query: starknetBalanceQuery,
@@ -273,29 +271,32 @@ for (let wallet of wallets) {
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
     let row
+
+    row = {
+        n: iteration,
+        wallet: wallet,
+        'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
+        'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+        'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+        'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
+        'TX Count': stats[wallet].txcount ?? 0,
+        'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed() : '$'+0,
+        'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Days': stats[wallet].unique_days ?? 0,
+        'Weeks': stats[wallet].unique_weeks ?? 0,
+        'Months': stats[wallet].unique_months ?? 0,
+        'First tx': stats[wallet].txcount ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '—',
+        'Last tx': stats[wallet].txcount ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '—',
+    }
+
+    if (stats[wallet].total_gas > 0) {
+        row['Total gas spent'] = stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+    }
+
     if (stats[wallet].txcount) {
-        row = {
-            n: iteration,
-            wallet: wallet,
-            'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
-            'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
-            'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
-            'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
-            'TX Count': stats[wallet].txcount,
-            'Volume': '$'+stats[wallet].volume.toFixed(),
-            'Contracts': stats[wallet].unique_contracts,
-            'Days': stats[wallet].unique_days,
-            'Weeks': stats[wallet].unique_weeks,
-            'Months': stats[wallet].unique_months,
-            'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
-            'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-        }
-
-        if (stats[wallet].total_gas > 0) {
-            row['Total gas spent'] = stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
-        }
-
-        p.addRow(row)
+        p.addRow(row, { color: "cyan" })
+    } else {
+        p.addRow(row, { color: "red" })
     }
 
     iteration++
@@ -323,7 +324,7 @@ for (let wallet of wallets) {
             row['Total gas spent'] = total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
         }
 
-        p.addRow(row)
+        p.addRow(row, { color: "cyan" })
 
         p.printTable()
 

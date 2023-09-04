@@ -39,7 +39,7 @@ const balances = async (address, index, network = 'eth', compare = '<', sum = '1
 };
 
 
-const wallets = readWallets('wallets.txt')
+const wallets = readWallets('./addresses/evm.txt')
 const args = process.argv.slice(2);
 const network = args[0];
 const compare = args[1];
