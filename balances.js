@@ -10,7 +10,7 @@ import {
     balance,
     balanceTotal,
     balanceNative,
-    balanceTopToken, getNativeToken
+    balanceTopToken, getNativeToken, balanceTotalStable
 } from './common.js'
 import dotenv from 'dotenv'
 
@@ -132,14 +132,13 @@ async function fetchDataAndPrintTable() {
     await fetchBalances()
 
     const totalRow = blockchains.reduce((row, network) => {
-        row[network] = `${balanceTotal(totalBalances, network, getNativeToken(network))} | USDT: $${parseFloat(totalBalances[network]['USDT'].amount).toFixed(1)} | USDC: $${parseFloat(totalBalances[network]['USDC'].amount).toFixed(1)}`
+        row[network] = `${balanceTotal(totalBalances, network, getNativeToken(network))} | USDT: ${balanceTotalStable(totalBalances, network, 'USDT')} | USDC: ${balanceTotalStable(totalBalances, network, 'USDC')}`
         return row;
     }, { index: wallets.length + 3, wallet: 'TOTAL' });
 
 
     p.addRow(totalRow)
     p.table.rows.map((row) => {
-        console.log(row.text)
         csvData.push(row.text)
     })
 

@@ -98,6 +98,11 @@ export function balanceTotal(totalBalances, network, token) {
         ' ' + totalBalances[network][token].symbol : '$0'
 }
 
+export function balanceTotalStable(totalBalances, network, token) {
+    return totalBalances[network] && totalBalances[network][token] ?
+        '$'+parseFloat(totalBalances[network][token].usd).toFixed(1) : '$0'
+}
+
 export function balanceTopToken(balances, network, iteration = 0) {
     if (balances[network] && balances[network]['tokens'] && Object.keys(balances[network]['tokens'])[iteration]) {
         let skip = 0
