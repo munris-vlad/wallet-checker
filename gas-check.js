@@ -65,8 +65,10 @@ async function checkGasSpent(address) {
         const result = response.toJSON()
 
         result.result.forEach(async (tx) => {
-            totalSpent += tx.gas_price * tx.gas
             totalTx++
+            if (tx.from_address === address.toLowerCase()) {
+                totalSpent += tx.gas_price * tx.gas
+            }
         })
 
         cursor = response.pagination.cursor

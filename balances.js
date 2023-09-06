@@ -41,7 +41,7 @@ blockchains.forEach(blockchain => {
     })
 
     headers.push({
-        name: blockchain, title: blockchain
+        id: blockchain, title: blockchain
     })
 })
 
@@ -81,7 +81,7 @@ const balances = async (address, index) => {
             totalBalances[blockchain] = {}
         }
 
-        if (balanceUsd > 1) {
+        if (balanceUsd > 0.1) {
             if (!totalBalances[blockchain][tokenSymbol]) {
                 totalBalances[blockchain][tokenSymbol] = {
                     symbol: tokenSymbol,
@@ -89,11 +89,13 @@ const balances = async (address, index) => {
                     amount: 0
                 }
             }
-            const formattedBalance = `$${balanceUsd.toFixed(2)} / ${balance.toFixed(3)} ${tokenSymbol}`
 
+            let formattedBalance
             if (isNative) {
+                formattedBalance = `$${balanceUsd.toFixed(2)} / ${balance.toFixed(3)} ${tokenSymbol}`
                 balances[blockchain][tokenSymbol] = formattedBalance
             } else {
+                formattedBalance = `$${balance.toFixed(2)}`
                 balances[blockchain]['tokens'][tokenSymbol] = formattedBalance
             }
 
@@ -130,13 +132,14 @@ async function fetchDataAndPrintTable() {
     await fetchBalances()
 
     const totalRow = blockchains.reduce((row, network) => {
-        row[network] = `${balanceTotal(totalBalances, network, getNativeToken(network))} | USDT: ${balanceTotal(totalBalances, network, 'USDT')} | USDC: ${balanceTotal(totalBalances, network, 'USDC')}`
+        row[network] = `${balanceTotal(totalBalances, network, getNativeToken(network))} | USDT: $${parseFloat(totalBalances[network]['USDT'].amount).toFixed(1)} | USDC: $${parseFloat(totalBalances[network]['USDC'].amount).toFixed(1)}`
         return row;
     }, { index: wallets.length + 3, wallet: 'TOTAL' });
 
 
     p.addRow(totalRow)
     p.table.rows.map((row) => {
+        console.log(row.text)
         csvData.push(row.text)
     })
 

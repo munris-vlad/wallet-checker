@@ -64,9 +64,7 @@ async function getBalances(wallet) {
             stats[wallet].collection_count++
             stats[wallet].nft_count += parseInt(token.value)
         })
-    }).catch(function (error) {
-        console.log(error)
-    })
+    }).catch()
 }
 
 async function getTxs(wallet) {
@@ -97,8 +95,8 @@ async function getTxs(wallet) {
             } else {
                 params = response.data.next_page_params
             }
-        }).catch(function (error) {
-            console.log(error)
+        }).catch(function (e) {
+            isAllTxCollected = true
         })
     }
 
@@ -150,24 +148,22 @@ for (let wallet of wallets) {
     await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let row
-    if (stats[wallet].txcount) {
-        totalEth += stats[wallet].balance
-        row = {
-            n: iteration,
-            wallet: wallet,
-            'ETH': stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})`,
-            'TX Count': stats[wallet].txcount,
-            'Collection count': stats[wallet].collection_count,
-            'NFT count': stats[wallet].nft_count,
-            'Unique days': stats[wallet].unique_days,
-            'Unique weeks': stats[wallet].unique_weeks,
-            'Unique months': stats[wallet].unique_months,
-            'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
-            'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-        }
-
-        p.addRow(row)
+    totalEth += stats[wallet].balance
+    row = {
+        n: iteration,
+        wallet: wallet,
+        'ETH': stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})`,
+        'TX Count': stats[wallet].txcount,
+        'Collection count': stats[wallet].collection_count,
+        'NFT count': stats[wallet].nft_count,
+        'Unique days': stats[wallet].unique_days,
+        'Unique weeks': stats[wallet].unique_weeks,
+        'Unique months': stats[wallet].unique_months,
+        'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
+        'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
     }
+
+    p.addRow(row)
 
     iteration++
 
