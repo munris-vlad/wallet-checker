@@ -78,27 +78,33 @@ const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const contracts = [
     {
         name: 'ETH',
-        address: '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7'
+        address: '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
+        decimals: 18
     },
     {
         name: 'DAI',
-        address: '0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3'
+        address: '0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3',
+        decimals: 18
     },
     {
         name: 'USDC',
-        address: '0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8'
+        address: '0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8',
+        decimals: 6
     },
     {
         name: 'USDT',
-        address: '0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8'
+        address: '0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8',
+        decimals: 18
     },
     {
         name: 'ZkLend ETH',
-        address: '0x04c0a5193d58f74fbace4b74dcf65481e734ed1714121bdc571da345540efa05'
+        address: '0x04c0a5193d58f74fbace4b74dcf65481e734ed1714121bdc571da345540efa05',
+        decimals: 18
     },
     {
         name: 'MySwapPool',
-        address: '0x022b05f9396d2c48183f6deaf138a57522bcc8b35b67dee919f76403d1783136'
+        address: '0x022b05f9396d2c48183f6deaf138a57522bcc8b35b67dee919f76403d1783136',
+        decimals: 18
     }
 ]
 
@@ -191,10 +197,10 @@ async function getTxs(wallet, proxy) {
                                 }
 
                                 if (contract.name.includes('ETH')) {
-                                    txVolume = (parseInt(value, 16) / Math.pow(10, 18)) * ethPrice
+                                    txVolume = (parseInt(value, 16) / Math.pow(10, contract.decimals)) * ethPrice
                                     if (txVolume > 100000) { txVolume = 0 }
                                 } else {
-                                    txVolume = parseInt(value, 16) / Math.pow(10, 18)
+                                    txVolume = parseInt(value, 16) / Math.pow(10, contract.decimals)
                                 }
 
                                 volume += txVolume
