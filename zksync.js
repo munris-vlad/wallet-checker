@@ -23,6 +23,7 @@ let headers = [
     { id: 'USDT', title: 'USDT'},
     { id: 'DAI', title: 'DAI'},
     { id: 'TX Count', title: 'TX Count'},
+    { id: 'Volume', title: 'Volume'},
     { id: 'Contracts', title: 'Contracts'},
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
@@ -41,6 +42,7 @@ let columns = [
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Volume', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
@@ -51,11 +53,6 @@ let columns = [
 ]
 
 const args = process.argv.slice(2)
-
-if (!args.includes('no-volume')) {
-    headers.push({ id: 'Volume', title: 'Volume'})
-    columns.push({ name: 'Volume', alignment: 'right', color: 'cyan'})
-}
 
 if (!args.includes('no-lite')) {
     headers.push({ id: 'Lite ETH', title: 'Lite ETH'})
@@ -77,9 +74,14 @@ const p = new Table({
 
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
 
+let ethPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
+    ethPrice = response.data.USD
+})
+
 let stats = []
-let totalGas = 0
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
+const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD']
 
 async function getBalances(wallet) {
     filterSymbol.forEach(symbol => {
@@ -135,45 +137,48 @@ async function getTxs(wallet) {
     }
 
     stats[wallet].txcount = txs.length
-    const stables = ['USDT', 'USDC', 'BUSD', 'DAI']
 
     for (const tx of Object.values(txs)) {
         const date = new Date(tx.receivedAt)
         let value = parseInt(tx.value) / Math.pow(10, 18)
-        const targetDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
         uniqueContracts.add(tx.to)
+        
+        if (value > 0) {
+            totalValue += value * ethPrice
+        }
+        totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
+    }
 
+    let isAllTransfersCollected = false
+    let pageTransfers = 1
 
-        if (!args.includes('no-volume')) {
-            if (value > 0.003) {
-                const ethPrice = await getEthPriceForDate(targetDate)
-                totalValue += value * ethPrice
+    while (!isAllTransfersCollected) {
+        await axios.get(apiUrl + '/address/' + wallet + '/transfers', {
+            params: {
+                limit: 100,
+                page: pageTransfers
             }
-
-            await axios.get(apiUrl + '/transactions/' + tx.hash + '/transfers', {
-                params: {
-                    limit: 100,
-                    page: 1
-                }
-            }).then(response => {
-                for (const transfer of response.data.items) {
-                    if (transfer.type === 'transfer') {
-                        if (transfer.token) {
-                            if (stables.includes(transfer.token.symbol)) {
-                                let amount = parseInt(transfer.amount) / Math.pow(10, transfer.token.decimals)
-                                totalValue += amount
-                                break
-                            }
-                        }
+        }).then(async response => {
+            let items = response.data.items
+            let meta = response.data.meta
+            for (const transfer of Object.values(items)) {
+                if (transfer.token) {
+                    if (stableSymbol.includes(transfer.token.symbol)) {
+                        let amount = parseInt(transfer.amount) / Math.pow(10, transfer.token.decimals)
+                        totalValue += amount
                     }
                 }
-            }).catch()
-        }
+            }
 
-        totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
+            if ((meta.currentPage === meta.totalPages) || meta.totalItems == 0) {
+                isAllTransfersCollected = true
+            } else {
+                pageTransfers++
+            }
+        }).catch()
     }
 
     if (txs.length) {
@@ -225,11 +230,6 @@ let total = {
     gas: 0,
     lite_eth: 0
 }
-
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 progressBar.start(iterations, 0)
