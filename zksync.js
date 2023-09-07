@@ -165,7 +165,7 @@ async function getTxs(wallet) {
             let items = response.data.items
             let meta = response.data.meta
             for (const transfer of Object.values(items)) {
-                if (transfer.token) {
+                if (transfer.token && transfer.from === wallet) {
                     if (stableSymbol.includes(transfer.token.symbol)) {
                         let amount = parseInt(transfer.amount) / Math.pow(10, transfer.token.decimals)
                         totalValue += amount
