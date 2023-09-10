@@ -86,6 +86,10 @@ const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
+function getKeyByValue(object, value) {
+    return Object.keys(object).find((key) => object[key] === value);
+}
+
 async function getBalances(wallet) {
     filterSymbol.forEach(symbol => {
         stats[wallet].balances[symbol] = 0
@@ -253,7 +257,7 @@ async function fetchWallet(wallet, index) {
     let row
     if (stats[wallet].txcount) {
         row = {
-            n: index,
+            n: parseInt(index)+1,
             wallet: wallet,
             'ETH': stats[wallet].balances['ETH'].toFixed(4) + ` ($${usdEthValue})`,
             'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -266,7 +270,7 @@ async function fetchWallet(wallet, index) {
             'Months': stats[wallet].unique_months,
             'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
             'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+            'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
         }
 
         if (!args.includes('no-volume')) {
@@ -283,6 +287,9 @@ async function fetchWallet(wallet, index) {
     }
 
     iteration++
+    if (iterations > 100) {
+        await sleep(500)
+    }
 }
 
 const wallets = readWallets('./addresses/zksync.txt')
@@ -300,8 +307,30 @@ let total = {
 }
 
 function fetchWallets() {
-    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    const batchSize = 50
+    const batchCount = Math.ceil(wallets.length / batchSize)
+
+    const walletPromises = [];
+
+    for (let i = 0; i < batchCount; i++) {
+        const startIndex = i * batchSize
+        const endIndex = (i + 1) * batchSize
+        const batch = wallets.slice(startIndex, endIndex)
+
+        const promise = new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(fetchBatch(batch))
+            }, i * 5000)
+        })
+
+        walletPromises.push(promise);
+    }
+
     return Promise.all(walletPromises)
+}
+
+async function fetchBatch(batch) {
+    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
 }
 
 async function fetchDataAndPrintTable() {
