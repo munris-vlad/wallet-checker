@@ -26,21 +26,22 @@ const csvWriter = createObjectCsvWriter({
 })
 
 const p = new Table({
-  columns: [
-    { name: 'n', color: 'green', alignment: "right"},
-    { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'APT', alignment: 'right', color: 'cyan'},
-    { name: 'USDC', alignment: 'right', color: 'cyan'},
-    { name: 'USDT', alignment: 'right', color: 'cyan'},
-    { name: 'DAI', alignment: 'right', color: 'cyan'},
-    { name: 'TX Count', alignment: 'right', color: 'cyan'},
-    { name: 'Unique days', alignment: 'right', color: 'cyan'},
-    { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
-    { name: 'Unique months', alignment: 'right', color: 'cyan'},
-    { name: 'First tx', alignment: 'right', color: 'cyan'},
-    { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-  ]
+    columns: [
+        { name: 'n', color: 'green', alignment: "right"},
+        { name: 'wallet', color: 'green', alignment: "right"},
+        { name: 'APT', alignment: 'right', color: 'cyan'},
+        { name: 'USDC', alignment: 'right', color: 'cyan'},
+        { name: 'USDT', alignment: 'right', color: 'cyan'},
+        { name: 'DAI', alignment: 'right', color: 'cyan'},
+        { name: 'TX Count', alignment: 'right', color: 'cyan'},
+        { name: 'Unique days', alignment: 'right', color: 'cyan'},
+        { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
+        { name: 'Unique months', alignment: 'right', color: 'cyan'},
+        { name: 'First tx', alignment: 'right', color: 'cyan'},
+        { name: 'Last tx', alignment: 'right', color: 'cyan'},
+        { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
+    ],
+    sort: (row1, row2) => +row1.n - +row2.n
 })
 
 const apiUrl = "https://api.apscan.io"
@@ -121,19 +122,7 @@ async function getTxs(wallet) {
     }
 }
 
-let aptPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=APT&tsyms=USD').then(response => {
-    aptPrice = response.data.USD
-})
-
-const wallets = readWallets('./addresses/aptos.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-progressBar.start(iterations, 0)
-
-for (let wallet of wallets) {
+async function fetchWallet(wallet, index) {
     stats[wallet] = {
         balances: []
     }
@@ -141,13 +130,12 @@ for (let wallet of wallets) {
     await getBalances(wallet)
     await getTxs(wallet)
     progressBar.update(iteration)
-    await sleep(1.5 * 1000)
     let usdAptValue = (stats[wallet].balances['APT']*aptPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*aptPrice).toFixed(2)
     let row
     if (stats[wallet].txcount) {
         row = {
-            n: iteration,
+            n: index,
             wallet: wallet,
             'APT': stats[wallet].balances['APT'].toFixed(2) + ` ($${usdAptValue})`,
             'USDC': stats[wallet].balances['USDC'].toFixed(2),
@@ -166,17 +154,40 @@ for (let wallet of wallets) {
     }
 
     iteration++
-
-    if (!--iterations) {
-        progressBar.stop()
-        p.printTable()
-
-        p.table.rows.map((row) => {
-            csvData.push(row.text)
-        })
-
-        csvWriter.writeRecords(csvData)
-            .then(() => console.log('Запись в CSV файл завершена'))
-            .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
-    }
 }
+
+let aptPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=APT&tsyms=USD').then(response => {
+    aptPrice = response.data.USD
+})
+
+const wallets = readWallets('./addresses/aptos.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+progressBar.start(iterations, 0)
+
+function fetchWallets() {
+    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    return Promise.all(walletPromises)
+}
+
+async function fetchDataAndPrintTable() {
+    await fetchWallets()
+
+    progressBar.stop()
+    p.printTable()
+
+    p.table.rows.map((row) => {
+        csvData.push(row.text)
+    })
+
+    csvWriter.writeRecords(csvData)
+        .then(() => console.log('Запись в CSV файл завершена'))
+        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+}
+
+fetchDataAndPrintTable().catch(error => {
+    console.error('Произошла ошибка:', error)
+})

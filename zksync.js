@@ -69,7 +69,8 @@ const csvWriter = createObjectCsvWriter({
 })
 
 const p = new Table({
-  columns: columns
+    columns: columns,
+    sort: (row1, row2) => +row1.n - +row2.n
 })
 
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
@@ -82,6 +83,8 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD']
+
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function getBalances(wallet) {
     filterSymbol.forEach(symbol => {
@@ -218,23 +221,7 @@ async function lite(wallet) {
 
 }
 
-const wallets = readWallets('./addresses/zksync.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-let total = {
-    eth: 0,
-    usdc: 0,
-    usdt: 0,
-    dai: 0,
-    gas: 0,
-    lite_eth: 0
-}
-
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-progressBar.start(iterations, 0)
-
-for (let wallet of wallets) {
+async function fetchWallet(wallet, index) {
     stats[wallet] = {
         balances: []
     }
@@ -244,8 +231,9 @@ for (let wallet of wallets) {
     if (!args.includes('no-lite')) {
         await lite(wallet)
     }
+
     progressBar.update(iteration)
-    await sleep(1.5 * 1000)
+
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdLiteEthValue = (stats[wallet].lite_eth*ethPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
@@ -260,7 +248,7 @@ for (let wallet of wallets) {
     let row
     if (stats[wallet].txcount) {
         row = {
-            n: iteration,
+            n: index,
             wallet: wallet,
             'ETH': stats[wallet].balances['ETH'].toFixed(4) + ` ($${usdEthValue})`,
             'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -290,34 +278,59 @@ for (let wallet of wallets) {
     }
 
     iteration++
-
-    if (!--iterations) {
-        progressBar.stop()
-        p.addRow({})
-
-        row = {
-            wallet: 'Total',
-            'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
-            'USDC': total.usdc.toFixed(2),
-            'USDT': total.usdt.toFixed(2),
-            'DAI': total.dai.toFixed(2),
-            'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`,
-        }
-
-        if (!args.includes('no-lite')) {
-            row['Lite ETH'] = total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`
-        }
-
-        p.addRow(row)
-
-        p.printTable()
-
-        p.table.rows.map((row) => {
-            csvData.push(row.text)
-        })
-
-        csvWriter.writeRecords(csvData)
-            .then(() => console.log('Запись в CSV файл завершена'))
-            .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
-    }
 }
+
+const wallets = readWallets('./addresses/zksync.txt')
+let iterations = wallets.length
+progressBar.start(iterations, 0)
+let iteration = 1
+let csvData = []
+let total = {
+    eth: 0,
+    usdc: 0,
+    usdt: 0,
+    dai: 0,
+    gas: 0,
+    lite_eth: 0
+}
+
+function fetchWallets() {
+    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    return Promise.all(walletPromises)
+}
+
+async function fetchDataAndPrintTable() {
+    await fetchWallets()
+
+    progressBar.stop()
+    p.addRow({})
+
+    let row = {
+        wallet: 'Total',
+        'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+        'USDC': total.usdc.toFixed(2),
+        'USDT': total.usdt.toFixed(2),
+        'DAI': total.dai.toFixed(2),
+        'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`,
+    }
+
+    if (!args.includes('no-lite')) {
+        row['Lite ETH'] = total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`
+    }
+
+    p.addRow(row)
+
+    p.printTable()
+
+    p.table.rows.map((row) => {
+        csvData.push(row.text)
+    })
+
+    csvWriter.writeRecords(csvData)
+        .then(() => console.log('Запись в CSV файл завершена'))
+        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+}
+
+fetchDataAndPrintTable().catch(error => {
+    console.error('Произошла ошибка:', error)
+})

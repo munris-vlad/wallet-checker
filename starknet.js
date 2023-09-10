@@ -69,7 +69,8 @@ const csvWriter = createObjectCsvWriter({
 })
 
 const p = new Table({
-  columns: columns
+    columns: columns,
+    sort: (row1, row2) => +row1.n - +row2.n
 })
 
 let stats = []
@@ -240,23 +241,7 @@ async function getTxs(wallet, proxy) {
     }
 }
 
-const wallets = readWallets('./addresses/starknet.txt')
-const proxies = readWallets('./proxy.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-let total = {
-    eth: 0,
-    usdc: 0,
-    usdt: 0,
-    dai: 0,
-    gas: 0
-}
-
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-progressBar.start(iterations, 0);
-
-for (let wallet of wallets) {
+async function fetchWallet(wallet, index) {
     stats[wallet] = {
         balances: []
     }
@@ -280,7 +265,7 @@ for (let wallet of wallets) {
     let row
 
     row = {
-        n: iteration,
+        n: index,
         wallet: wallet,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -307,40 +292,67 @@ for (let wallet of wallets) {
     }
 
     iteration++
-
-    if (!--iterations) {
-        progressBar.stop();
-
-        p.addRow({})
-
-        row = {
-            wallet: 'Total',
-            'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
-            'USDC': total.usdc.toFixed(2),
-            'USDT': total.usdt.toFixed(2),
-            'DAI': total.dai.toFixed(2),
-            'TX Count': '',
-            'Days': '',
-            'Weeks': '',
-            'Months': '',
-            'First tx': '',
-            'Last tx': '',
-        }
-
-        if (total.gas > 0) {
-            row['Total gas spent'] = total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
-        }
-
-        p.addRow(row, { color: "cyan" })
-
-        p.printTable()
-
-        p.table.rows.map((row) => {
-            csvData.push(row.text);
-        })
-
-        csvWriter.writeRecords(csvData)
-            .then(() => console.log('Запись в CSV файл завершена'))
-            .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error));
-    }
 }
+
+const wallets = readWallets('./addresses/starknet.txt')
+const proxies = readWallets('./proxy.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+let total = {
+    eth: 0,
+    usdc: 0,
+    usdt: 0,
+    dai: 0,
+    gas: 0
+}
+
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+progressBar.start(iterations, 0)
+
+function fetchWallets() {
+    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    return Promise.all(walletPromises)
+}
+
+async function fetchDataAndPrintTable() {
+    await fetchWallets()
+
+    progressBar.stop()
+
+    p.addRow({})
+
+    let row = {
+        wallet: 'Total',
+        'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+        'USDC': total.usdc.toFixed(2),
+        'USDT': total.usdt.toFixed(2),
+        'DAI': total.dai.toFixed(2),
+        'TX Count': '',
+        'Days': '',
+        'Weeks': '',
+        'Months': '',
+        'First tx': '',
+        'Last tx': '',
+    }
+
+    if (total.gas > 0) {
+        row['Total gas spent'] = total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+    }
+
+    p.addRow(row, { color: "cyan" })
+
+    p.printTable()
+
+    p.table.rows.map((row) => {
+        csvData.push(row.text)
+    })
+
+    csvWriter.writeRecords(csvData)
+        .then(() => console.log('Запись в CSV файл завершена'))
+        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+}
+
+fetchDataAndPrintTable().catch(error => {
+    console.error('Произошла ошибка:', error)
+})

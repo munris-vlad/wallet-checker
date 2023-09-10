@@ -27,19 +27,20 @@ const csvWriter = createObjectCsvWriter({
 })
 
 const p = new Table({
-  columns: [
-    { name: 'n', color: 'green', alignment: "right"},
-    { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'ETH', alignment: 'right', color: 'cyan'},
-    { name: 'TX Count', alignment: 'right', color: 'cyan'},
-    { name: 'Collection count', alignment: 'right', color: 'cyan'},
-    { name: 'NFT count', alignment: 'right', color: 'cyan'},
-    { name: 'Unique days', alignment: 'right', color: 'cyan'},
-    { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
-    { name: 'Unique months', alignment: 'right', color: 'cyan'},
-    { name: 'First tx', alignment: 'right', color: 'cyan'},
-    { name: 'Last tx', alignment: 'right', color: 'cyan'},
-  ]
+    columns: [
+        { name: 'n', color: 'green', alignment: "right"},
+        { name: 'wallet', color: 'green', alignment: "right"},
+        { name: 'ETH', alignment: 'right', color: 'cyan'},
+        { name: 'TX Count', alignment: 'right', color: 'cyan'},
+        { name: 'Collection count', alignment: 'right', color: 'cyan'},
+        { name: 'NFT count', alignment: 'right', color: 'cyan'},
+        { name: 'Unique days', alignment: 'right', color: 'cyan'},
+        { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
+        { name: 'Unique months', alignment: 'right', color: 'cyan'},
+        { name: 'First tx', alignment: 'right', color: 'cyan'},
+        { name: 'Last tx', alignment: 'right', color: 'cyan'},
+    ],
+    sort: (row1, row2) => +row1.n - +row2.n
 })
 
 const apiUrl = "https://explorer.zora.energy/api/v2"
@@ -122,20 +123,7 @@ async function getTxs(wallet) {
     }
 }
 
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
-
-const wallets = readWallets('./addresses/zora.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-progressBar.start(iterations, 0)
-let totalEth = 0
-
-for (let wallet of wallets) {
+async function fetchWallet(wallet, index) {
     stats[wallet] = {
         balance: 0,
         collection_count: 0,
@@ -145,12 +133,11 @@ for (let wallet of wallets) {
     await getBalances(wallet)
     await getTxs(wallet)
     progressBar.update(iteration)
-    await sleep(1.5 * 1000)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let row
     totalEth += stats[wallet].balance
     row = {
-        n: iteration,
+        n: index,
         wallet: wallet,
         'ETH': stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})`,
         'TX Count': stats[wallet].txcount,
@@ -167,22 +154,47 @@ for (let wallet of wallets) {
 
     iteration++
 
-    if (!--iterations) {
-        progressBar.stop()
-
-        row = {
-            wallet: 'Total',
-            'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
-        }
-        p.addRow(row)
-        p.printTable()
-
-        p.table.rows.map((row) => {
-            csvData.push(row.text)
-        })
-
-        csvWriter.writeRecords(csvData)
-            .then(() => console.log('Запись в CSV файл завершена'))
-            .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
-    }
 }
+
+let ethPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
+    ethPrice = response.data.USD
+})
+
+const wallets = readWallets('./addresses/zora.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+progressBar.start(iterations, 0)
+let totalEth = 0
+
+function fetchWallets() {
+    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    return Promise.all(walletPromises)
+}
+
+async function fetchDataAndPrintTable() {
+    await fetchWallets()
+
+    progressBar.stop()
+
+    let row = {
+        wallet: 'Total',
+        'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
+    }
+    p.addRow(row)
+    p.printTable()
+
+    p.table.rows.map((row) => {
+        csvData.push(row.text)
+    })
+
+    csvWriter.writeRecords(csvData)
+        .then(() => console.log('Запись в CSV файл завершена'))
+        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+}
+
+fetchDataAndPrintTable().catch(error => {
+    console.error('Произошла ошибка:', error)
+})
