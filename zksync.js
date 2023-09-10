@@ -82,7 +82,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
-const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD']
+const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC']
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
@@ -167,11 +167,16 @@ async function getTxs(wallet) {
         }).then(async response => {
             let items = response.data.items
             let meta = response.data.meta
+
             for (const transfer of Object.values(items)) {
-                if (transfer.token && transfer.from === wallet) {
+                if (transfer.token && transfer.from.toLowerCase() === wallet) {
                     if (stableSymbol.includes(transfer.token.symbol)) {
                         let amount = parseInt(transfer.amount) / Math.pow(10, transfer.token.decimals)
-                        totalValue += amount
+                        if (transfer.token.symbol.includes('ETH')) {
+                            totalValue += amount * ethPrice
+                        } else {
+                            totalValue += amount
+                        }
                     }
                 }
             }
