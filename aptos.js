@@ -50,13 +50,13 @@ let stats = []
 const filterSymbol = ['APT', 'USDT', 'USDC', 'DAI']
 
 async function getBalances(wallet) {
+    filterSymbol.forEach(symbol => {
+        stats[wallet].balances[symbol] = 0
+    })
+
     await axios.get(apiUrl+'/accounts?address=eq.'+wallet).then(response => {
         if (response.data.length) {
             let balances = response.data[0].all_balances
-
-            filterSymbol.forEach(symbol => {
-                stats[wallet].balances[symbol] = 0
-            })
 
             Object.values(balances).forEach(balance => {
                 if (balance.coin_info) {
@@ -123,6 +123,8 @@ async function getTxs(wallet) {
 }
 
 async function fetchWallet(wallet, index) {
+    wallet = wallet.replace('0x0', '0x')
+
     stats[wallet] = {
         balances: []
     }
@@ -132,26 +134,23 @@ async function fetchWallet(wallet, index) {
     progressBar.update(iteration)
     let usdAptValue = (stats[wallet].balances['APT']*aptPrice).toFixed(2)
     let usdGasValue = (stats[wallet].total_gas*aptPrice).toFixed(2)
-    let row
-    if (stats[wallet].txcount) {
-        row = {
-            n: index,
-            wallet: wallet,
-            'APT': stats[wallet].balances['APT'].toFixed(2) + ` ($${usdAptValue})`,
-            'USDC': stats[wallet].balances['USDC'].toFixed(2),
-            'USDT': stats[wallet].balances['USDT'].toFixed(2),
-            'DAI': stats[wallet].balances['DAI'].toFixed(2),
-            'TX Count': stats[wallet].txcount,
-            'Unique days': stats[wallet].unique_days,
-            'Unique weeks': stats[wallet].unique_weeks,
-            'Unique months': stats[wallet].unique_months,
-            'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
-            'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
-        }
-
-        p.addRow(row)
+    let row = {
+        n: index,
+        wallet: wallet,
+        'APT': stats[wallet].balances['APT'].toFixed(2) + ` ($${usdAptValue})`,
+        'USDC': stats[wallet].balances['USDC'].toFixed(2),
+        'USDT': stats[wallet].balances['USDT'].toFixed(2),
+        'DAI': stats[wallet].balances['DAI'].toFixed(2),
+        'TX Count': stats[wallet].txcount,
+        'Unique days': stats[wallet].unique_days,
+        'Unique weeks': stats[wallet].unique_weeks,
+        'Unique months': stats[wallet].unique_months,
+        'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
+        'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
+        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
     }
+
+    p.addRow(row)
 
     iteration++
 }
