@@ -83,6 +83,16 @@ const contracts = [
         decimals: 18
     },
     {
+        name: 'wstETH',
+        address: '0x042b8f0484674ca266ac5d08e4ac6a3fe65bd3129795def2dca5c34ecc5f96d2',
+        decimals: 18
+    },
+    {
+        name: 'ETH bridge',
+        address: '0x073314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82',
+        decimals: 18
+    },
+    {
         name: 'DAI',
         address: '0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3',
         decimals: 18
@@ -95,17 +105,7 @@ const contracts = [
     {
         name: 'USDT',
         address: '0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8',
-        decimals: 18
-    },
-    {
-        name: 'ZkLend ETH',
-        address: '0x04c0a5193d58f74fbace4b74dcf65481e734ed1714121bdc571da345540efa05',
-        decimals: 18
-    },
-    {
-        name: 'MySwapPool',
-        address: '0x022b05f9396d2c48183f6deaf138a57522bcc8b35b67dee919f76403d1783136',
-        decimals: 18
+        decimals: 6
     }
 ]
 
@@ -180,11 +180,9 @@ async function getTxs(wallet, proxy) {
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
 
         if (tx.node.main_calls) {
-            if (tx.node.main_calls.length) {
-                uniqueContracts.add(tx.node.main_calls[0].contract_identifier)
-            }
-
             for (const call of Object.values(tx.node.main_calls)) {
+                uniqueContracts.add(call.contract_address)
+                // console.log(call)
                 contracts.forEach(contract => {
                     if (call.contract_address === contract.address) {
                         for (const data of Object.values(call.calldata_decoded)) {
@@ -199,12 +197,11 @@ async function getTxs(wallet, proxy) {
 
                                 if (contract.name.includes('ETH')) {
                                     txVolume = (parseInt(value, 16) / Math.pow(10, contract.decimals)) * ethPrice
-                                    if (txVolume > 100000) { txVolume = 0 }
+                                    if (txVolume > 10000) { txVolume = 0 }
                                 } else {
                                     txVolume = parseInt(value, 16) / Math.pow(10, contract.decimals)
                                 }
-
-                                volume += txVolume
+                                volume += parseFloat(txVolume.toFixed(4))
                             }
                         }
                     }
@@ -272,7 +269,7 @@ async function fetchWallet(wallet, index) {
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
         'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
         'TX Count': stats[wallet].txcount ?? 0,
-        'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed() : '$'+0,
+        'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
