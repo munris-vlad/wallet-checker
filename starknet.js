@@ -12,12 +12,7 @@ import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-
-const args = process.argv.slice(2)
-let withGas = false
-if (args.length) {
-    withGas = args[0]
-}
+import * as starknet from "starknet"
 
 let ethPrice = 0
 await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
@@ -37,6 +32,7 @@ let columns = [
     { name: 'Days', alignment: 'right'},
     { name: 'Weeks', alignment: 'right'},
     { name: 'Months', alignment: 'right'},
+    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right'},
     { name: 'Last tx', alignment: 'right'},
 ]
@@ -54,14 +50,10 @@ let headers = [
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
     { id: 'Months', title: 'Months'},
+    { id: 'Total gas spent', title: 'Total gas spent'},
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
 ]
-
-if (withGas) {
-    headers.push({ id: 'Total gas spent', title: 'Total gas spent'})
-    columns.push({ name: 'Total gas spent', alignment: 'right', color: 'cyan'})
-}
 
 const csvWriter = createObjectCsvWriter({
     path: './results/starknet.csv',
@@ -75,6 +67,10 @@ const p = new Table({
 
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
+
+const provider = new starknet.RpcProvider({
+  nodeUrl: 'https://starknet-mainnet.s.chainbase.online/v1/2VGBLTvvZscaPEQ0xkRcCA9HHqd',
+})
 
 const contracts = [
     {
@@ -179,10 +175,13 @@ async function getTxs(wallet, proxy) {
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
 
+        if (tx.node.actual_fee) {
+            totalGasUsed += parseInt(tx.node.actual_fee) / Math.pow(10, 18)
+        }
+
         if (tx.node.main_calls) {
             for (const call of Object.values(tx.node.main_calls)) {
                 uniqueContracts.add(call.contract_address)
-                // console.log(call)
                 contracts.forEach(contract => {
                     if (call.contract_address === contract.address) {
                         for (const data of Object.values(call.calldata_decoded)) {
@@ -207,17 +206,6 @@ async function getTxs(wallet, proxy) {
                     }
                 })
             }
-        }
-
-        if (withGas) {
-            await axios.get('https://alpha-mainnet.starknet.io/feeder_gateway/get_transaction_receipt', {
-                params: {
-                    'transactionHash': tx.node.transaction_hash
-                }
-            }).then(response => {
-                totalGasUsed += parseInt(response.data.actual_fee, 16) / Math.pow(10, 18)
-            })
-            await sleep(1000)
         }
     }
 
