@@ -12,7 +12,6 @@ import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import * as starknet from "starknet"
 
 let ethPrice = 0
 await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
@@ -67,10 +66,6 @@ const p = new Table({
 
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
-
-const provider = new starknet.RpcProvider({
-  nodeUrl: 'https://starknet-mainnet.s.chainbase.online/v1/2VGBLTvvZscaPEQ0xkRcCA9HHqd',
-})
 
 const contracts = [
     {
@@ -134,7 +129,7 @@ async function getBalances(wallet) {
     }
 }
 
-async function getTxs(wallet, proxy) {
+async function getTxs(wallet) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -230,13 +225,9 @@ async function fetchWallet(wallet, index) {
     stats[wallet] = {
         balances: []
     }
-    let proxy = null
-    if (proxies.length && proxies[iteration-1]) {
-        proxy = proxies[iteration-1]
-    }
 
-    await getBalances(wallet, proxy)
-    await getTxs(wallet, proxy)
+    await getBalances(wallet)
+    await getTxs(wallet)
     progressBar.update(iteration)
 
     total.gas += stats[wallet].total_gas
@@ -280,7 +271,6 @@ async function fetchWallet(wallet, index) {
 }
 
 const wallets = readWallets('./addresses/starknet.txt')
-const proxies = readWallets('./proxy.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
