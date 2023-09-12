@@ -6,6 +6,7 @@ import {getNativeToken, readWallets, sleep} from "./common.js"
 import {Table} from "console-table-printer";
 import cliProgress from "cli-progress";
 import {createObjectCsvWriter} from "csv-writer";
+import moment from "moment";
 
 dotenv.config()
 
@@ -14,22 +15,32 @@ await Moralis.start({
 })
 
 const p = new Table({
-  columns: [
-      { name: 'Wallet', color: 'green', alignment: "right"},
-      { name: 'TX Count', alignment: "right", color: 'cyan' },
-      { name: 'Gas spent', alignment: "right", color: 'cyan' }
-  ]
+    columns: [
+        { name: 'Wallet', color: 'green', alignment: "right"},
+        { name: 'TX Count', alignment: "right", color: 'cyan' },
+        { name: 'Days', alignment: 'right', color: 'cyan'},
+        { name: 'Weeks', alignment: 'right', color: 'cyan'},
+        { name: 'Months', alignment: 'right', color: 'cyan'},
+        { name: 'Gas spent', alignment: "right", color: 'cyan' },
+        { name: 'First tx', alignment: 'right', color: 'cyan'},
+        { name: 'Last tx', alignment: 'right', color: 'cyan'},
+    ]
 })
 
 const args = process.argv.slice(2);
 const network = args[0];
 
 const csvWriter = createObjectCsvWriter({
-    path: `./results/gas_${network}.csv`,
+    path: `./results/evm_${network}.csv`,
     header: [
         { id: 'Wallet', title: 'Wallet'},
         { id: 'TX Count', title: 'TX Count'},
-        { id: 'Gas spent', title: 'Gas spent'}
+        { id: 'Days', title: 'Days'},
+        { id: 'Weeks', title: 'Weeks'},
+        { id: 'Months', title: 'Months'},
+        { id: 'Gas spent', title: 'Gas spent'},
+        { id: 'First tx', title: 'First tx'},
+        { id: 'Last tx', title: 'Last tx'},
     ]
 });
 
@@ -54,6 +65,10 @@ async function checkGasSpent(address) {
     let cursor = null
     let totalTx = 0
     let totalSpent = 0
+    let txs = []
+    const uniqueDays = new Set()
+    const uniqueWeeks = new Set()
+    const uniqueMonths = new Set()
 
     do {
         const response = await Moralis.EvmApi.transaction.getWalletTransactions({
@@ -64,16 +79,26 @@ async function checkGasSpent(address) {
 
         const result = response.toJSON()
 
-        result.result.forEach(async (tx) => {
-            totalTx++
-            if (tx.from_address === address.toLowerCase()) {
-                totalSpent += tx.gas_price * tx.gas
-            }
-        })
+        for (const tx of result.result) {
+            txs.push(tx)
+        }
 
         cursor = response.pagination.cursor
         await sleep(100)
     } while (cursor !== "" && cursor != null)
+
+    for (const tx of txs) {
+        totalTx++
+        if (tx.from_address === address.toLowerCase()) {
+            totalSpent += tx.gas_price * tx.gas
+            if (tx.block_timestamp) {
+                const date = new Date(tx.block_timestamp)
+                uniqueDays.add(date.toDateString())
+                uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+                uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+            }
+        }
+    }
 
     total += totalSpent
     totalSpent = totalSpent / Math.pow(10, 18)
@@ -81,7 +106,12 @@ async function checkGasSpent(address) {
     const walletRow = {
         'Wallet': address,
         'TX Count': totalTx,
-        'Gas spent': `${totalSpent.toFixed(4)} ${getNativeToken(network)}`
+        'Days': uniqueDays.size,
+        'Weeks': uniqueWeeks.size,
+        'Months': uniqueMonths.size,
+        'Gas spent': `${totalSpent.toFixed(4)} ${getNativeToken(network)}`,
+        'First tx': txs.length ? moment(new Date(txs[txs.length - 1].block_timestamp)).format("DD.MM.YY") : '',
+        'Last tx': txs.length ? moment(new Date(txs[0].block_timestamp)).format("DD.MM.YY") : ''
     }
 
     p.addRow(walletRow)
