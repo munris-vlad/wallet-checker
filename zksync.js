@@ -82,7 +82,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 
 let stats = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
-const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC']
+const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC', 'ETH']
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
@@ -143,20 +143,21 @@ async function getTxs(wallet) {
         }).catch()
     }
 
-    stats[wallet].txcount = txs.length
-
     for (const tx of Object.values(txs)) {
-        const date = new Date(tx.receivedAt)
-        let value = parseInt(tx.value) / Math.pow(10, 18)
-        uniqueDays.add(date.toDateString())
-        uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-        uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        uniqueContracts.add(tx.to)
-        
-        if (value > 0) {
-            totalValue += value * ethPrice
+        if (tx.from.toLowerCase() === wallet.toLowerCase()) {
+            const date = new Date(tx.receivedAt)
+            let value = parseInt(tx.value) / Math.pow(10, 18)
+            uniqueDays.add(date.toDateString())
+            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+            uniqueContracts.add(tx.to)
+            stats[wallet].txcount++
+
+            if (value > 0) {
+                // totalValue += value * ethPrice
+            }
+            totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
         }
-        totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
     }
 
     let isAllTransfersCollected = false
@@ -173,7 +174,7 @@ async function getTxs(wallet) {
             let meta = response.data.meta
 
             for (const transfer of Object.values(items)) {
-                if (transfer.token && transfer.from.toLowerCase() === wallet) {
+                if (transfer.token && transfer.from.toLowerCase() === wallet.toLowerCase()) {
                     if (stableSymbol.includes(transfer.token.symbol)) {
                         let amount = parseInt(transfer.amount) / Math.pow(10, transfer.token.decimals)
                         if (transfer.token.symbol.includes('ETH')) {
@@ -232,7 +233,8 @@ async function lite(wallet) {
 
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
-        balances: []
+        balances: [],
+        txcount: 0
     }
 
     await getBalances(wallet)
@@ -264,6 +266,7 @@ async function fetchWallet(wallet, index) {
             'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
             'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
             'TX Count': stats[wallet].txcount,
+            'Volume': '$'+stats[wallet].total_value.toFixed(2),
             'Contracts': stats[wallet].unique_contracts,
             'Days': stats[wallet].unique_days,
             'Weeks': stats[wallet].unique_weeks,
@@ -271,10 +274,6 @@ async function fetchWallet(wallet, index) {
             'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
             'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
             'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
-        }
-
-        if (!args.includes('no-volume')) {
-            row['Volume'] = '$'+stats[wallet].total_value.toFixed(2)
         }
 
         if (!args.includes('no-lite')) {
