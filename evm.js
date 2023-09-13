@@ -88,8 +88,8 @@ async function checkGasSpent(address) {
     } while (cursor !== "" && cursor != null)
 
     for (const tx of txs) {
-        totalTx++
         if (tx.from_address === address.toLowerCase()) {
+            totalTx++
             totalSpent += tx.gas_price * tx.gas
             if (tx.block_timestamp) {
                 const date = new Date(tx.block_timestamp)
