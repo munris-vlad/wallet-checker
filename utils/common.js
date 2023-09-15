@@ -223,14 +223,14 @@ export const entryPoint = async () => {
                     name: "Балансы",
                     value: "balances",
                 },
-                {
-                    name: "Фильтр балансов",
-                    value: "filter",
-                },
-                {
-                    name: "Фильтр NFT",
-                    value: "nft",
-                },
+                // {
+                //     name: "Фильтр балансов",
+                //     value: "filter",
+                // },
+                // {
+                //     name: "Фильтр NFT",
+                //     value: "nft",
+                // },
             ],
             default: "web",
             loop: false,
