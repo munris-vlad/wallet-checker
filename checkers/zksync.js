@@ -1,14 +1,9 @@
-import './common.js'
+import '../utils/common.js'
 import {
-    wait,
     sleep,
-    random,
     readWallets,
-    writeLineToFile,
-    getBalance,
-    timestampToDate,
-    getEthPriceForDate
-} from './common.js'
+    getBalance
+} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -81,6 +76,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 })
 
 let stats = []
+let jsonData = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC', 'ETH']
 
@@ -152,10 +148,6 @@ async function getTxs(wallet) {
             uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
             uniqueContracts.add(tx.to)
             stats[wallet].txcount++
-
-            if (value > 0) {
-                // totalValue += value * ethPrice
-            }
             totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
         }
     }
@@ -283,6 +275,7 @@ async function fetchWallet(wallet, index) {
         }
 
         p.addRow(row)
+        jsonData.push(row)
     }
 
     iteration++
@@ -322,7 +315,7 @@ function fetchWallets() {
             }, i * 5000)
         })
 
-        walletPromises.push(promise);
+        walletPromises.push(promise)
     }
 
     return Promise.all(walletPromises)
@@ -332,7 +325,7 @@ async function fetchBatch(batch) {
     await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
 }
 
-async function fetchDataAndPrintTable() {
+export async function zkSyncFetchDataAndPrintTable() {
     await fetchWallets()
 
     progressBar.stop()
@@ -364,6 +357,32 @@ async function fetchDataAndPrintTable() {
         .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 }
 
-fetchDataAndPrintTable().catch(error => {
-    console.error('Произошла ошибка:', error)
-})
+export async function zkSyncData() {
+    jsonData = []
+    total = {
+        eth: 0,
+        usdc: 0,
+        usdt: 0,
+        dai: 0,
+        gas: 0,
+        lite_eth: 0
+    }
+    await fetchWallets()
+
+    let row = {
+        wallet: 'Total',
+        'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+        'USDC': total.usdc.toFixed(2),
+        'USDT': total.usdt.toFixed(2),
+        'DAI': total.dai.toFixed(2),
+        'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`,
+    }
+
+    if (!args.includes('no-lite')) {
+        row['Lite ETH'] = total.lite_eth.toFixed(4) + ` ($${(total.lite_eth*ethPrice).toFixed(2)})`
+    }
+
+    jsonData.push(row)
+
+    return jsonData
+}

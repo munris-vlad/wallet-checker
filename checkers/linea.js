@@ -1,5 +1,5 @@
-import './common.js'
-import {wait, sleep, random, readWallets, writeLineToFile, getBalance, timestampToDate} from './common.js'
+import  '../utils/common.js'
+import {sleep, readWallets, getBalance} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -17,9 +17,9 @@ const csvWriter = createObjectCsvWriter({
         { id: 'DAI', title: 'DAI'},
         { id: 'TX Count', title: 'TX Count'},
         { id: 'Contracts', title: 'Contracts'},
-        { id: 'Unique days', title: 'Unique days'},
-        { id: 'Unique weeks', title: 'Unique weeks'},
-        { id: 'Unique months', title: 'Unique months'},
+        { id: 'Days', title: 'Days'},
+        { id: 'Weeks', title: 'Weeks'},
+        { id: 'Months', title: 'Months'},
         { id: 'First tx', title: 'First tx'},
         { id: 'Last tx', title: 'Last tx'},
         { id: 'Total gas spent', title: 'Total gas spent'}
@@ -36,9 +36,9 @@ const p = new Table({
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
-    { name: 'Unique days', alignment: 'right', color: 'cyan'},
-    { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
-    { name: 'Unique months', alignment: 'right', color: 'cyan'},
+    { name: 'Days', alignment: 'right', color: 'cyan'},
+    { name: 'Weeks', alignment: 'right', color: 'cyan'},
+    { name: 'Months', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
@@ -121,10 +121,7 @@ async function getTxs(wallet) {
             }
         }).then(response => {
             let items = response.data.result
-
-            if (items.length) {
-                isAllTxCollected = true
-            }
+            isAllTxCollected = true
 
             Object.values(items).forEach(tx => {
                 txs.push(tx)
@@ -172,6 +169,7 @@ const wallets = readWallets('./addresses/linea.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
+let jsonData = []
 let total = {
     eth: 0,
     usdc: 0,
@@ -182,68 +180,90 @@ let total = {
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 progressBar.start(iterations, 0)
 
-for (let wallet of wallets) {
-    stats[wallet] = {
-        balances: []
-    }
-
-    await getBalances(wallet)
-    await getTxs(wallet)
-    progressBar.update(iteration)
-    await sleep(1.5 * 1000)
-    total.gas += stats[wallet].total_gas
-    total.eth += parseFloat(stats[wallet].balances['ETH'])
-    total.usdt += parseFloat(stats[wallet].balances['USDT'])
-    total.usdc += parseFloat(stats[wallet].balances['USDC'])
-    total.dai += parseFloat(stats[wallet].balances['DAI'])
-
-    let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
-    let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
-    let row
-    if (stats[wallet].txcount) {
-        row = {
-            n: iteration,
-            wallet: wallet,
-            'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
-            'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
-            'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
-            'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
-            'TX Count': stats[wallet].txcount,
-            'Contracts': stats[wallet].unique_contracts,
-            'Unique days': stats[wallet].unique_days,
-            'Unique weeks': stats[wallet].unique_weeks,
-            'Unique months': stats[wallet].unique_months,
-            'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
-            'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+async function fetchWallets() {
+    for (let wallet of wallets) {
+        stats[wallet] = {
+            balances: []
         }
 
-        p.addRow(row)
-    }
+        await getBalances(wallet)
+        await getTxs(wallet)
+        progressBar.update(iteration)
+        await sleep(1.5 * 1000)
+        total.gas += stats[wallet].total_gas
+        total.eth += parseFloat(stats[wallet].balances['ETH'])
+        total.usdt += parseFloat(stats[wallet].balances['USDT'])
+        total.usdc += parseFloat(stats[wallet].balances['USDC'])
+        total.dai += parseFloat(stats[wallet].balances['DAI'])
 
-    iteration++
+        let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
+        let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
+        let row
+        if (stats[wallet].txcount) {
+            row = {
+                n: iteration,
+                wallet: wallet,
+                'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
+                'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+                'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+                'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
+                'TX Count': stats[wallet].txcount,
+                'Contracts': stats[wallet].unique_contracts,
+                'Days': stats[wallet].unique_days,
+                'Weeks': stats[wallet].unique_weeks,
+                'Months': stats[wallet].unique_months,
+                'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
+                'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
+                'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+            }
 
-    if (!--iterations) {
-        progressBar.stop()
-        row = {
-            wallet: 'Total',
-            'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
-            'USDC': total.usdc.toFixed(2),
-            'USDT': total.usdt.toFixed(2),
-            'DAI': total.dai.toFixed(2),
-            'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+            jsonData.push(row)
+            p.addRow(row)
         }
 
-        p.addRow(row)
+        iteration++
 
-        p.printTable()
+        if (!--iterations) {
+            progressBar.stop()
+            row = {
+                wallet: 'Total',
+                'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+                'USDC': total.usdc.toFixed(2),
+                'USDT': total.usdt.toFixed(2),
+                'DAI': total.dai.toFixed(2),
+                'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+            }
 
-        p.table.rows.map((row) => {
-            csvData.push(row.text)
-        })
+            jsonData.push(row)
+            p.addRow(row)
 
-        csvWriter.writeRecords(csvData)
-            .then(() => console.log('Запись в CSV файл завершена'))
-            .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+            p.printTable()
+
+            p.table.rows.map((row) => {
+                csvData.push(row.text)
+            })
+
+            csvWriter.writeRecords(csvData)
+                .then(() => console.log('Запись в CSV файл завершена'))
+                .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+        }
     }
+}
+
+export async function lineaFetchDataAndPrintTable() {
+    await fetchWallets()
+}
+
+export async function lineaData() {
+    jsonData = []
+    total = {
+        eth: 0,
+        usdc: 0,
+        usdt: 0,
+        dai: 0,
+        gas: 0
+    }
+    await fetchWallets()
+
+    return jsonData
 }

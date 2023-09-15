@@ -1,29 +1,28 @@
 import { AnkrProvider } from '@ankr.com/ankr.js'
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
+import dotenv from 'dotenv'
 import {
-    wait,
-    sleep,
-    random,
     readWallets,
-    writeLineToFile,
     balance,
     balanceTotal,
     balanceNative,
-    balanceTopToken, getNativeToken, balanceTotalStable
-} from './common.js'
-import dotenv from 'dotenv'
+    getNativeToken,
+    balanceTotalStable
+} from '../utils/common.js'
 
-dotenv.config();
+dotenv.config()
 
 const provider = new AnkrProvider('https://rpc.ankr.com/multichain/'+process.env.ANKR_API_KEY)
 
 let columns = [
+    { name: 'n', alignment: 'left'},
     { name: 'index', alignment: 'left'},
     { name: 'wallet', color: 'green', alignment: "right"}
 ]
 
 let headers = [
+    { id: 'n', title: 'n'},
     { id: 'wallet', title: 'wallet'},
 ]
 
@@ -35,30 +34,12 @@ if (network) {
     blockchains = [network]
 }
 
-blockchains.forEach(blockchain => {
-    columns.push({
-        name: blockchain, alignment: "right", color: 'cyan'
-    })
-
-    headers.push({
-        id: blockchain, title: blockchain
-    })
-})
-
-const p = new Table({
-  columns: columns,
-  disabledColumns: ["index"],
-  sort: (row1, row2) => +row1.index - +row2.index
-})
-
-const csvWriter = createObjectCsvWriter({
-    path: './results/balances.csv',
-    header: headers
-})
-
 let totalBalances = []
+let jsonData = []
+let isJson = false
+let p
 
-const balances = async (address, index) => {
+const balances = async (address, index, network) => {
     const data = await provider.getAccountBalance({
         blockchain: blockchains,
         walletAddress: address,
@@ -114,21 +95,50 @@ const balances = async (address, index) => {
     const walletRow = blockchains.reduce((row, network) => {
         row[network] = `${balanceNative(balances, network)} | USDT: ${balance(balances, network, 'USDT')} | USDC: ${balance(balances, network, 'USDC')}`
         return row;
-    }, { index: index, wallet: address });
+    }, { index: index, wallet: address, n: index });
 
-    p.addRow(walletRow)
+    if (isJson) {
+        jsonData.push({
+            n: index,
+            wallet: address,
+            native: balanceNative(balances, network),
+            USDT: balance(balances, network, 'USDT'),
+            USDC: balance(balances, network, 'USDC')
+        })
+    } else {
+        p.addRow(walletRow)
+    }
 }
 
-
 const wallets = readWallets('./addresses/evm.txt')
-function fetchBalances() {
-    const balancePromises = wallets.map((account, index) => balances(account, index))
+function fetchBalances(network) {
+    const balancePromises = wallets.map((account, index) => balances(account, index, network))
     return Promise.all(balancePromises)
 }
 
 let csvData = []
 
-async function fetchDataAndPrintTable() {
+export async function balancesFetchDataAndPrintTable(network) {
+    if (network) {
+        blockchains = [network]
+    }
+
+    blockchains.forEach(blockchain => {
+        columns.push({
+            name: blockchain, alignment: "right", color: 'cyan'
+        })
+
+        headers.push({
+            id: blockchain, title: blockchain
+        })
+    })
+
+    p = new Table({
+      columns: columns,
+      disabledColumns: ["index"],
+      sort: (row1, row2) => +row1.index - +row2.index
+    })
+
     await fetchBalances()
 
     const totalRow = blockchains.reduce((row, network) => {
@@ -144,12 +154,34 @@ async function fetchDataAndPrintTable() {
 
     p.printTable()
 
+    const csvWriter = createObjectCsvWriter({
+        path: './results/balances.csv',
+        header: headers
+    })
+
     csvWriter.writeRecords(csvData)
         .then(() => console.log('Запись в CSV файл завершена'))
         .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 }
 
-fetchDataAndPrintTable().catch(error => {
-    console.error('Произошла ошибка:', error)
-})
+export async function balancesData(network) {
+    isJson = true
+    jsonData = []
+    totalBalances = []
+    if (network) {
+        blockchains = [network]
+    }
 
+    await fetchBalances(network)
+
+    jsonData.push({
+        n: wallets.length+1,
+        index: wallets.length+1,
+        wallet: 'Total',
+        native: balanceTotal(totalBalances, network, getNativeToken(network)),
+        USDT: balanceTotalStable(totalBalances, network, 'USDT'),
+        USDC: balanceTotalStable(totalBalances, network, 'USDC')
+    })
+
+    return jsonData
+}

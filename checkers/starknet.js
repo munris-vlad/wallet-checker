@@ -1,12 +1,9 @@
-import './common.js'
+import '../utils/common.js'
 import {
-    random,
     readWallets,
-    sleep,
     starknetApiUrl, starknetBalanceQuery,
     starknetHeaders, starknetTxQuery,
-    timestampToDate
-} from './common.js'
+} from '../utils/common.js'
 import axios from "axios"
 import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
@@ -65,6 +62,7 @@ const p = new Table({
 })
 
 let stats = []
+let jsonData = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 
 const contracts = [
@@ -267,6 +265,8 @@ async function fetchWallet(wallet, index) {
         p.addRow(row, { color: "red" })
     }
 
+    jsonData.push(row)
+
     iteration++
 }
 
@@ -290,7 +290,7 @@ function fetchWallets() {
     return Promise.all(walletPromises)
 }
 
-async function fetchDataAndPrintTable() {
+export async function starknetFetchDataAndPrintTable() {
     await fetchWallets()
 
     progressBar.stop()
@@ -328,6 +328,38 @@ async function fetchDataAndPrintTable() {
         .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 }
 
-fetchDataAndPrintTable().catch(error => {
-    console.error('Произошла ошибка:', error)
-})
+export async function starknetData() {
+    jsonData = []
+    total = {
+        eth: 0,
+        usdc: 0,
+        usdt: 0,
+        dai: 0,
+        gas: 0,
+        lite_eth: 0
+    }
+
+    await fetchWallets()
+
+    let row = {
+        wallet: 'Total',
+        'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+        'USDC': total.usdc.toFixed(2),
+        'USDT': total.usdt.toFixed(2),
+        'DAI': total.dai.toFixed(2),
+        'TX Count': '',
+        'Days': '',
+        'Weeks': '',
+        'Months': '',
+        'First tx': '',
+        'Last tx': '',
+    }
+
+    if (total.gas > 0) {
+        row['Total gas spent'] = total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
+    }
+
+    jsonData.push(row)
+
+    return jsonData
+}

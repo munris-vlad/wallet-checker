@@ -1,0 +1,67 @@
+import {chooiceNetwork, entryPoint, evmNetwork} from "./utils/common.js"
+import {zkSyncFetchDataAndPrintTable} from "./checkers/zksync.js"
+import {aptosFetchDataAndPrintTable} from "./checkers/aptos.js"
+import {starknetFetchDataAndPrintTable} from "./checkers/starknet.js"
+import {zoraFetchDataAndPrintTable} from "./checkers/zora.js"
+import {lineaFetchDataAndPrintTable} from "./checkers/linea.js"
+import {balancesFetchDataAndPrintTable} from "./checkers/balances.js"
+import {evmFetchDataAndPrintTable} from "./checkers/evm.js"
+import {filterFetchDataAndPrintTable} from "./checkers/filter.js"
+import {nftFetchDataAndPrintTable} from "./checkers/nft.js"
+import {exec} from "child_process"
+
+let mode = await entryPoint()
+
+function startExpressServer() {
+    const expressServer = exec('node server.js', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`[Express Server Error]: ${error}`)
+        }
+        console.log(`[Express Server]: ${stdout}`)
+    })
+
+    expressServer.stdout.on('data', (data) => {
+        console.log(`[Express Server]: ${data}`)
+    })
+
+    expressServer.stderr.on('data', (data) => {
+        console.error(`[Express Server Error]: ${data}`)
+    })
+}
+
+switch (mode) {
+    case "web":
+        startExpressServer()
+        break
+    case "zksync":
+        await zkSyncFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "starknet":
+        await starknetFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "zora":
+        await zoraFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "aptos":
+        await aptosFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "linea":
+        await lineaFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "evm":
+        let chain = await evmNetwork()
+        await evmFetchDataAndPrintTable(chain).catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "balances":
+        let network = await chooiceNetwork()
+        await balancesFetchDataAndPrintTable(network).catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "filter":
+        await filterFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+        break
+    case "nft":
+        await nftFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+        break
+}
+
+// process.exit(0)

@@ -1,5 +1,5 @@
-import './common.js'
-import {wait, sleep, random, readWallets, writeLineToFile, getBalance, timestampToDate} from './common.js'
+import '../utils/common.js'
+import {readWallets, getBalance} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -18,9 +18,9 @@ const csvWriter = createObjectCsvWriter({
         { id: 'TX Count', title: 'TX Count'},
         { id: 'Collection count', title: 'Collection count'},
         { id: 'NFT count', title: 'NFT count'},
-        { id: 'Unique days', title: 'Unique days'},
-        { id: 'Unique weeks', title: 'Unique weeks'},
-        { id: 'Unique months', title: 'Unique months'},
+        { id: 'Days', title: 'Days'},
+        { id: 'Weeks', title: 'Weeks'},
+        { id: 'Months', title: 'Months'},
         { id: 'First tx', title: 'First tx'},
         { id: 'Last tx', title: 'Last tx'},
     ]
@@ -34,9 +34,9 @@ const p = new Table({
         { name: 'TX Count', alignment: 'right', color: 'cyan'},
         { name: 'Collection count', alignment: 'right', color: 'cyan'},
         { name: 'NFT count', alignment: 'right', color: 'cyan'},
-        { name: 'Unique days', alignment: 'right', color: 'cyan'},
-        { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
-        { name: 'Unique months', alignment: 'right', color: 'cyan'},
+        { name: 'Days', alignment: 'right', color: 'cyan'},
+        { name: 'Weeks', alignment: 'right', color: 'cyan'},
+        { name: 'Months', alignment: 'right', color: 'cyan'},
         { name: 'First tx', alignment: 'right', color: 'cyan'},
         { name: 'Last tx', alignment: 'right', color: 'cyan'},
     ],
@@ -46,6 +46,7 @@ const p = new Table({
 const apiUrl = "https://explorer.zora.energy/api/v2"
 
 let stats = []
+let jsonData = []
 
 async function getBalances(wallet) {
     await axios.get(apiUrl+'/addresses/'+wallet, {
@@ -143,14 +144,15 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Collection count': stats[wallet].collection_count,
         'NFT count': stats[wallet].nft_count,
-        'Unique days': stats[wallet].unique_days,
-        'Unique weeks': stats[wallet].unique_weeks,
-        'Unique months': stats[wallet].unique_months,
+        'Days': stats[wallet].unique_days,
+        'Weeks': stats[wallet].unique_weeks,
+        'Months': stats[wallet].unique_months,
         'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
         'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
     }
 
     p.addRow(row)
+    jsonData.push(row)
 
     iteration++
 
@@ -174,7 +176,7 @@ function fetchWallets() {
     return Promise.all(walletPromises)
 }
 
-async function fetchDataAndPrintTable() {
+export async function zoraFetchDataAndPrintTable() {
     await fetchWallets()
 
     progressBar.stop()
@@ -195,6 +197,16 @@ async function fetchDataAndPrintTable() {
         .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 }
 
-fetchDataAndPrintTable().catch(error => {
-    console.error('Произошла ошибка:', error)
-})
+export async function zoraData() {
+    jsonData = []
+    totalEth = 0
+    await fetchWallets()
+
+    let row = {
+        wallet: 'Total',
+        'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
+    }
+    jsonData.push(row)
+
+    return jsonData
+}

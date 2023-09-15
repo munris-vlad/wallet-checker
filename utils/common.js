@@ -1,5 +1,6 @@
-import fs from "fs";
-import axios from "axios";
+import fs from "fs"
+import axios from "axios"
+import inquirer from "inquirer"
 
 export const wait = ms => new Promise(r => setTimeout(r, ms));
 export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis));
@@ -20,7 +21,6 @@ export function readWallets(filePath) {
         return [];
     }
 }
-
 
 export function writeLineToFile(filePath, line) {
     try {
@@ -154,6 +154,7 @@ export async function getEthPriceForDate(date) {
         }
     }
 }
+
 let chromeV = random(100, 114)
 export const starknetApiUrl = "https://starkscan.stellate.sh/"
 export const starknetAccountQuery = "query ContractPageQuery(\n  $input: ContractInput!\n) {\n  contract(input: $input) {\n    contract_address\n    is_starknet_class_code_verified\n    implementation_type\n    ...ContractPageContainerFragment_contract\n    ...ContractPageOverviewTabFragment_contract\n    ...ContractPageClassCodeHistoryTabFragment_contract\n    ...ContractFunctionReadWriteTabFragment_contract\n    id\n  }\n}\n\nfragment ContractFunctionReadCallsFragment_starknetClass on StarknetClass {\n  is_code_verified\n  abi_final\n}\n\nfragment ContractFunctionReadWriteTabFragment_contract on Contract {\n  contract_address\n  starknet_class {\n    ...ContractFunctionReadCallsFragment_starknetClass\n    ...ContractFunctionWriteCallsFragment_starknetClass\n    id\n  }\n}\n\nfragment ContractFunctionWriteCallsFragment_starknetClass on StarknetClass {\n  is_code_verified\n  abi_final\n}\n\nfragment ContractPageClassCodeHistoryTabFragment_contract on Contract {\n  contract_address\n  starknet_class {\n    is_code_verified\n    id\n  }\n  ...ContractPageCodeSubTabFragment_contract\n}\n\nfragment ContractPageCodeSubTabFragment_contract on Contract {\n  starknet_class {\n    class_hash\n    ...StarknetClassCodeTabFragment_starknetClass\n    id\n  }\n}\n\nfragment ContractPageContainerFragment_contract on Contract {\n  contract_address\n  implementation_type\n  is_starknet_class_code_verified\n  contract_stats {\n    number_of_transactions\n    number_of_account_calls\n    number_of_events\n  }\n}\n\nfragment ContractPageOverviewTabClassHashPlacedAtItemFragment_contract on Contract {\n  deployed_at_transaction_hash\n  class_hash_placed_at_transaction_hash\n  class_hash_placed_at_timestamp\n}\n\nfragment ContractPageOverviewTabEthBalanceItemFragment_contract on Contract {\n  eth_balance {\n    balance_display\n    id\n  }\n}\n\nfragment ContractPageOverviewTabFragment_contract on Contract {\n  contract_address\n  class_hash\n  name_tag\n  is_social_verified\n  deployed_by_contract_address\n  deployed_by_contract_identifier\n  deployed_at_transaction_hash\n  deployed_at_timestamp\n  ...ContractPageOverviewTabEthBalanceItemFragment_contract\n  ...ContractPageOverviewTabTypeItemFragment_contract\n  ...ContractPageOverviewTabStarknetIDItemFragment_contract\n  starknet_class {\n    ...StarknetClassVersionItemFragment_starknetClass\n    id\n  }\n  ...ContractPageOverviewTabClassHashPlacedAtItemFragment_contract\n}\n\nfragment ContractPageOverviewTabStarknetIDItemFragment_contract on Contract {\n  starknet_id {\n    domain\n  }\n}\n\nfragment ContractPageOverviewTabTypeItemFragment_contract on Contract {\n  implementation_type\n  starknet_class {\n    type\n    id\n  }\n}\n\nfragment StarknetClassCodeTabAbiAndByteCodeItemFragment_starknetClass on StarknetClass {\n  is_code_verified\n  abi_final\n  bytecode\n  sierra_program\n}\n\nfragment StarknetClassCodeTabFragment_starknetClass on StarknetClass {\n  ...StarknetClassCodeTabVerifiedItemFragment_starknetClass\n  ...StarknetClassCodeTabSourceCodeItemFragment_starknetClass\n  ...StarknetClassCodeTabAbiAndByteCodeItemFragment_starknetClass\n}\n\nfragment StarknetClassCodeTabSourceCodeItemFragment_starknetClass on StarknetClass {\n  class_hash\n  verified {\n    source_code\n  }\n}\n\nfragment StarknetClassCodeTabVerifiedItemFragment_starknetClass on StarknetClass {\n  is_code_verified\n  verified {\n    name\n    source_code\n    verified_at_timestamp\n  }\n}\n\nfragment StarknetClassVersionItemFragment_starknetClass on StarknetClass {\n  is_cairo_one\n}\n"
@@ -181,4 +182,139 @@ export const starknetHeaders = {
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/" +
       chromeV +
       ".0.0.0 Safari/537.36",
+}
+
+export const entryPoint = async () => {
+    const questions = [
+        {
+            name: "choice",
+            type: "list",
+            message: "Действие:",
+            choices: [
+                {
+                    name: "Веб версия",
+                    value: "web",
+                },
+                {
+                    name: "ZkSync",
+                    value: "zksync",
+                },
+                {
+                    name: "Starknet",
+                    value: "starknet",
+                },
+                {
+                    name: "Zora",
+                    value: "zora",
+                },
+                {
+                    name: "Aptos",
+                    value: "aptos",
+                },
+                {
+                    name: "Linea",
+                    value: "linea",
+                },
+                {
+                    name: "EVM checker",
+                    value: "evm",
+                },
+                {
+                    name: "Балансы",
+                    value: "balances",
+                },
+                {
+                    name: "Фильтр балансов",
+                    value: "filter",
+                },
+                {
+                    name: "Фильтр NFT",
+                    value: "nft",
+                },
+            ],
+            default: "web",
+            loop: false,
+        },
+    ]
+
+    const answers = await inquirer.prompt(questions)
+    return answers.choice
+}
+
+export const chooiceNetwork = async () => {
+    const questions = [
+        {
+            name: "choice",
+            type: "list",
+            message: "Сеть:",
+            choices: [
+                {
+                    name: "Ethereum",
+                    value: "eth",
+                },
+                {
+                    name: "Arbitrum",
+                    value: "arbitrum",
+                },
+                {
+                    name: "Optimism",
+                    value: "optimism",
+                },
+                {
+                    name: "Polygon",
+                    value: "polygon",
+                },
+                {
+                    name: "BSC",
+                    value: "bsc",
+                },
+                {
+                    name: "Avalanche",
+                    value: "avalanche",
+                }
+            ],
+            default: "web",
+            loop: false,
+        },
+    ]
+
+    const answers = await inquirer.prompt(questions)
+    return answers.choice
+}
+
+export const evmNetwork = async () => {
+    const questions = [
+        {
+            name: "choice",
+            type: "list",
+            message: "Сеть:",
+            choices: [
+                {
+                    name: "Ethereum",
+                    value: "eth",
+                },
+                {
+                    name: "Arbitrum",
+                    value: "arbitrum",
+                },
+                {
+                    name: "Optimism",
+                    value: "optimism",
+                },
+                {
+                    name: "Polygon",
+                    value: "polygon",
+                },
+                {
+                    name: "BSC",
+                    value: "bsc",
+                }
+            ],
+            default: "web",
+            loop: false,
+        },
+    ]
+
+    const answers = await inquirer.prompt(questions)
+    return answers.choice
 }

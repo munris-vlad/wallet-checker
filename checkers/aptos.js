@@ -1,5 +1,5 @@
-import './common.js'
-import {wait, sleep, random, readWallets, writeLineToFile, getBalance, timestampToDate} from './common.js'
+import '../utils/common.js'
+import {readWallets, getBalance, timestampToDate} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -16,9 +16,9 @@ const csvWriter = createObjectCsvWriter({
         { id: 'USDT', title: 'USDT'},
         { id: 'DAI', title: 'DAI'},
         { id: 'TX Count', title: 'TX Count'},
-        { id: 'Unique days', title: 'Unique days'},
-        { id: 'Unique weeks', title: 'Unique weeks'},
-        { id: 'Unique months', title: 'Unique months'},
+        { id: 'Days', title: 'Days'},
+        { id: 'Weeks', title: 'Weeks'},
+        { id: 'Months', title: 'Months'},
         { id: 'First tx', title: 'First tx'},
         { id: 'Last tx', title: 'Last tx'},
         { id: 'Total gas spent', title: 'Total gas spent'}
@@ -34,9 +34,9 @@ const p = new Table({
         { name: 'USDT', alignment: 'right', color: 'cyan'},
         { name: 'DAI', alignment: 'right', color: 'cyan'},
         { name: 'TX Count', alignment: 'right', color: 'cyan'},
-        { name: 'Unique days', alignment: 'right', color: 'cyan'},
-        { name: 'Unique weeks', alignment: 'right', color: 'cyan'},
-        { name: 'Unique months', alignment: 'right', color: 'cyan'},
+        { name: 'Days', alignment: 'right', color: 'cyan'},
+        { name: 'Weeks', alignment: 'right', color: 'cyan'},
+        { name: 'Months', alignment: 'right', color: 'cyan'},
         { name: 'First tx', alignment: 'right', color: 'cyan'},
         { name: 'Last tx', alignment: 'right', color: 'cyan'},
         { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
@@ -47,6 +47,7 @@ const p = new Table({
 const apiUrl = "https://api.apscan.io"
 
 let stats = []
+let jsonData = []
 const filterSymbol = ['APT', 'USDT', 'USDC', 'DAI']
 
 async function getBalances(wallet) {
@@ -142,14 +143,15 @@ async function fetchWallet(wallet, index) {
         'USDT': stats[wallet].balances['USDT'].toFixed(2),
         'DAI': stats[wallet].balances['DAI'].toFixed(2),
         'TX Count': stats[wallet].txcount,
-        'Unique days': stats[wallet].unique_days,
-        'Unique weeks': stats[wallet].unique_weeks,
-        'Unique months': stats[wallet].unique_months,
+        'Days': stats[wallet].unique_days,
+        'Weeks': stats[wallet].unique_weeks,
+        'Months': stats[wallet].unique_months,
         'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
         'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
     }
 
+    jsonData.push(row)
     p.addRow(row)
 
     iteration++
@@ -172,7 +174,7 @@ function fetchWallets() {
     return Promise.all(walletPromises)
 }
 
-async function fetchDataAndPrintTable() {
+export async function aptosFetchDataAndPrintTable() {
     await fetchWallets()
 
     progressBar.stop()
@@ -187,6 +189,9 @@ async function fetchDataAndPrintTable() {
         .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 }
 
-fetchDataAndPrintTable().catch(error => {
-    console.error('Произошла ошибка:', error)
-})
+export async function aptosData() {
+    jsonData = []
+    await fetchWallets()
+
+    return jsonData
+}
