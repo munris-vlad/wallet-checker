@@ -10,6 +10,7 @@ import {aptosData} from "./checkers/aptos.js"
 import {lineaData} from "./checkers/linea.js"
 import {balancesData} from "./checkers/balances.js"
 import {evmData} from "./checkers/evm.js"
+import {readWallets} from "./utils/common.js"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,6 +26,23 @@ app.use(express.static(path.join(__dirname, '/web/dist')))
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '/web/dist/index.html'))
+})
+
+apiRoutes.get('/stats', async (req, res) => {
+    const starknetWallets = readWallets('./addresses/starknet.txt')
+    const zksyncWallets = readWallets('./addresses/zksync.txt')
+    const zoraWallets = readWallets('./addresses/zora.txt')
+    const aptosWallets = readWallets('./addresses/aptos.txt')
+    const lineaWallets = readWallets('./addresses/linea.txt')
+    const evmWallets = readWallets('./addresses/evm.txt')
+    res.json({
+        'starknet_wallets': starknetWallets,
+        'zksync_wallets': zksyncWallets,
+        'zora_wallets': zoraWallets,
+        'aptos_wallets': aptosWallets,
+        'linea_wallets': lineaWallets,
+        'evm_wallets': evmWallets,
+    })
 })
 
 apiRoutes.get('/zksync', async (req, res) => {

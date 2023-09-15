@@ -15,7 +15,7 @@ import EvmView from "@/views/EvmView"
 const app = createApp(App)
 
 app.config.globalProperties.$axios = axios.create({
-  baseURL: 'http://localhost',
+  baseURL: 'http://'+window.location.host,
 })
 
 const routes = [
