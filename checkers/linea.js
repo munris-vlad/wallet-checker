@@ -71,7 +71,7 @@ const contracts = [
 const apiUrl = "https://explorer.linea.build/api"
 
 let stats = []
-const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
+let isJson = false
 
 async function getBalances(wallet) {
     await axios.get(apiUrl, {
@@ -224,7 +224,6 @@ async function fetchWallets() {
         iteration++
 
         if (!--iterations) {
-            progressBar.stop()
             row = {
                 wallet: 'Total',
                 'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
@@ -235,17 +234,21 @@ async function fetchWallets() {
             }
 
             jsonData.push(row)
-            p.addRow(row)
+            if (!isJson) {
+                progressBar.stop()
 
-            p.printTable()
+                p.addRow(row)
 
-            p.table.rows.map((row) => {
-                csvData.push(row.text)
-            })
+                p.printTable()
 
-            csvWriter.writeRecords(csvData)
-                .then(() => console.log('Запись в CSV файл завершена'))
-                .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+                p.table.rows.map((row) => {
+                    csvData.push(row.text)
+                })
+
+                csvWriter.writeRecords(csvData)
+                    .then(() => console.log('Запись в CSV файл завершена'))
+                    .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+            }
         }
     }
 }
@@ -256,6 +259,9 @@ export async function lineaFetchDataAndPrintTable() {
 
 export async function lineaData() {
     jsonData = []
+    iteration = 1
+    isJson = true
+
     total = {
         eth: 0,
         usdc: 0,

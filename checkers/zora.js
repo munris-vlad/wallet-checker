@@ -64,7 +64,9 @@ async function getBalances(wallet) {
 
         Object.values(tokens).forEach(token => {
             stats[wallet].collection_count++
-            stats[wallet].nft_count += parseInt(token.value)
+            if (token.token.type !== 'ERC-20') {
+                stats[wallet].nft_count += parseInt(token.value)
+            }
         })
     }).catch()
 }

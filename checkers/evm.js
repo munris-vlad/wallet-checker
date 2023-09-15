@@ -28,6 +28,7 @@ const p = new Table({
 
 let total = 0
 let jsonData = []
+let isJson = false
 
 async function fetchWallet(address, chain, network) {
     let cursor = null
@@ -102,7 +103,6 @@ async function fetchBalances(chain, network) {
         progressBar.update(iteration++)
 
         if (!--iterations) {
-            progressBar.stop()
             total = total / Math.pow(10, 18)
             const totalRow = {
                 'Wallet': 'TOTAL',
@@ -111,31 +111,35 @@ async function fetchBalances(chain, network) {
             }
 
             jsonData.push(totalRow)
-            p.addRow(totalRow)
 
-            p.printTable()
+            if (!isJson) {
+                progressBar.stop()
+                p.addRow(totalRow)
 
-            p.table.rows.map((row) => {
-                csvData.push(row.text);
-            })
+                p.printTable()
 
-            const csvWriter = createObjectCsvWriter({
-                path: `./results/evm_${network}.csv`,
-                header: [
-                    { id: 'Wallet', title: 'Wallet'},
-                    { id: 'TX Count', title: 'TX Count'},
-                    { id: 'Days', title: 'Days'},
-                    { id: 'Weeks', title: 'Weeks'},
-                    { id: 'Months', title: 'Months'},
-                    { id: 'Gas spent', title: 'Gas spent'},
-                    { id: 'First tx', title: 'First tx'},
-                    { id: 'Last tx', title: 'Last tx'},
-                ]
-            })
+                p.table.rows.map((row) => {
+                    csvData.push(row.text);
+                })
 
-            csvWriter.writeRecords(csvData)
-                .then(() => console.log('Запись в CSV файл завершена'))
-                .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error));
+                const csvWriter = createObjectCsvWriter({
+                    path: `./results/evm_${network}.csv`,
+                    header: [
+                        {id: 'Wallet', title: 'Wallet'},
+                        {id: 'TX Count', title: 'TX Count'},
+                        {id: 'Days', title: 'Days'},
+                        {id: 'Weeks', title: 'Weeks'},
+                        {id: 'Months', title: 'Months'},
+                        {id: 'Gas spent', title: 'Gas spent'},
+                        {id: 'First tx', title: 'First tx'},
+                        {id: 'Last tx', title: 'Last tx'},
+                    ]
+                })
+
+                csvWriter.writeRecords(csvData)
+                    .then(() => console.log('Запись в CSV файл завершена'))
+                    .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+            }
         }
     }
 }
@@ -164,7 +168,9 @@ export async function evmFetchDataAndPrintTable(network) {
 
 export async function evmData(network) {
     jsonData = []
+    iteration = 1
     total = 0
+    isJson = true
     let chain
     switch (network) {
         case "eth":
