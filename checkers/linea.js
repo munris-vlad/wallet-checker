@@ -199,55 +199,78 @@ async function fetchWallets() {
         let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
         let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
         let row
-        if (stats[wallet].txcount) {
-            row = {
-                n: iteration,
-                wallet: wallet,
-                'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
-                'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
-                'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
-                'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
-                'TX Count': stats[wallet].txcount,
-                'Contracts': stats[wallet].unique_contracts,
-                'Days': stats[wallet].unique_days,
-                'Weeks': stats[wallet].unique_weeks,
-                'Months': stats[wallet].unique_months,
-                'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
-                'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-                'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
-            }
+        p.addRow({
+            n: iteration,
+            wallet: wallet,
+            'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
+            'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+            'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+            'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
+            'TX Count': stats[wallet].txcount,
+            'Contracts': stats[wallet].unique_contracts ?? 0,
+            'Days': stats[wallet].unique_days ?? 0,
+            'Weeks': stats[wallet].unique_weeks ?? 0,
+            'Months': stats[wallet].unique_months ?? 0,
+            'First tx': stats[wallet].txcount ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '-',
+            'Last tx': stats[wallet].txcount ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '-',
+            'Total gas spent': stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})`
+        })
 
-            jsonData.push(row)
-            p.addRow(row)
-        }
+        jsonData.push({
+            n: iteration,
+            wallet: wallet,
+            'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
+            'ETH USDVALUE': usdEthValue,
+            'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+            'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+            'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
+            'TX Count': stats[wallet].txcount,
+            'Contracts': stats[wallet].unique_contracts ?? 0,
+            'Days': stats[wallet].unique_days ?? 0,
+            'Weeks': stats[wallet].unique_weeks ?? 0,
+            'Months': stats[wallet].unique_months ?? 0,
+            'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
+            'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
+            'Total gas spent': stats[wallet].total_gas.toFixed(4),
+            'Total gas spent USDVALUE': usdGasValue
+        })
 
         iteration++
 
         if (!--iterations) {
-            row = {
+
+            jsonData.push({
                 wallet: 'Total',
-                'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+                'ETH': total.eth.toFixed(4),
+                'ETH USDVALUE': (total.eth*ethPrice).toFixed(2),
                 'USDC': total.usdc.toFixed(2),
                 'USDT': total.usdt.toFixed(2),
                 'DAI': total.dai.toFixed(2),
-                'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
-            }
+                'Total gas spent': total.gas.toFixed(4),
+                'Total gas spent USDVALUE': (total.gas*ethPrice).toFixed(2),
+            })
 
-            jsonData.push(row)
+            p.table.rows.map((row) => {
+                csvData.push(row.text)
+            })
+
+            csvWriter.writeRecords(csvData)
+                .then(() => console.log('Запись в CSV файл завершена'))
+                .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+
             if (!isJson) {
                 progressBar.stop()
 
-                p.addRow(row)
-
-                p.printTable()
-
-                p.table.rows.map((row) => {
-                    csvData.push(row.text)
+                p.addRow({
+                    wallet: 'Total',
+                    'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+                    'USDC': total.usdc.toFixed(2),
+                    'USDT': total.usdt.toFixed(2),
+                    'DAI': total.dai.toFixed(2),
+                    'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`
                 })
 
-                csvWriter.writeRecords(csvData)
-                    .then(() => console.log('Запись в CSV файл завершена'))
-                    .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+                p.printTable()
             }
         }
     }

@@ -86,7 +86,18 @@ async function fetchWallet(address, chain, network) {
     }
 
     p.addRow(walletRow)
-    jsonData.push(walletRow)
+    jsonData.push({
+        'n': iteration,
+        'Wallet': address,
+        'TX Count': totalTx,
+        'Days': uniqueDays.size,
+        'Weeks': uniqueWeeks.size,
+        'Months': uniqueMonths.size,
+        'Gas spent': totalSpent.toFixed(4),
+        'First tx': txs.length ? new Date(txs[txs.length - 1].block_timestamp) : '',
+        'Last tx': txs.length ? new Date(txs[0].block_timestamp) : '',
+        'Native token': getNativeToken(network)
+    })
 }
 
 const wallets = readWallets('./addresses/evm.txt')
@@ -105,40 +116,44 @@ async function fetchBalances(chain, network) {
         if (!--iterations) {
             total = total / Math.pow(10, 18)
             const totalRow = {
-                'Wallet': 'TOTAL',
+                'Wallet': 'Total',
                 'TX Count': '',
                 'Gas spent': `${total.toFixed(4)} ${getNativeToken(network)}`
             }
 
-            jsonData.push(totalRow)
+            jsonData.push({
+                'Wallet': 'Total',
+                'TX Count': '',
+                'Gas spent': total.toFixed(4),
+                'Native token': getNativeToken(network)
+            })
+
+            p.addRow(totalRow)
+            p.table.rows.map((row) => {
+                csvData.push(row.text);
+            })
+
+            const csvWriter = createObjectCsvWriter({
+                path: `./results/evm_${network}.csv`,
+                header: [
+                    {id: 'Wallet', title: 'Wallet'},
+                    {id: 'TX Count', title: 'TX Count'},
+                    {id: 'Days', title: 'Days'},
+                    {id: 'Weeks', title: 'Weeks'},
+                    {id: 'Months', title: 'Months'},
+                    {id: 'Gas spent', title: 'Gas spent'},
+                    {id: 'First tx', title: 'First tx'},
+                    {id: 'Last tx', title: 'Last tx'},
+                ]
+            })
+
+            csvWriter.writeRecords(csvData)
+                .then(() => console.log('Запись в CSV файл завершена'))
+                .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 
             if (!isJson) {
                 progressBar.stop()
-                p.addRow(totalRow)
-
                 p.printTable()
-
-                p.table.rows.map((row) => {
-                    csvData.push(row.text);
-                })
-
-                const csvWriter = createObjectCsvWriter({
-                    path: `./results/evm_${network}.csv`,
-                    header: [
-                        {id: 'Wallet', title: 'Wallet'},
-                        {id: 'TX Count', title: 'TX Count'},
-                        {id: 'Days', title: 'Days'},
-                        {id: 'Weeks', title: 'Weeks'},
-                        {id: 'Months', title: 'Months'},
-                        {id: 'Gas spent', title: 'Gas spent'},
-                        {id: 'First tx', title: 'First tx'},
-                        {id: 'Last tx', title: 'Last tx'},
-                    ]
-                })
-
-                csvWriter.writeRecords(csvData)
-                    .then(() => console.log('Запись в CSV файл завершена'))
-                    .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
             }
         }
     }

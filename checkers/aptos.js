@@ -55,19 +55,23 @@ async function getBalances(wallet) {
         stats[wallet].balances[symbol] = 0
     })
 
-    await axios.get(apiUrl+'/accounts?address=eq.'+wallet).then(response => {
-        if (response.data.length) {
-            let balances = response.data[0].all_balances
+    try {
+        await axios.get(apiUrl+'/accounts?address=eq.'+wallet).then(response => {
+            if (response.data.length) {
+                let balances = response.data[0].all_balances
 
-            Object.values(balances).forEach(balance => {
-                if (balance.coin_info) {
-                    if (filterSymbol.includes(balance.coin_info.symbol)) {
-                        stats[wallet].balances[balance.coin_info.symbol] = getBalance(balance.balance, balance.coin_info.decimals)
+                Object.values(balances).forEach(balance => {
+                    if (balance.coin_info) {
+                        if (filterSymbol.includes(balance.coin_info.symbol)) {
+                            stats[wallet].balances[balance.coin_info.symbol] = getBalance(balance.balance, balance.coin_info.decimals)
+                        }
                     }
-                }
-            })
-        }
-    }).catch()
+                })
+            }
+        }).catch()
+    } catch (e) {
+        return e.toString()
+    }
 }
 
 async function getTxs(wallet) {
@@ -81,22 +85,26 @@ async function getTxs(wallet) {
     let isAllTxCollected = false
 
     while (!isAllTxCollected) {
-        await axios.get(apiUrl + '/user_transactions?sender=eq.' + wallet, {
-            headers: {
-                range: `${startRange}-${endRange}`
-            }
-        }).then(response => {
-            let items = response.data
-            if (items.length) {
-                Object.values(items).forEach(tx => {
-                    txs.push(tx)
-                })
-                startRange = startRange + 50
-                endRange = endRange + 50
-            } else {
-                isAllTxCollected = true
-            }
-        }).catch()
+        try {
+            await axios.get(apiUrl + '/user_transactions?sender=eq.' + wallet, {
+                headers: {
+                    range: `${startRange}-${endRange}`
+                }
+            }).then(response => {
+                let items = response.data
+                if (items.length) {
+                    Object.values(items).forEach(tx => {
+                        txs.push(tx)
+                    })
+                    startRange = startRange + 50
+                    endRange = endRange + 50
+                } else {
+                    isAllTxCollected = true
+                }
+            }).catch()
+        } catch (e) {
+            return e.toString()
+        }
     }
 
     stats[wallet].txcount = txs.length
@@ -151,8 +159,24 @@ async function fetchWallet(wallet, index) {
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
     }
 
-    jsonData.push(row)
     p.addRow(row)
+    jsonData.push({
+        n: index,
+        wallet: wallet,
+        'APT': stats[wallet].balances['APT'].toFixed(2),
+        'APT USDVALUE': usdAptValue,
+        'USDC': stats[wallet].balances['USDC'].toFixed(2),
+        'USDT': stats[wallet].balances['USDT'].toFixed(2),
+        'DAI': stats[wallet].balances['DAI'].toFixed(2),
+        'TX Count': stats[wallet].txcount,
+        'Days': stats[wallet].unique_days ?? 0,
+        'Weeks': stats[wallet].unique_weeks ?? 0,
+        'Months': stats[wallet].unique_months ?? 0,
+        'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
+        'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
+        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
+        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0
+    })
 
     iteration++
 }
@@ -165,7 +189,6 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=APT&tsyms=USD
 const wallets = readWallets('./addresses/aptos.txt')
 let iterations = wallets.length
 let iteration = 1
-let csvData = []
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 progressBar.start(iterations, 0)
 
@@ -174,12 +197,8 @@ function fetchWallets() {
     return Promise.all(walletPromises)
 }
 
-export async function aptosFetchDataAndPrintTable() {
-    await fetchWallets()
-
-    progressBar.stop()
-    p.printTable()
-
+async function saveToCsv() {
+    let csvData = []
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
@@ -189,9 +208,17 @@ export async function aptosFetchDataAndPrintTable() {
         .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 }
 
+export async function aptosFetchDataAndPrintTable() {
+    await fetchWallets()
+    await saveToCsv()
+    progressBar.stop()
+    p.printTable()
+}
+
 export async function aptosData() {
     jsonData = []
     await fetchWallets()
+    await saveToCsv()
 
     return jsonData
 }

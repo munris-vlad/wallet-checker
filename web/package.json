@@ -12,6 +12,7 @@
     "axios": "^1.5.0",
     "core-js": "^3.8.3",
     "vue": "^3.2.13",
+    "vue-moment": "^4.1.0",
     "vue-router": "^4.0.3"
   },
   "devDependencies": {

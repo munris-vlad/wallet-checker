@@ -128,7 +128,9 @@ async function getTxs(wallet) {
             let items = response.data.items
             let meta = response.data.meta
             Object.values(items).forEach(tx => {
-                txs.push(tx)
+                if (tx.from.toLowerCase() === wallet.toLowerCase()) {
+                    txs.push(tx)
+                }
             })
 
             if ((meta.currentPage === meta.totalPages) || meta.totalItems == 0) {
@@ -140,16 +142,14 @@ async function getTxs(wallet) {
     }
 
     for (const tx of Object.values(txs)) {
-        if (tx.from.toLowerCase() === wallet.toLowerCase()) {
-            const date = new Date(tx.receivedAt)
-            let value = parseInt(tx.value) / Math.pow(10, 18)
-            uniqueDays.add(date.toDateString())
-            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-            uniqueContracts.add(tx.to)
-            stats[wallet].txcount++
-            totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
-        }
+        const date = new Date(tx.receivedAt)
+        let value = parseInt(tx.value) / Math.pow(10, 18)
+        uniqueDays.add(date.toDateString())
+        uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+        uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+        uniqueContracts.add(tx.to)
+        stats[wallet].txcount++
+        totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
     }
 
     let isAllTransfersCollected = false
@@ -194,7 +194,7 @@ async function getTxs(wallet) {
         stats[wallet].unique_months = uniqueMonths.size
         stats[wallet].unique_contracts = uniqueContracts.size
         stats[wallet].total_gas = totalGasUsed
-        stats[wallet].total_value = totalValue
+        stats[wallet].volume = totalValue
     }
 }
 
@@ -249,34 +249,50 @@ async function fetchWallet(wallet, index) {
     total.lite_eth += stats[wallet].lite_eth || 0
 
     let row
-    if (stats[wallet].txcount) {
-        row = {
-            n: parseInt(index)+1,
-            wallet: wallet,
-            'ETH': stats[wallet].balances['ETH'].toFixed(4) + ` ($${usdEthValue})`,
-            'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
-            'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
-            'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
-            'TX Count': stats[wallet].txcount,
-            'Volume': '$'+stats[wallet].total_value.toFixed(2),
-            'Contracts': stats[wallet].unique_contracts,
-            'Days': stats[wallet].unique_days,
-            'Weeks': stats[wallet].unique_weeks,
-            'Months': stats[wallet].unique_months,
-            'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
-            'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-            'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
-        }
-
-        if (!args.includes('no-lite')) {
-            row['Lite ETH'] = stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})`
-            row['Lite TX'] = stats[wallet].lite_tx
-            row['Lite last TX'] = stats[wallet].lite_last_tx ? moment(stats[wallet].lite_last_tx).format("DD.MM.YY") : ''
-        }
-
-        p.addRow(row)
-        jsonData.push(row)
+    row = {
+        n: parseInt(index)+1,
+        wallet: wallet,
+        'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
+        'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+        'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+        'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
+        'TX Count': stats[wallet].txcount,
+        'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
+        'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Days': stats[wallet].unique_days ?? 0,
+        'Weeks': stats[wallet].unique_weeks ?? 0,
+        'Months': stats[wallet].unique_months ?? 0,
+        'First tx': stats[wallet].txcount ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '—',
+        'Last tx': stats[wallet].txcount ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '—',
+        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
     }
+
+    if (!args.includes('no-lite')) {
+        row['Lite ETH'] = stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})`
+        row['Lite TX'] = stats[wallet].lite_tx
+        row['Lite last TX'] = stats[wallet].lite_last_tx ? moment(stats[wallet].lite_last_tx).format("DD.MM.YY") : ''
+    }
+
+    p.addRow(row)
+    jsonData.push({
+        n: parseInt(index)+1,
+        wallet: wallet,
+        'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
+        'ETH USDVALUE': usdEthValue,
+        'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
+        'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
+        'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
+        'TX Count': stats[wallet].txcount,
+        'Volume': stats[wallet].volume ? stats[wallet].volume?.toFixed(2) : 0,
+        'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Days': stats[wallet].unique_days ?? 0,
+        'Weeks': stats[wallet].unique_weeks ?? 0,
+        'Months': stats[wallet].unique_months ?? 0,
+        'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
+        'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
+        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4): 0,
+        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0
+    })
 
     iteration++
     if (iterations > 100) {
@@ -325,6 +341,16 @@ async function fetchBatch(batch) {
     await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
 }
 
+async function saveToCsv() {
+    p.table.rows.map((row) => {
+        csvData.push(row.text)
+    })
+
+    csvWriter.writeRecords(csvData)
+        .then(() => console.log('Запись в CSV файл завершена'))
+        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+}
+
 export async function zkSyncFetchDataAndPrintTable() {
     await fetchWallets()
 
@@ -348,13 +374,7 @@ export async function zkSyncFetchDataAndPrintTable() {
 
     p.printTable()
 
-    p.table.rows.map((row) => {
-        csvData.push(row.text)
-    })
-
-    csvWriter.writeRecords(csvData)
-        .then(() => console.log('Запись в CSV файл завершена'))
-        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+    await saveToCsv()
 }
 
 export async function zkSyncData() {
@@ -371,11 +391,13 @@ export async function zkSyncData() {
 
     let row = {
         wallet: 'Total',
-        'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
+        'ETH': total.eth.toFixed(4),
+        'ETH USDVALUE': (total.eth*ethPrice).toFixed(2),
         'USDC': total.usdc.toFixed(2),
         'USDT': total.usdt.toFixed(2),
         'DAI': total.dai.toFixed(2),
-        'Total gas spent': total.gas.toFixed(4)  + ` ($${(total.gas*ethPrice).toFixed(2)})`,
+        'Total gas spent': total.gas.toFixed(4),
+        'Total gas spent USDVALUE': (total.gas*ethPrice).toFixed(2),
     }
 
     if (!args.includes('no-lite')) {
@@ -383,6 +405,8 @@ export async function zkSyncData() {
     }
 
     jsonData.push(row)
+
+    await saveToCsv()
 
     return jsonData
 }

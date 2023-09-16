@@ -154,7 +154,20 @@ async function fetchWallet(wallet, index) {
     }
 
     p.addRow(row)
-    jsonData.push(row)
+    jsonData.push({
+        n: index,
+        wallet: wallet,
+        'ETH': stats[wallet].balance.toFixed(4),
+        'ETH USDVALUE': usdEthValue,
+        'TX Count': stats[wallet].txcount,
+        'Collection count': stats[wallet].collection_count ?? 0,
+        'NFT count': stats[wallet].nft_count ?? 0,
+        'Days': stats[wallet].unique_days ?? 0,
+        'Weeks': stats[wallet].unique_weeks ?? 0,
+        'Months': stats[wallet].unique_months ?? 0,
+        'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
+        'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
+    })
 
     iteration++
 
@@ -178,6 +191,16 @@ function fetchWallets() {
     return Promise.all(walletPromises)
 }
 
+async function saveToCsv() {
+    p.table.rows.map((row) => {
+        csvData.push(row.text)
+    })
+
+    csvWriter.writeRecords(csvData)
+        .then(() => console.log('Запись в CSV файл завершена'))
+        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+}
+
 export async function zoraFetchDataAndPrintTable() {
     await fetchWallets()
 
@@ -190,13 +213,7 @@ export async function zoraFetchDataAndPrintTable() {
     p.addRow(row)
     p.printTable()
 
-    p.table.rows.map((row) => {
-        csvData.push(row.text)
-    })
-
-    csvWriter.writeRecords(csvData)
-        .then(() => console.log('Запись в CSV файл завершена'))
-        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+    await saveToCsv()
 }
 
 export async function zoraData() {
@@ -204,11 +221,13 @@ export async function zoraData() {
     totalEth = 0
     await fetchWallets()
 
-    let row = {
+    jsonData.push({
         wallet: 'Total',
-        'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
-    }
-    jsonData.push(row)
+        'ETH': totalEth.toFixed(4),
+        'ETH USDVALUE': (totalEth*ethPrice).toFixed(2),
+    })
+
+    await saveToCsv()
 
     return jsonData
 }

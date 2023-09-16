@@ -18,6 +18,18 @@ app.config.globalProperties.$axios = axios.create({
   baseURL: 'http://'+window.location.host,
 })
 
+await axios.get('/api/stats').then((response) => {
+    let data = response.data
+    app.config.globalProperties.$zk_count = data.zksync_wallets.length
+    app.config.globalProperties.$stark_count = data.starknet_wallets.length
+    app.config.globalProperties.$zora_count = data.zora_wallets.length
+    app.config.globalProperties.$aptos_count = data.aptos_wallets.length
+    app.config.globalProperties.$linea_count = data.linea_wallets.length
+    app.config.globalProperties.$evm_count = data.evm_wallets.length
+}).catch((error) => {
+    console.error('Ошибка при загрузке данных:', error)
+})
+
 const routes = [
     {
         path: '/',

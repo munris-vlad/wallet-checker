@@ -1,161 +1,217 @@
-import { AnkrProvider } from '@ankr.com/ankr.js'
-import { Table } from 'console-table-printer'
-import { createObjectCsvWriter } from 'csv-writer'
-import dotenv from 'dotenv'
-import {
-    readWallets,
-    balance,
-    balanceTotal,
-    balanceNative,
-    getNativeToken,
-    balanceTotalStable
-} from '../utils/common.js'
+import ethers from "ethers"
+import {getNativeToken, readWallets} from "../utils/common.js";
+import axios from "axios";
+import {Table} from "console-table-printer";
+import {createObjectCsvWriter} from "csv-writer";
 
-dotenv.config()
-
-const provider = new AnkrProvider('https://rpc.ankr.com/multichain/'+process.env.ANKR_API_KEY)
 
 let columns = [
-    { name: 'n', alignment: 'left'},
-    { name: 'index', alignment: 'left'},
-    { name: 'wallet', color: 'green', alignment: "right"}
+    { name: 'n', alignment: 'left', color: 'green'},
+    { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'native', alignment: 'right', color: 'cyan'},
+    { name: 'usd', alignment: 'right', color: 'cyan'},
+    { name: 'USDT', alignment: 'right', color: 'cyan'},
+    { name: 'USDC', alignment: 'right', color: 'cyan'},
+    { name: 'DAI', alignment: 'right', color: 'cyan'},
 ]
 
 let headers = [
     { id: 'n', title: 'n'},
     { id: 'wallet', title: 'wallet'},
+    { id: 'native', title: 'native'},
+    { id: 'usd', title: 'usd'},
+    { id: 'USDT', title: 'USDT'},
+    { id: 'USDC', title: 'USDC'},
+    { id: 'DAI', title: 'DAI'},
 ]
 
-let blockchains = ['eth', 'arbitrum', 'optimism', 'polygon', 'bsc', 'avalanche']
-const args = process.argv.slice(2);
-const network = args[0];
-
-if (network) {
-    blockchains = [network]
-}
-
-let totalBalances = []
-let jsonData = []
-let isJson = false
-let p
-
-const balances = async (address, index, network) => {
-    const data = await provider.getAccountBalance({
-        blockchain: blockchains,
-        walletAddress: address,
-        onlyWhitelisted: true
-    })
-
-    let balances = []
-
-    for (const token of data.assets) {
-        const { blockchain, tokenSymbol } = token
-        const isNative = token.tokenType === 'NATIVE'
-        const balanceUsd = parseFloat(token.balanceUsd)
-        const balance = parseFloat(token.balance)
-
-        if (!balances[blockchain]) {
-            balances[blockchain] = { tokens: {} }
+const priceApi = 'https://min-api.cryptocompare.com/data/price'
+const networks = {
+    'ETH': {
+        provider: new ethers.providers.JsonRpcProvider('https://eth.llamarpc.com'),
+        'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
+        'USDT': {
+            address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            decimals: 18
+        },
+        'DAI': {
+            address: '0x6b175474e89094c44da98b954eedeac495271d0f',
+            decimals: 18
         }
-
-        if (!totalBalances[blockchain]) {
-            totalBalances[blockchain] = {}
+    },
+    'Arbitrum': {
+        provider: new ethers.providers.JsonRpcProvider('https://arbitrum.llamarpc.com'),
+        'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
+        'USDT': {
+            address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+            decimals: 18
+        },
+        'DAI': {
+            address: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+            decimals: 18
         }
-
-        if (balanceUsd > 0.1) {
-            if (!totalBalances[blockchain][tokenSymbol]) {
-                totalBalances[blockchain][tokenSymbol] = {
-                    symbol: tokenSymbol,
-                    usd: 0,
-                    amount: 0
-                }
-            }
-
-            let formattedBalance
-            if (isNative) {
-                formattedBalance = `$${balanceUsd.toFixed(2)} / ${balance.toFixed(3)} ${tokenSymbol}`
-                balances[blockchain][tokenSymbol] = formattedBalance
-            } else {
-                formattedBalance = `$${balance.toFixed(2)}`
-                balances[blockchain]['tokens'][tokenSymbol] = formattedBalance
-            }
-
-            totalBalances[blockchain][tokenSymbol].usd += balanceUsd
-            totalBalances[blockchain][tokenSymbol].amount += balance
+    },
+    'Optimism': {
+        provider: new ethers.providers.JsonRpcProvider('https://optimism.llamarpc.com'),
+        'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
+        'USDT': {
+            address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0x7f5c764cbc14f9669b88837ca1490cca17c31607',
+            decimals: 18
+        },
+        'DAI': {
+            address: '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1',
+            decimals: 18
         }
-    }
-
-    for (const blockchain in balances) {
-        if (balances[blockchain]['tokens'].length > 0) {
-            balances[blockchain]['tokens'] = Object.entries(balances[blockchain]['tokens'])
-                                                    .sort((a, b) => list[a[0]] - list[b[0]])
-        }
-    }
-
-    const walletRow = blockchains.reduce((row, network) => {
-        row[network] = `${balanceNative(balances, network)} | USDT: ${balance(balances, network, 'USDT')} | USDC: ${balance(balances, network, 'USDC')}`
-        return row;
-    }, { index: index, wallet: address, n: index });
-
-    if (isJson) {
-        jsonData.push({
-            n: index,
-            wallet: address,
-            native: balanceNative(balances, network),
-            USDT: balance(balances, network, 'USDT'),
-            USDC: balance(balances, network, 'USDC')
-        })
-    } else {
-        p.addRow(walletRow)
+    },
+    'Polygon': {
+        provider: new ethers.providers.JsonRpcProvider('https://polygon.llamarpc.com'),
+        'USDT': {
+            address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+            decimals: 18
+        },
+        'DAI': {
+            address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
+            decimals: 18
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=MATIC&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'BSC': {
+        provider: new ethers.providers.JsonRpcProvider('https://binance.llamarpc.com'),
+        'USDT': {
+            address: '0x55d398326f99059ff775485246999027b3197955',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
+            decimals: 18
+        },
+        'DAI': {
+            address: '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3',
+            decimals: 18
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=BNB&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'Avalanche': {
+        provider: new ethers.providers.JsonRpcProvider('https://avax.meowrpc.com'),
+        'USDT': {
+            address: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
+            decimals: 18
+        },
+        'DAI': {
+            address: '0xd586E7F844cEa2F87f50152665BCbc2C279D8d70',
+            decimals: 18
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=AVAX&tsyms=USD').then(r => { return r.data.USD})
     }
 }
 
 const wallets = readWallets('./addresses/evm.txt')
-function fetchBalances(network) {
-    const balancePromises = wallets.map((account, index) => balances(account, index, network))
-    return Promise.all(balancePromises)
-}
-
+let walletsData = []
 let csvData = []
+let stables = ['USDT', 'USDC', 'DAI']
+const p = new Table({
+    columns: columns
+})
 
-export async function balancesFetchDataAndPrintTable(network) {
-    if (network) {
-        blockchains = [network]
+async function fetchWallet(wallet, index, network) {
+    const nativeBalanceWei = await networks[network].provider.getBalance(wallet)
+    const nativeBalance = parseInt(nativeBalanceWei)  / Math.pow(10, 18)
+    let walletData = {
+        n: index,
+        wallet: wallet,
+        native: nativeBalance.toFixed(3),
+        usd: (nativeBalance * networks[network].nativePrice).toFixed(2)
     }
 
-    blockchains.forEach(blockchain => {
-        columns.push({
-            name: blockchain, alignment: "right", color: 'cyan'
-        })
+    for (const stable of stables) {
+        let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], networks[network].provider)
+        let balance = await tokenContract.balanceOf(wallet)
+        walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
+        walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
+    }
 
-        headers.push({
-            id: blockchain, title: blockchain
-        })
+    walletsData.push(walletData)
+}
+
+async function fetchWallets(network) {
+    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1, network))
+    return Promise.all(walletPromises)
+}
+
+async function collectData(network) {
+    if (!network) {
+        network = 'ETH'
+    }
+    walletsData = []
+    csvData = []
+    await fetchWallets(network)
+
+    let totalRow = {
+        native: 0,
+        usd: 0,
+        USDT: 0,
+        USDC: 0,
+        DAI: 0,
+    }
+
+    walletsData.forEach((obj) => {
+        for (const key in totalRow) {
+            totalRow[key] += parseFloat(obj[key]) || 0
+        }
+        obj.native = obj.native  + ' ' + getNativeToken(network)
     })
 
-    p = new Table({
-      columns: columns,
-      disabledColumns: ["index"],
-      sort: (row1, row2) => +row1.index - +row2.index
+    for (const key in totalRow) {
+        totalRow[key] = totalRow[key] > 0 ? parseFloat(totalRow[key]).toFixed(key === 'native' ? 3 : 2) : 0
+    }
+
+    totalRow.native = totalRow.native  + ' ' + getNativeToken(network)
+
+    totalRow.n = wallets.length+1
+    totalRow.wallet = 'TOTAL'
+
+    walletsData.push(totalRow)
+
+    columns.push({
+        name: network, alignment: "right", color: 'cyan'
     })
 
-    await fetchBalances()
+    headers.push({
+        id: network, title: network
+    })
 
-    const totalRow = blockchains.reduce((row, network) => {
-        row[network] = `${balanceTotal(totalBalances, network, getNativeToken(network))} | USDT: ${balanceTotalStable(totalBalances, network, 'USDT')} | USDC: ${balanceTotalStable(totalBalances, network, 'USDC')}`
-        return row;
-    }, { index: wallets.length + 3, wallet: 'TOTAL' });
+    walletsData.sort((a, b) => a.n - b.n)
 
+    p.addRows(walletsData)
 
-    p.addRow(totalRow)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
+}
 
-    p.printTable()
-
+async function saveToCsv(network) {
     const csvWriter = createObjectCsvWriter({
-        path: './results/balances.csv',
+        path: `./results/balances_${network}.csv`,
         header: headers
     })
 
@@ -164,24 +220,15 @@ export async function balancesFetchDataAndPrintTable(network) {
         .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
 }
 
+export async function balancesFetchDataAndPrintTable(network) {
+    await collectData(network)
+
+    p.printTable()
+    await saveToCsv(network)
+}
+
 export async function balancesData(network) {
-    isJson = true
-    jsonData = []
-    totalBalances = []
-    if (network) {
-        blockchains = [network]
-    }
-
-    await fetchBalances(network)
-
-    jsonData.push({
-        n: wallets.length+1,
-        index: wallets.length+1,
-        wallet: 'Total',
-        native: balanceTotal(totalBalances, network, getNativeToken(network)),
-        USDT: balanceTotalStable(totalBalances, network, 'USDT'),
-        USDC: balanceTotalStable(totalBalances, network, 'USDC')
-    })
-
-    return jsonData
+    await collectData(network)
+    await saveToCsv(network)
+    return walletsData
 }

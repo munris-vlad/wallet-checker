@@ -69,13 +69,13 @@ Date.prototype.getWeek = function (dowOffset) {
 export function getNativeToken(network) {
     let token = 'ETH'
     switch (network) {
-        case 'polygon':
+        case 'Polygon':
             token = 'MATIC'
             break
-        case 'bsc':
+        case 'BSC':
             token = 'BNB'
             break
-        case 'avalanche':
+        case 'Avalanche':
             token = 'AVAX'
             break
     }
@@ -250,27 +250,27 @@ export const chooiceNetwork = async () => {
             choices: [
                 {
                     name: "Ethereum",
-                    value: "eth",
+                    value: "ETH",
                 },
                 {
                     name: "Arbitrum",
-                    value: "arbitrum",
+                    value: "Arbitrum",
                 },
                 {
                     name: "Optimism",
-                    value: "optimism",
+                    value: "Optimism",
                 },
                 {
                     name: "Polygon",
-                    value: "polygon",
+                    value: "Polygon",
                 },
                 {
                     name: "BSC",
-                    value: "bsc",
+                    value: "BSC",
                 },
                 {
                     name: "Avalanche",
-                    value: "avalanche",
+                    value: "Avalanche",
                 }
             ],
             default: "web",
