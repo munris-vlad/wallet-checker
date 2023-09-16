@@ -301,7 +301,6 @@ let total = {
 }
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-progressBar.start(iterations, 0)
 
 function fetchWallets() {
     const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
@@ -313,14 +312,12 @@ async function saveToCsv() {
         csvData.push(row.text)
     })
 
-    csvWriter.writeRecords(csvData)
-        .then(() => console.log('Запись в CSV файл завершена'))
-        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+    csvWriter.writeRecords(csvData).then().catch()
 }
 
 export async function starknetFetchDataAndPrintTable() {
+    progressBar.start(iterations, 0)
     await fetchWallets()
-
     progressBar.stop()
 
     p.addRow({})

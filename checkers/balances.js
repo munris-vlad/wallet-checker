@@ -215,9 +215,7 @@ async function saveToCsv(network) {
         header: headers
     })
 
-    csvWriter.writeRecords(csvData)
-        .then(() => console.log('Запись в CSV файл завершена'))
-        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+    csvWriter.writeRecords(csvData).then().catch()
 }
 
 export async function balancesFetchDataAndPrintTable(network) {

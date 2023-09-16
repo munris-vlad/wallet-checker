@@ -178,7 +178,6 @@ let total = {
     gas: 0
 }
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-progressBar.start(iterations, 0)
 
 async function fetchWallets() {
     for (let wallet of wallets) {
@@ -254,9 +253,7 @@ async function fetchWallets() {
                 csvData.push(row.text)
             })
 
-            csvWriter.writeRecords(csvData)
-                .then(() => console.log('Запись в CSV файл завершена'))
-                .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+            csvWriter.writeRecords(csvData).then().catch()
 
             if (!isJson) {
                 progressBar.stop()
@@ -277,6 +274,7 @@ async function fetchWallets() {
 }
 
 export async function lineaFetchDataAndPrintTable() {
+    progressBar.start(iterations, 0)
     await fetchWallets()
 }
 

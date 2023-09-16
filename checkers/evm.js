@@ -106,7 +106,6 @@ let csvData = []
 let iteration = 1
 let iterations = wallets.length
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-progressBar.start(iterations, 0)
 
 async function fetchBalances(chain, network) {
     for (let wallet of wallets) {
@@ -147,9 +146,7 @@ async function fetchBalances(chain, network) {
                 ]
             })
 
-            csvWriter.writeRecords(csvData)
-                .then(() => console.log('Запись в CSV файл завершена'))
-                .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+            csvWriter.writeRecords(csvData).then().catch()
 
             if (!isJson) {
                 progressBar.stop()
@@ -160,6 +157,7 @@ async function fetchBalances(chain, network) {
 }
 
 export async function evmFetchDataAndPrintTable(network) {
+    progressBar.start(iterations, 0)
     let chain
     switch (network) {
         case "eth":

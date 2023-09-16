@@ -186,7 +186,7 @@ async function getTxs(wallet) {
         }).catch()
     }
 
-    if (txs.length) {
+    if (stats[wallet].txcount) {
         stats[wallet].first_tx_date = new Date(txs[txs.length - 1].receivedAt)
         stats[wallet].last_tx_date = new Date(txs[0].receivedAt)
         stats[wallet].unique_days = uniqueDays.size
@@ -302,7 +302,6 @@ async function fetchWallet(wallet, index) {
 
 const wallets = readWallets('./addresses/zksync.txt')
 let iterations = wallets.length
-progressBar.start(iterations, 0)
 let iteration = 1
 let csvData = []
 let total = {
@@ -346,12 +345,11 @@ async function saveToCsv() {
         csvData.push(row.text)
     })
 
-    csvWriter.writeRecords(csvData)
-        .then(() => console.log('Запись в CSV файл завершена'))
-        .catch(error => console.error('Произошла ошибка при записи в CSV файл:', error))
+    csvWriter.writeRecords(csvData).then().catch()
 }
 
 export async function zkSyncFetchDataAndPrintTable() {
+    progressBar.start(iterations, 0)
     await fetchWallets()
 
     progressBar.stop()
