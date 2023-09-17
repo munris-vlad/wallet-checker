@@ -288,7 +288,7 @@ async function fetchWallet(wallet, index) {
     iteration++
 }
 
-const wallets = readWallets('./addresses/starknet.txt')
+let wallets = readWallets('./addresses/starknet.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -348,6 +348,7 @@ export async function starknetFetchDataAndPrintTable() {
 }
 
 export async function starknetData() {
+    wallets = readWallets('./addresses/starknet.txt')
     jsonData = []
     total = {
         eth: 0,

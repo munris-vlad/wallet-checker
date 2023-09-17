@@ -178,7 +178,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
     ethPrice = response.data.USD
 })
 
-const wallets = readWallets('./addresses/zora.txt')
+let wallets = readWallets('./addresses/zora.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -214,6 +214,7 @@ export async function zoraFetchDataAndPrintTable() {
 }
 
 export async function zoraData() {
+    wallets = readWallets('./addresses/zora.txt')
     jsonData = []
     totalEth = 0
     await fetchWallets()

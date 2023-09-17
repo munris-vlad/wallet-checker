@@ -100,7 +100,7 @@ async function fetchWallet(address, chain, network) {
     })
 }
 
-const wallets = readWallets('./addresses/evm.txt')
+let wallets = readWallets('./addresses/evm.txt')
 
 let csvData = []
 let iteration = 1
@@ -180,6 +180,7 @@ export async function evmFetchDataAndPrintTable(network) {
 }
 
 export async function evmData(network) {
+    wallets = readWallets('./addresses/evm.txt')
     jsonData = []
     iteration = 1
     total = 0

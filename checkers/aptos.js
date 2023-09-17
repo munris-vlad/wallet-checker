@@ -186,7 +186,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=APT&tsyms=USD
     aptPrice = response.data.USD
 })
 
-const wallets = readWallets('./addresses/aptos.txt')
+let wallets = readWallets('./addresses/aptos.txt')
 let iterations = wallets.length
 let iteration = 1
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
@@ -214,6 +214,7 @@ export async function aptosFetchDataAndPrintTable() {
 }
 
 export async function aptosData() {
+    wallets = readWallets('./addresses/aptos.txt')
     jsonData = []
     await fetchWallets()
     await saveToCsv()

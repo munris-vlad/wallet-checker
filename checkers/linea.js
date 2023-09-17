@@ -165,7 +165,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
     ethPrice = response.data.USD
 })
 
-const wallets = readWallets('./addresses/linea.txt')
+let wallets = readWallets('./addresses/linea.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -279,6 +279,7 @@ export async function lineaFetchDataAndPrintTable() {
 }
 
 export async function lineaData() {
+    wallets = readWallets('./addresses/linea.txt')
     jsonData = []
     iteration = 1
     isJson = true

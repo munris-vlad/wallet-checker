@@ -300,7 +300,7 @@ async function fetchWallet(wallet, index) {
     }
 }
 
-const wallets = readWallets('./addresses/zksync.txt')
+let wallets = readWallets('./addresses/zksync.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -376,6 +376,7 @@ export async function zkSyncFetchDataAndPrintTable() {
 }
 
 export async function zkSyncData() {
+    wallets = readWallets('./addresses/zksync.txt')
     jsonData = []
     total = {
         eth: 0,

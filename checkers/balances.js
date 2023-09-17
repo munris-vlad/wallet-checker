@@ -125,7 +125,7 @@ const networks = {
     }
 }
 
-const wallets = readWallets('./addresses/evm.txt')
+let wallets = readWallets('./addresses/evm.txt')
 let walletsData = []
 let csvData = []
 let stables = ['USDT', 'USDC', 'DAI']
@@ -226,6 +226,7 @@ export async function balancesFetchDataAndPrintTable(network) {
 }
 
 export async function balancesData(network) {
+    wallets = readWallets('./addresses/evm.txt')
     await collectData(network)
     await saveToCsv(network)
     return walletsData
