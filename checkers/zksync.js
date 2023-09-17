@@ -178,7 +178,6 @@ async function getTxs(wallet) {
             let meta = response.data.meta
 
             for (const transfer of Object.values(items)) {
-                // console.log(transfer)
                 if (transfer.type === 'deposit' &&
                     transfer.from.toLowerCase() === wallet.toLowerCase() &&
                     transfer.to.toLowerCase() === wallet.toLowerCase()) {
@@ -319,7 +318,8 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Volume': stats[wallet].volume ? stats[wallet].volume?.toFixed(2) : 0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
-        'Bridge to / from': `${stats[wallet].bridge_to} / ${stats[wallet].bridge_from}`,
+        'Bridge to': stats[wallet].bridge_to,
+        'Bridge from': stats[wallet].bridge_from,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
