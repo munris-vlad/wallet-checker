@@ -161,7 +161,7 @@ async function getTxs(wallet) {
     })
 
     let transactions = await parseTransactions.json()
-    if (transactions.data.transactions) {
+    if (transactions.data) {
         txs = transactions.data.transactions.edges
     }
 
