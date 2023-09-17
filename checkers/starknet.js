@@ -159,57 +159,60 @@ async function getTxs(wallet) {
             },
         }),
     })
+
     let transactions = await parseTransactions.json()
-    txs = transactions.data.transactions.edges
-
-    stats[wallet].txcount = txs.length
-
-    for (const tx of Object.values(txs)) {
-        const date = new Date(tx.node.timestamp * 1000)
-        uniqueDays.add(date.toDateString())
-        uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-        uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-
-        if (tx.node.actual_fee) {
-            totalGasUsed += parseInt(tx.node.actual_fee) / Math.pow(10, 18)
-        }
-
-        if (tx.node.main_calls) {
-            for (const call of Object.values(tx.node.main_calls)) {
-                uniqueContracts.add(call.contract_address)
-                contracts.forEach(contract => {
-                    if (call.contract_address === contract.address) {
-                        for (const data of Object.values(call.calldata_decoded)) {
-                            if (data.name === 'amount') {
-                                let txVolume
-                                let value
-                                if (typeof data.value === 'string') {
-                                    value = data.value
-                                } else {
-                                    value = data.value[0].value
-                                }
-
-                                if (contract.name.includes('ETH')) {
-                                    txVolume = (parseInt(value, 16) / Math.pow(10, contract.decimals)) * ethPrice
-                                    if (txVolume > 10000) { txVolume = 0 }
-                                } else {
-                                    txVolume = parseInt(value, 16) / Math.pow(10, contract.decimals)
-                                }
-                                volume += parseFloat(txVolume.toFixed(4))
-                            }
-                        }
-                    }
-                })
-            }
-        }
+    if (transactions.data.transactions) {
+        txs = transactions.data.transactions.edges
     }
 
-    const numUniqueDays = uniqueDays.size
-    const numUniqueWeeks = uniqueWeeks.size
-    const numUniqueMonths = uniqueMonths.size
-    const numUniqueContracts = uniqueContracts.size
-
     if (txs.length) {
+        stats[wallet].txcount = txs.length
+
+        for (const tx of Object.values(txs)) {
+            const date = new Date(tx.node.timestamp * 1000)
+            uniqueDays.add(date.toDateString())
+            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+
+            if (tx.node.actual_fee) {
+                totalGasUsed += parseInt(tx.node.actual_fee) / Math.pow(10, 18)
+            }
+
+            if (tx.node.main_calls) {
+                for (const call of Object.values(tx.node.main_calls)) {
+                    uniqueContracts.add(call.contract_address)
+                    contracts.forEach(contract => {
+                        if (call.contract_address === contract.address) {
+                            for (const data of Object.values(call.calldata_decoded)) {
+                                if (data.name === 'amount') {
+                                    let txVolume
+                                    let value
+                                    if (typeof data.value === 'string') {
+                                        value = data.value
+                                    } else {
+                                        value = data.value[0].value
+                                    }
+
+                                    if (contract.name.includes('ETH')) {
+                                        txVolume = (parseInt(value, 16) / Math.pow(10, contract.decimals)) * ethPrice
+                                        if (txVolume > 10000) { txVolume = 0 }
+                                    } else {
+                                        txVolume = parseInt(value, 16) / Math.pow(10, contract.decimals)
+                                    }
+                                    volume += parseFloat(txVolume.toFixed(4))
+                                }
+                            }
+                        }
+                    })
+                }
+            }
+        }
+
+        const numUniqueDays = uniqueDays.size
+        const numUniqueWeeks = uniqueWeeks.size
+        const numUniqueMonths = uniqueMonths.size
+        const numUniqueContracts = uniqueContracts.size
+
         stats[wallet].first_tx_date = new Date(txs[txs.length - 1].node.timestamp*1000)
         stats[wallet].last_tx_date = new Date(txs[0].node.timestamp*1000)
         stats[wallet].unique_days = numUniqueDays
