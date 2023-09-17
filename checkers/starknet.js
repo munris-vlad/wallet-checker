@@ -2,7 +2,7 @@ import '../utils/common.js'
 import {
     readWallets,
     starknetApiUrl, starknetBalanceQuery,
-    starknetHeaders, starknetTxQuery,
+    starknetHeaders, starknetTransfersQuery, starknetTxQuery,
 } from '../utils/common.js'
 import axios from "axios"
 import {Table} from 'console-table-printer'
@@ -25,6 +25,7 @@ let columns = [
     { name: 'Volume', alignment: 'right'},
     { name: 'TX Count', alignment: 'right'},
     { name: 'Contracts', alignment: 'right'},
+    { name: 'Bridge to / from', alignment: 'right'},
     { name: 'Days', alignment: 'right'},
     { name: 'Weeks', alignment: 'right'},
     { name: 'Months', alignment: 'right'},
@@ -43,6 +44,7 @@ let headers = [
     { id: 'Volume', title: 'Volume'},
     { id: 'TX Count', title: 'TX Count'},
     { id: 'Contracts', title: 'Contracts'},
+    { id: 'Bridge to / from', title: 'Bridge to / from'},
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
     { id: 'Months', title: 'Months'},
@@ -138,6 +140,7 @@ async function getTxs(wallet) {
     let totalGasUsed = 0
     let volume = 0
     let txs = []
+    let transfers = []
 
     let parseTransactions = await fetch(starknetApiUrl, {
         method: "POST",
@@ -163,6 +166,28 @@ async function getTxs(wallet) {
     let transactions = await parseTransactions.json()
     if (transactions.data) {
         txs = transactions.data.transactions.edges
+    }
+
+    let parseTransfers = await fetch(starknetApiUrl, {
+        method: "POST",
+        headers: starknetHeaders,
+        body: JSON.stringify({
+            query: starknetTransfersQuery,
+            variables: {
+                'first': 30,
+                'after': null,
+                'input': {
+                    'transfer_from_or_to_address': wallet,
+                    'sort_by': 'timestamp',
+                    'order_by': 'desc'
+                }
+            },
+        }),
+    })
+
+    let transfersData = await parseTransfers.json()
+    if (transfersData.data) {
+        transfers = transfersData.data.erc20TransferEvents.edges
     }
 
     if (txs.length) {
@@ -208,6 +233,19 @@ async function getTxs(wallet) {
             }
         }
 
+        let bridgeTo = 0
+        let bridgeFrom = 0
+        for (const transfer of Object.values(transfers)) {
+            // console.log(transfer)
+            if (transfer.node.transfer_from_address === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                bridgeTo++
+            }
+
+            if (transfer.node.transfer_to_address === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                bridgeFrom++
+            }
+        }
+
         const numUniqueDays = uniqueDays.size
         const numUniqueWeeks = uniqueWeeks.size
         const numUniqueMonths = uniqueMonths.size
@@ -221,6 +259,8 @@ async function getTxs(wallet) {
         stats[wallet].unique_contracts = numUniqueContracts
         stats[wallet].total_gas = totalGasUsed
         stats[wallet].volume = volume
+        stats[wallet].bridge_to = bridgeTo
+        stats[wallet].bridge_from = bridgeFrom
     }
 }
 
@@ -253,6 +293,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount ?? 0,
         'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Bridge to / from': `${stats[wallet].bridge_to} / ${stats[wallet].bridge_from}`,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
@@ -281,6 +322,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount ?? 0,
         'Volume': stats[wallet].volume ? stats[wallet].volume?.toFixed(2) : 0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Bridge to / from': `${stats[wallet].bridge_to} / ${stats[wallet].bridge_from}`,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,

@@ -23,8 +23,8 @@
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
                     <td :class="tdClass">{{ item['Months'] }}</td>
-                    <td :class="tdClass">{{ formattedDate(item['First tx']) }}</td>
-                    <td :class="tdClass">{{ formattedDate(item['Last tx']) }}</td>
+                    <td :class="tdClass">{{ formatDate(item['First tx']) }}</td>
+                    <td :class="tdClass">{{ formatDate(item['Last tx']) }}</td>
                     <td :class="tdClass">{{ item['Total gas spent'] }} (${{ item['Total gas spent USDVALUE'] }})</td>
                 </tr>
             </tbody>
@@ -40,7 +40,11 @@
 </template>
 
 <script>
-import moment from "moment"
+
+import {sortMethods} from "@/utils/sorting"
+import {formatDate} from "@/utils/formatDate"
+import {thClass, tdClass} from "@/utils/tableClass"
+
 export default {
     data() {
         return {
@@ -48,8 +52,8 @@ export default {
             isError: false,
             error: '',
             data: [],
-            thClass: 'border-b border-r font-medium dark:border-gray-700 text-xs px-2 py-2',
-            tdClass: 'whitespace-nowrap border-r px-3 py-2 font-regular text-xs dark:border-gray-700',
+            thClass: thClass,
+            tdClass: tdClass,
             sortDirection: 1,
             sortBy: 'n',
             headers: [
@@ -85,6 +89,7 @@ export default {
         },
     },
     methods: {
+        formatDate,
         loadData() {
             this.$axios.get('/api/zksync').then((response) => {
                 this.data = response.data.sort((a, b) => a.n - b.n)
@@ -99,49 +104,11 @@ export default {
             this.sortDirection *= -1
             this.sortData()
         },
-        sortMethods(type, head, direction) {
-            return (a, b) => {
-                if (a.wallet === 'Total' || b.wallet === 'Total') {
-                    if (a.wallet === 'Total' && b.wallet !== 'Total') {
-                        return 1
-                    } else if (a.wallet !== 'Total' && b.wallet === 'Total') {
-                        return -1
-                    } else {
-                        if (type === 'String') {
-                            return direction === 1 ? a[head].localeCompare(b[head]) : b[head].localeCompare(a[head])
-                        } else if (type === 'Number') {
-                            if (head === 'First tx' || head === 'Last tx') {
-                                const dateA = new Date(a[head]).getTime()
-                                const dateB = new Date(b[head]).getTime()
-                                return direction === 1 ? dateA - dateB : dateB - dateA
-                            } else {
-                                return direction === 1 ? Number(b[head]) - Number(a[head]) : Number(a[head]) - Number(b[head])
-                            }
-                        }
-                    }
-                } else {
-                    if (type === 'String') {
-                        return direction === 1 ? a[head].localeCompare(b[head]) : b[head].localeCompare(a[head])
-                    } else if (type === 'Number') {
-                        if (head === 'First tx' || head === 'Last tx') {
-                            const dateA = new Date(a[head]).getTime()
-                            const dateB = new Date(b[head]).getTime()
-                            return direction === 1 ? dateA - dateB : dateB - dateA
-                        } else {
-                            return direction === 1 ? Number(b[head]) - Number(a[head]) : Number(a[head]) - Number(b[head])
-                        }
-                    }
-                }
-            }
-        },
         sortData() {
             const type = this.sortBy === 'name' ? 'String' : 'Number'
             const direction = this.sortDirection
             const head = this.sortBy
-            this.sortedData = this.data.slice().sort(this.sortMethods(type, head, direction))
-        },
-        formattedDate(date) {
-            return date ? moment(date).format('DD.MM.YY') : ''
+            this.sortedData = this.data.slice().sort(sortMethods(type, head, direction))
         }
     },
 }

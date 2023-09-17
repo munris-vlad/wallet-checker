@@ -1,0 +1,2 @@
+export const thClass = 'border-b border-r font-medium dark:border-gray-700 text-xs px-2 py-2 cursor-pointer select-none'
+export const tdClass = 'whitespace-nowrap border-r px-3 py-2 font-regular text-xs dark:border-gray-700'
