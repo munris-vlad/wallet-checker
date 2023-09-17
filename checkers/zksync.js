@@ -116,6 +116,7 @@ async function getTxs(wallet) {
     let txs = []
     let page = 1
     let isAllTxCollected = false
+    let retry = 0
 
     while (!isAllTxCollected) {
         await axios.get(apiUrl + '/transactions', {
@@ -138,7 +139,13 @@ async function getTxs(wallet) {
             } else {
                 page++
             }
-        }).catch()
+        }).catch(e => {
+            retry++
+
+            if (retry === 3) {
+                isAllTxCollected = true
+            }
+        })
     }
 
     for (const tx of Object.values(txs)) {
@@ -154,6 +161,7 @@ async function getTxs(wallet) {
 
     let isAllTransfersCollected = false
     let pageTransfers = 1
+    retry = 0
 
     while (!isAllTransfersCollected) {
         await axios.get(apiUrl + '/address/' + wallet + '/transfers', {
@@ -183,7 +191,13 @@ async function getTxs(wallet) {
             } else {
                 pageTransfers++
             }
-        }).catch()
+        }).catch(e => {
+            retry++
+
+            if (retry === 3) {
+                isAllTxCollected = true
+            }
+        })
     }
 
     if (stats[wallet].txcount) {

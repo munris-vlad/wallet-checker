@@ -116,14 +116,16 @@ async function getBalances(wallet) {
 
     let balancesParse = await parseBalances.json()
 
-    const balances = balancesParse.data.erc20BalancesByOwnerAddress
+    if (balancesParse.data) {
+        const balances = balancesParse.data.erc20BalancesByOwnerAddress
 
-    if (balances) {
-        Object.values(balances).forEach(balance => {
-            if (filterSymbol.includes(balance.contract_erc20_contract.symbol)) {
-                stats[wallet].balances[balance.contract_erc20_contract.symbol] = balance.balance_display
-            }
-        })
+        if (balances) {
+            Object.values(balances).forEach(balance => {
+                if (filterSymbol.includes(balance.contract_erc20_contract.symbol)) {
+                    stats[wallet].balances[balance.contract_erc20_contract.symbol] = balance.balance_display
+                }
+            })
+        }
     }
 }
 
