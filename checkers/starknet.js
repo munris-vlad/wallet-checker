@@ -281,8 +281,8 @@ async function fetchWallet(wallet, index) {
         'Months': stats[wallet].unique_months ?? 0,
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
-        'Total gas spent': stats[wallet].total_gas.toFixed(4),
-        'Total gas spent USDVALUE': usdGasValue
+        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
+        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0
     })
 
     iteration++
