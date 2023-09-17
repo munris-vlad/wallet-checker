@@ -236,7 +236,6 @@ async function getTxs(wallet) {
         let bridgeTo = 0
         let bridgeFrom = 0
         for (const transfer of Object.values(transfers)) {
-            // console.log(transfer)
             if (transfer.node.transfer_from_address === '0x0000000000000000000000000000000000000000000000000000000000000000') {
                 bridgeTo++
             }

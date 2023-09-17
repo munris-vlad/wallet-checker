@@ -16,9 +16,10 @@ const app = createApp(App)
 
 app.config.globalProperties.$axios = axios.create({
   baseURL: 'http://'+window.location.host,
+  // baseURL: 'http://localhost:3000',
 })
 
-await axios.get('/api/stats').then((response) => {
+await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     let data = response.data
     app.config.globalProperties.$zk_count = data.zksync_wallets.length
     app.config.globalProperties.$stark_count = data.starknet_wallets.length

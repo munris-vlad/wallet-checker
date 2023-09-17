@@ -20,6 +20,7 @@ let headers = [
     { id: 'TX Count', title: 'TX Count'},
     { id: 'Volume', title: 'Volume'},
     { id: 'Contracts', title: 'Contracts'},
+    { id: 'Bridge to / from', title: 'Bridge to / from'},
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
     { id: 'Months', title: 'Months'},
@@ -39,6 +40,7 @@ let columns = [
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
     { name: 'Volume', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
+    { name: 'Bridge to / from', alignment: 'right'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
     { name: 'Months', alignment: 'right', color: 'cyan'},
@@ -113,6 +115,8 @@ async function getTxs(wallet) {
 
     let totalGasUsed = 0
     let totalValue = 0
+    let bridgeTo = 0
+    let bridgeFrom = 0
     let txs = []
     let page = 1
     let isAllTxCollected = false
@@ -174,6 +178,19 @@ async function getTxs(wallet) {
             let meta = response.data.meta
 
             for (const transfer of Object.values(items)) {
+                // console.log(transfer)
+                if (transfer.type === 'deposit' &&
+                    transfer.from.toLowerCase() === wallet.toLowerCase() &&
+                    transfer.to.toLowerCase() === wallet.toLowerCase()) {
+                    bridgeTo++
+                }
+
+                if (transfer.type === 'withdrawal' &&
+                    transfer.from.toLowerCase() === wallet.toLowerCase() &&
+                    transfer.to.toLowerCase() === wallet.toLowerCase()) {
+                    bridgeFrom++
+                }
+
                 if (transfer.token && transfer.from.toLowerCase() === wallet.toLowerCase()) {
                     if (stableSymbol.includes(transfer.token.symbol)) {
                         let amount = parseInt(transfer.amount) / Math.pow(10, transfer.token.decimals)
@@ -209,6 +226,8 @@ async function getTxs(wallet) {
         stats[wallet].unique_contracts = uniqueContracts.size
         stats[wallet].total_gas = totalGasUsed
         stats[wallet].volume = totalValue
+        stats[wallet].bridge_to = bridgeTo
+        stats[wallet].bridge_from = bridgeFrom
     }
 }
 
@@ -273,6 +292,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Bridge to / from': `${stats[wallet].bridge_to} / ${stats[wallet].bridge_from}`,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
@@ -299,6 +319,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Volume': stats[wallet].volume ? stats[wallet].volume?.toFixed(2) : 0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Bridge to / from': `${stats[wallet].bridge_to} / ${stats[wallet].bridge_from}`,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
