@@ -236,16 +236,18 @@ async function getTxs(wallet) {
         let bridgeTo = 0
         let bridgeFrom = 0
         for (const transfer of Object.values(transfers)) {
-            if (transfer.node.transfer_from_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
-                transfer.node.main_call.selector_identifier === 'handle_deposit'
-            ) {
-                bridgeTo++
-            }
+            if (transfer.node.main_call) {
+                if (transfer.node.transfer_from_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
+                    transfer.node.main_call.selector_identifier === 'handle_deposit'
+                ) {
+                    bridgeTo++
+                }
 
-            if (transfer.node.transfer_to_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
-                transfer.node.main_call.selector_identifier === 'initiate_withdraw'
-            ) {
-                bridgeFrom++
+                if (transfer.node.transfer_to_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
+                    transfer.node.main_call.selector_identifier === 'initiate_withdraw'
+                ) {
+                    bridgeFrom++
+                }
             }
         }
 
