@@ -67,6 +67,16 @@ let protocolsData = [
         url: 'https://sithswap.com/'
     },
     {
+        address: '0x010884171baf1914edc28d7afb619b40a4051cfae78a094a55d230f19e944a28',
+        name: 'myswap',
+        url: 'https://zklend.com/'
+    },
+    {
+        address: '0x01b23ed400b210766111ba5b1e63e33922c6ba0c45e6ad56ce112e5f4c578e62',
+        name: 'fibrous.finance',
+        url: 'https://fibrous.finance/'
+    },
+    {
         address: '0x04c0a5193d58f74fbace4b74dcf65481e734ed1714121bdc571da345540efa05',
         name: 'zklend',
         url: 'https://zklend.com/'
@@ -244,7 +254,7 @@ async function getTxs(wallet) {
         body: JSON.stringify({
             query: starknetTransfersQuery,
             variables: {
-                'first': 30,
+                'first': 1000,
                 'after': null,
                 'input': {
                     'transfer_from_or_to_address': wallet,

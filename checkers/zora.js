@@ -16,6 +16,7 @@ const csvWriter = createObjectCsvWriter({
         { id: 'wallet', title: 'wallet'},
         { id: 'ETH', title: 'ETH'},
         { id: 'TX Count', title: 'TX Count'},
+        { id: 'Zora.co NFT', title: 'Zora.co NFT'},
         { id: 'Collection count', title: 'Collection count'},
         { id: 'NFT count', title: 'NFT count'},
         { id: 'Days', title: 'Days'},
@@ -32,6 +33,7 @@ const p = new Table({
         { name: 'wallet', color: 'green', alignment: "right"},
         { name: 'ETH', alignment: 'right', color: 'cyan'},
         { name: 'TX Count', alignment: 'right', color: 'cyan'},
+        { name: 'Zora.co NFT', alignment: 'right', color: 'cyan'},
         { name: 'Collection count', alignment: 'right', color: 'cyan'},
         { name: 'NFT count', alignment: 'right', color: 'cyan'},
         { name: 'Days', alignment: 'right', color: 'cyan'},
@@ -105,12 +107,17 @@ async function getTxs(wallet) {
     }
 
     stats[wallet].txcount = txs.length
+    let zoraNftCount = 0
 
     Object.values(txs).forEach(tx => {
         const date = new Date(tx.timestamp)
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+
+        if (parseInt(tx.value) === 777000000000000) {
+            zoraNftCount++
+        }
     })
 
     const numUniqueDays = uniqueDays.size
@@ -123,6 +130,7 @@ async function getTxs(wallet) {
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
+        stats[wallet].zora_nft = zoraNftCount
     }
 }
 
@@ -146,6 +154,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Collection count': stats[wallet].collection_count,
         'NFT count': stats[wallet].nft_count,
+        'Zora.co NFT': stats[wallet].zora_nft,
         'Days': stats[wallet].unique_days,
         'Weeks': stats[wallet].unique_weeks,
         'Months': stats[wallet].unique_months,
@@ -162,6 +171,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Collection count': stats[wallet].collection_count ?? 0,
         'NFT count': stats[wallet].nft_count ?? 0,
+        'Zora.co NFT': stats[wallet].zora_nft,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,

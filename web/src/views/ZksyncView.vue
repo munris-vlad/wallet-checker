@@ -20,10 +20,10 @@
                     <td :class="tdClass">{{ item['n'] }}</td>
                     <td :class="tdClass + ' text-left'">
                         <strong>{{ item['wallet'] }}</strong>
-                        <div class="flex space-x-2 pt-3 pb-3 select-none" v-if="isShowProtocols">
+                        <div class="flex space-x-2 pt-3 pb-4 select-none" v-if="isShowProtocols">
                             <div class="h-4 w-4 text-center" v-for="(info, protocol) in item['Protocols']" :key="protocol" :title="protocol">
                                 <a :href="info.url" target="_blank">
-                                    <img class="rounded-full" :src="'/'+protocol+'.png'" :alt="protocol">
+                                    <img class="rounded-full mb-1" :src="'/'+protocol+'.png'" :alt="protocol">
                                     <span class="text-xs protocol-text">{{ info.count }}</span>
                                 </a>
                             </div>
@@ -144,6 +144,6 @@ export default {
 </script>
 <style>
 .protocol-text {
-    font-size: 0.5rem;
+    font-size: 0.7rem;
 }
 </style>

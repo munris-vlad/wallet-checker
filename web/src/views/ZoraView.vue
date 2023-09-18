@@ -15,6 +15,7 @@
                     <td :class="tdClass + ' text-left'"><strong>{{ item['wallet'] }}</strong></td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.001 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
+                    <td :class="tdClass">{{ item['Zora.co NFT'] }}</td>
                     <td :class="tdClass">{{ item['Collection count'] }}</td>
                     <td :class="tdClass">{{ item['NFT count'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
@@ -57,6 +58,7 @@ export default {
                 'Wallet',
                 'ETH',
                 'TX Count',
+                'Zora.co NFT',
                 'Collection count',
                 'NFT count',
                 'Days',
