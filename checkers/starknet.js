@@ -15,6 +15,69 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
     ethPrice = response.data.USD
 })
 
+let protocolsData = [
+    {
+        address: '0x03090623ea32d932ca1236595076b00702e7d860696faf300ca9eb13bfe0a78c',
+        name: 'aspect',
+        url: 'https://aspect.co/'
+    },
+    {
+        address: '0x05dbdedc203e92749e2e746e2d40a768d966bd243df04a6b712e222bc040a9af',
+        name: 'starknetid',
+        url: 'https://app.starknet.id/'
+    },
+    {
+        address: '0x6ac597f8116f886fa1c97a23fa4e08299975ecaf6b598873ca6792b9bbfb678',
+        name: 'starknetid',
+        url: 'https://app.starknet.id/'
+    },
+    {
+        address: '0x04942ebdc9fc996a42adb4a825e9070737fe68cef32a64a616ba5528d457812e',
+        name: 'starknetid',
+        url: 'https://app.starknet.id/'
+    },
+    {
+        address: '0x04942ebdc9fc996a42adb4a825e9070737fe68cef32a64a616ba5528d457812e',
+        name: 'mintsquare',
+        url: 'https://mintsquare.io/'
+    },
+    {
+        address: '0x041fd22b238fa21cfcf5dd45a8548974d8263b3a531a60388411c5e230f97023',
+        name: 'jediswap',
+        url: 'https://www.jediswap.xyz/'
+    },
+    {
+        address: '0x07a6f98c03379b9513ca84cca1373ff452a7462a3b61598f0af5bb27ad7f76d1',
+        name: '10kswap',
+        url: 'https://10kswap.com/'
+    },
+    {
+        address: '0x070f8a4fcd75190661ca09a7300b7c93fab93971b67ea712c664d7948a8a54c6',
+        name: 'nostra',
+        url: 'https://nostra.finance/'
+    },
+    {
+        address: '0x04270219d365d6b017231b52e92b3fb5d7c8378b05e9abc97724537a80e93b0f',
+        name: 'avnu',
+        url: 'https://www.avnu.fi/'
+    },
+    {
+        address: '0x028c858a586fa12123a1ccb337a0a3b369281f91ea00544d0c086524b759f627',
+        name: 'sithswap',
+        url: 'https://sithswap.com/'
+    },
+    {
+        address: '0x04c0a5193d58f74fbace4b74dcf65481e734ed1714121bdc571da345540efa05',
+        name: 'zklend',
+        url: 'https://zklend.com/'
+    },
+    {
+        address: '0x0454f0bd015e730e5adbb4f080b075fdbf55654ff41ee336203aa2e1ac4d4309',
+        name: 'dmail',
+        url: 'https://dmail.ai/'
+    },
+]
+
 let columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
@@ -142,6 +205,13 @@ async function getTxs(wallet) {
     let txs = []
     let transfers = []
 
+    let protocols = {}
+    protocolsData.forEach(protocol => {
+        protocols[protocol.name] = {}
+        protocols[protocol.name].count = 0
+        protocols[protocol.name].url = protocol.url
+    })
+
     let parseTransactions = await fetch(starknetApiUrl, {
         method: "POST",
         headers: starknetHeaders,
@@ -206,6 +276,11 @@ async function getTxs(wallet) {
             if (tx.node.main_calls) {
                 for (const call of Object.values(tx.node.main_calls)) {
                     uniqueContracts.add(call.contract_address)
+                    let protocol = protocolsData.find(protocol => protocol.address.toLowerCase() === call.contract_address.toLowerCase())
+
+                    if (protocol) {
+                        protocols[protocol.name].count++
+                    }
                     contracts.forEach(contract => {
                         if (call.contract_address === contract.address) {
                             for (const data of Object.values(call.calldata_decoded)) {
@@ -266,6 +341,7 @@ async function getTxs(wallet) {
         stats[wallet].volume = volume
         stats[wallet].bridge_to = bridgeTo
         stats[wallet].bridge_from = bridgeFrom
+        stats[wallet].protocols = protocols
     }
 }
 
@@ -335,7 +411,8 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
-        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0
+        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0,
+        'Protocols': stats[wallet].protocols
     })
 
     iteration++

@@ -3,6 +3,12 @@
         <div class="min-w-full text-center header pb-4 pt-4">
             <h1 class="text-3xl">Starknet</h1>
         </div>
+        <div class="pb-1 pt-4 pl-0" v-if="isDataLoaded && !isError">
+            <div class="text-gray-500 hover:text-gray-600 px-2 cursor-pointer select-none pl-0 w-32" @click="toggleProtocol">
+                <span v-if="isShowProtocols">Hide</span>
+                <span v-if="!isShowProtocols">Show</span> protocols
+            </div>
+        </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700" v-if="isDataLoaded && !isError">
             <thead class="border-b font-medium dark:border-gray-700">
                 <tr>
@@ -12,7 +18,17 @@
             <tbody>
                 <tr v-for="(item, index) in sortedData" :key="index" class="border-b dark:border-gray-700">
                     <td :class="tdClass">{{ item['n'] }}</td>
-                    <td :class="tdClass + ' text-left'"><strong>{{ item['wallet'] }}</strong></td>
+                    <td :class="tdClass + ' text-left'">
+                        <strong>{{ item['wallet'] }}</strong>
+                        <div class="flex space-x-2 pt-3 pb-3 select-none" v-if="isShowProtocols">
+                            <div class="h-4 w-4 text-center" v-for="(info, protocol) in item['Protocols']" :key="protocol" :title="protocol">
+                                <a :href="info.url" target="_blank">
+                                    <img class="rounded-full" :src="'/'+protocol+'.png'" :alt="protocol">
+                                    <span class="text-xs protocol-text">{{ info.count }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.001 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
@@ -52,6 +68,7 @@ export default {
         return {
             isDataLoaded: false,
             isError: false,
+            isShowProtocols: true,
             error: '',
             data: [],
             thClass: thClass,
@@ -81,6 +98,10 @@ export default {
     },
     created() {
         this.loadData()
+        const storedState = localStorage.getItem('show_protocols')
+        if (storedState !== undefined) {
+            this.isShowProtocols = storedState !== 'false'
+        }
     },
     computed: {
         sortedData: {
@@ -113,6 +134,10 @@ export default {
             const direction = this.sortDirection
             const head = this.sortBy
             this.sortedData = this.data.slice().sort(sortMethods(type, head, direction))
+        },
+        toggleProtocol() {
+            this.isShowProtocols = !this.isShowProtocols
+            localStorage.setItem('show_protocols', this.isShowProtocols)
         }
     },
 }

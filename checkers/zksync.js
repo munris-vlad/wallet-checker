@@ -49,6 +49,139 @@ let columns = [
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'}
 ]
 
+let contracts = [
+    {
+        address: '0xf2DAd89f2788a8CD54625C60b55cD3d2D0ACa7Cb',
+        name: 'syncswap',
+        url: 'https://syncswap.xyz/'
+    },
+    {
+        address: '0x2da10A1e27bF85cEdD8FFb1AbBe97e53391C0295',
+        name: 'syncswap',
+        url: 'https://syncswap.xyz/'
+    },
+    {
+        address: '0x80115c708e12edd42e504c1cd52aea96c547c05c',
+        name: 'syncswap',
+        url: 'https://syncswap.xyz/'
+    },
+    {
+        address: '0x8B791913eB07C32779a16750e3868aA8495F5964',
+        name: 'mute',
+        url: 'https://mute.io/'
+    },
+    {
+        address: '0xDFAaB828f5F515E104BaaBa4d8D554DA9096f0e4',
+        name: 'mute',
+        url: 'https://mute.io/'
+    },
+    {
+        address: '0xbE7D1FD1f6748bbDefC4fbaCafBb11C6Fc506d1d',
+        name: 'spacefi',
+        url: 'https://swap-zksync.spacefi.io/'
+    },
+    {
+        address: '0x39E098A153Ad69834a9Dac32f0FCa92066aD03f4',
+        name: 'maverick',
+        url: 'https://mav.xyz/'
+    },
+    {
+        address: '0x9606eC131EeC0F84c95D82c9a63959F2331cF2aC',
+        name: 'izumi',
+        url: 'https://zksync.izumi.finance/'
+    },
+    {
+        address: '0xA269031037B4D5fa3F771c401D19E57def6Cb491',
+        name: 'odos',
+        url: 'https://odos.xyz/'
+    },
+    {
+        address: '0x4bba932e9792a2b917d47830c93a9bc79320e4f7',
+        name: 'odos',
+        url: 'https://odos.xyz/'
+    },
+    {
+        address: '0xd999E16e68476bC749A28FC14a0c3b6d7073F50c',
+        name: 'velocore',
+        url: 'https://velocore.xyz/'
+    },
+    {
+        address: '0xF29Eb540eEba673f8Fb6131a7C7403C8e4C3f143',
+        name: 'velocore',
+        url: 'https://velocore.xyz/'
+    },
+    {
+        address: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+        name: 'orbiter',
+        url: 'https://www.orbiter.finance/'
+    },
+    {
+        address: '0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8',
+        name: 'orbiter',
+        url: 'https://www.orbiter.finance/'
+    },
+    {
+        address: '0xf8b59f3c3Ab33200ec80a8A58b2aA5F5D2a8944C',
+        name: 'pancake',
+        url: 'https://pancakeswap.finance/'
+    },
+    {
+        address: '0x8b5193BCaE3032766bEc9d07ecDB9E56aefBff0F',
+        name: 'zkname',
+        url: 'https://zkns.domains/'
+    },
+    {
+        address: '0x981F198286E40F9979274E0876636E9144B8FB8E',
+        name: 'dmail',
+        url: 'https://dmail.ai/'
+    },
+    {
+        address: '0xfd505702b37Ae9b626952Eb2DD736d9045876417',
+        name: 'woofi',
+        url: 'https://fi.woo.org/'
+    },
+    {
+        address: '0x30E63157bD0bA74C814B786F6eA2ed9549507b46',
+        name: 'woofi',
+        url: 'https://fi.woo.org/'
+    },
+    {
+        address: '0x7ee459d7fde8b4a3c22b9c8c7aa52abaddd9ffd5',
+        name: 'bungee',
+        url: 'https://www.bungee.exchange/'
+    },
+    {
+        address: '0x22d8b71599e14f20a49a397b88c1c878c86f5579',
+        name: 'eralend',
+        url: 'https://www.eralend.com/'
+    },
+    {
+        address: '0xc955d5fa053d88e7338317cc6589635cd5b2cf09',
+        name: 'eralend',
+        url: 'https://www.eralend.com/'
+    },
+    {
+        address: '0x1e8F1099a3fe6D2c1A960528394F4fEB8f8A288D',
+        name: 'basilisk',
+        url: 'https://basilisk.org/'
+    },
+    {
+        address: '0x4085f99720e699106bc483dab6caed171eda8d15',
+        name: 'basilisk',
+        url: 'https://basilisk.org/'
+    },
+    {
+        address: '0x50b2b7092bcc15fbb8ac74fe9796cf24602897ad',
+        name: 'tevaera',
+        url: 'https://tevaera.com/'
+    },
+    {
+        address: '0x1Ecd053f681a51E37087719653f3f0FFe54750C0',
+        name: 'omnisea',
+        url: 'https://omnisea.xyz/'
+    },
+]
+
 const args = process.argv.slice(2)
 
 if (!args.includes('no-lite')) {
@@ -113,6 +246,13 @@ async function getTxs(wallet) {
     const uniqueMonths = new Set()
     const uniqueContracts = new Set()
 
+    let protocols = {}
+    contracts.forEach(contract => {
+        protocols[contract.name] = {}
+        protocols[contract.name].count = 0
+        protocols[contract.name].url = contract.url
+    })
+
     let totalGasUsed = 0
     let totalValue = 0
     let bridgeTo = 0
@@ -154,13 +294,18 @@ async function getTxs(wallet) {
 
     for (const tx of Object.values(txs)) {
         const date = new Date(tx.receivedAt)
-        let value = parseInt(tx.value) / Math.pow(10, 18)
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
         uniqueContracts.add(tx.to)
         stats[wallet].txcount++
         totalGasUsed += parseInt(tx.fee) / Math.pow(10, 18)
+
+        let contract = contracts.find(contract => contract.address.toLowerCase() === tx.to.toLowerCase())
+
+        if (contract) {
+            protocols[contract.name].count++
+        }
     }
 
     let isAllTransfersCollected = false
@@ -227,6 +372,7 @@ async function getTxs(wallet) {
         stats[wallet].volume = totalValue
         stats[wallet].bridge_to = bridgeTo
         stats[wallet].bridge_from = bridgeFrom
+        stats[wallet].protocols = protocols
     }
 }
 
@@ -301,8 +447,8 @@ async function fetchWallet(wallet, index) {
     }
 
     if (!args.includes('no-lite')) {
-        row['Lite ETH'] = stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})`
-        row['Lite TX'] = stats[wallet].lite_tx
+        row['Lite ETH'] = stats[wallet].lite_eth ? stats[wallet].lite_eth.toFixed(4) + ` ($${usdLiteEthValue})` : 0
+        row['Lite TX'] = stats[wallet].lite_tx ? stats[wallet].lite_tx : 0
         row['Lite last TX'] = stats[wallet].lite_last_tx ? moment(stats[wallet].lite_last_tx).format("DD.MM.YY") : ''
     }
 
@@ -326,7 +472,8 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4): 0,
-        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0
+        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0,
+        'Protocols': stats[wallet].protocols
     })
 
     iteration++
@@ -441,6 +588,5 @@ export async function zkSyncData() {
     jsonData.push(row)
 
     await saveToCsv()
-
     return jsonData
 }
