@@ -1,5 +1,6 @@
 import '../utils/common.js'
 import {
+    getKeyByValue,
     readWallets,
     starknetApiUrl, starknetBalanceQuery,
     starknetHeaders, starknetTransfersQuery, starknetTxQuery,
@@ -443,8 +444,30 @@ let total = {
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 function fetchWallets() {
-    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    const batchSize = 50
+    const batchCount = Math.ceil(wallets.length / batchSize)
+
+    const walletPromises = [];
+
+    for (let i = 0; i < batchCount; i++) {
+        const startIndex = i * batchSize
+        const endIndex = (i + 1) * batchSize
+        const batch = wallets.slice(startIndex, endIndex)
+
+        const promise = new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(fetchBatch(batch))
+            }, i * 5000)
+        })
+
+        walletPromises.push(promise)
+    }
+
     return Promise.all(walletPromises)
+}
+
+async function fetchBatch(batch) {
+    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
 }
 
 async function saveToCsv() {

@@ -2,7 +2,7 @@ import '../utils/common.js'
 import {
     sleep,
     readWallets,
-    getBalance
+    getBalance, getKeyByValue
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -216,10 +216,6 @@ const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC', 'ETH']
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-
-function getKeyByValue(object, value) {
-    return Object.keys(object).find((key) => object[key] === value);
-}
 
 async function getBalances(wallet) {
     filterSymbol.forEach(symbol => {
@@ -496,7 +492,7 @@ let total = {
 }
 
 function fetchWallets() {
-    const batchSize = 50
+    const batchSize = 250
     const batchCount = Math.ceil(wallets.length / batchSize)
 
     const walletPromises = [];

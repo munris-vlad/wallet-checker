@@ -319,3 +319,7 @@ export const evmNetwork = async () => {
     const answers = await inquirer.prompt(questions)
     return answers.choice
 }
+
+export function getKeyByValue(object, value) {
+    return Object.keys(object).find((key) => object[key] === value);
+}
