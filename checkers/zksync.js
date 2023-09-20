@@ -492,7 +492,7 @@ let total = {
 }
 
 function fetchWallets() {
-    const batchSize = 250
+    const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
 
     const walletPromises = [];

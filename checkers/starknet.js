@@ -444,7 +444,7 @@ let total = {
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 function fetchWallets() {
-    const batchSize = 50
+    const batchSize = 250
     const batchCount = Math.ceil(wallets.length / batchSize)
 
     const walletPromises = [];
