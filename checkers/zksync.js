@@ -213,7 +213,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 let stats = []
 let jsonData = []
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
-const stableSymbol = ['USDT', 'USDC', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC', 'ETH']
+const stableSymbol = ['USDT', 'USDC', 'BUSD', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC', 'ETH']
 
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
