@@ -19,6 +19,7 @@
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
                     <td :class="tdClass">{{ item['Destination chains'] }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
+                    <td :class="tdClass">{{ item['Months'] }}</td>
                 </tr>
             </tbody>
         </table>
@@ -58,6 +59,7 @@ export default {
                 'Source chains',
                 'Destination chains',
                 'Contracts',
+                'Months',
             ]
         }
     },

@@ -16,6 +16,7 @@ const csvWriter = createObjectCsvWriter({
         { id: 'Source chains', title: 'Networks'},
         { id: 'Destination chains', title: 'Networks'},
         { id: 'Contracts', title: 'Contracts'},
+        { id: 'Months', title: 'Months'},
 
     ]
 })
@@ -30,6 +31,7 @@ const p = new Table({
         { name: 'Source chains', alignment: 'right', color: 'cyan'},
         { name: 'Destination chains', alignment: 'right', color: 'cyan'},
         { name: 'Contracts', alignment: 'right', color: 'cyan'},
+        { name: 'Months', alignment: 'right', color: 'cyan'},
     ],
     sort: (row1, row2) => +row1.n - +row2.n
 })
@@ -47,7 +49,8 @@ async function fetchWallet(wallet, index) {
         distinctMonth: 0,
         networks: 0,
         contracts: 0,
-        destChains: 0
+        destChains: 0,
+        distinctMonths: 0
     }
 
     await axios.post(apiUrl, {
@@ -70,7 +73,8 @@ async function fetchWallet(wallet, index) {
         'Volume': data.volume,
         'Source chains': data.networks,
         'Destination chains': data.destChains,
-        'Contracts': data.contracts
+        'Contracts': data.contracts,
+        'Months': data.distinctMonths
     }
 
     p.addRow(row)
