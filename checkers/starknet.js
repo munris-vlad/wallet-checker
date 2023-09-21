@@ -70,7 +70,7 @@ let protocolsData = [
     {
         address: '0x010884171baf1914edc28d7afb619b40a4051cfae78a094a55d230f19e944a28',
         name: 'myswap',
-        url: 'https://zklend.com/'
+        url: 'https://www.myswap.xyz/'
     },
     {
         address: '0x01b23ed400b210766111ba5b1e63e33922c6ba0c45e6ad56ce112e5f4c578e62',

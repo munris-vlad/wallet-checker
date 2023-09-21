@@ -11,6 +11,7 @@ import {lineaData} from "./checkers/linea.js"
 import {balancesData} from "./checkers/balances.js"
 import {evmData} from "./checkers/evm.js"
 import {readWallets} from "./utils/common.js"
+import {layerzeroData} from "./checkers/layerzero.js"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,6 +32,7 @@ app.get('*', (req, res) => {
 apiRoutes.get('/stats', async (req, res) => {
     const starknetWallets = readWallets('./addresses/starknet.txt')
     const zksyncWallets = readWallets('./addresses/zksync.txt')
+    const layerzeroWallets = readWallets('./addresses/layerzero.txt')
     const zoraWallets = readWallets('./addresses/zora.txt')
     const aptosWallets = readWallets('./addresses/aptos.txt')
     const lineaWallets = readWallets('./addresses/linea.txt')
@@ -38,6 +40,7 @@ apiRoutes.get('/stats', async (req, res) => {
     res.json({
         'starknet_wallets': starknetWallets,
         'zksync_wallets': zksyncWallets,
+        'layerzero_wallets': layerzeroWallets,
         'zora_wallets': zoraWallets,
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
@@ -52,6 +55,11 @@ apiRoutes.get('/zksync', async (req, res) => {
 
 apiRoutes.get('/starknet', async (req, res) => {
     const responseData = await starknetData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/layerzero', async (req, res) => {
+    const responseData = await layerzeroData()
     res.json(responseData)
 })
 

@@ -9,6 +9,7 @@ import {evmFetchDataAndPrintTable} from "./checkers/evm.js"
 import {filterFetchDataAndPrintTable} from "./checkers/filter.js"
 import {nftFetchDataAndPrintTable} from "./checkers/nft.js"
 import {exec} from "child_process"
+import {layerzeroFetchDataAndPrintTable} from "./checkers/layerzero.js";
 
 function startExpressServer() {
     const expressServer = exec('node server.js', (error, stdout, stderr) => {
@@ -39,6 +40,10 @@ async function startMenu() {
             break
         case "starknet":
             await starknetFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+            await startMenu()
+            break
+        case "layerzero":
+            await layerzeroFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             await startMenu()
             break
         case "zora":

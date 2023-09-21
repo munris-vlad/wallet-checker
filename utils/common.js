@@ -205,6 +205,10 @@ export const entryPoint = async () => {
                     value: "starknet",
                 },
                 {
+                    name: "Layerzero",
+                    value: "layerzero",
+                },
+                {
                     name: "Zora",
                     value: "zora",
                 },
