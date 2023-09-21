@@ -81,7 +81,6 @@ async function fetchWallet(wallet, index) {
     jsonData.push(row)
 
     iteration++
-    await sleep(100)
 }
 
 let wallets = readWallets('./addresses/layerzero.txt')
@@ -92,7 +91,7 @@ let totalEth = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 function fetchWallets() {
-    const batchSize = 20
+    const batchSize = 15
     const batchCount = Math.ceil(wallets.length / batchSize)
 
     const walletPromises = [];
@@ -105,7 +104,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 2000)
+            }, i * 3000)
         })
 
         walletPromises.push(promise)
