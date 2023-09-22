@@ -153,10 +153,12 @@ async function fetchWallet(wallet, index, network) {
     walletData['DAI'] = 0
 
     for (const stable of stables) {
-        let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], networks[network].provider)
-        let balance = await tokenContract.balanceOf(wallet)
-        walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
-        walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
+        if (networks[network][stable]) {
+            let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], networks[network].provider)
+            let balance = await tokenContract.balanceOf(wallet)
+            walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
+            walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
+        }
     }
 
     walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
