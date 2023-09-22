@@ -4,6 +4,7 @@ import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
+import moment from "moment"
 
 const csvWriter = createObjectCsvWriter({
     path: './results/layerzero.csv',
@@ -20,6 +21,7 @@ const csvWriter = createObjectCsvWriter({
         { id: 'Weeks', title: 'Weeks'},
         { id: 'Months', title: 'Months'},
         { id: 'First TX', title: 'First TX'},
+        { id: 'Last TX', title: 'Last TX'},
     ]
 })
 
@@ -37,6 +39,7 @@ const p = new Table({
         { name: 'Weeks', alignment: 'right', color: 'cyan'},
         { name: 'Months', alignment: 'right', color: 'cyan'},
         { name: 'First TX', alignment: 'right', color: 'cyan'},
+        { name: 'Last TX', alignment: 'right', color: 'cyan'},
     ],
     sort: (row1, row2) => +row1.n - +row2.n
 })
@@ -67,9 +70,24 @@ async function fetchWallet(wallet, index) {
     }).then(response => {
         data = response.data
         progressBar.update(iteration)
-        let row
 
-        row = {
+        p.addRow({
+            n: parseInt(index)+1,
+            Wallet: wallet,
+            Rank: data.rank,
+            'TX Count': data.tx_count,
+            'Volume': data.volume,
+            'Source chains': data.source_chain,
+            'Destination chains': data.dest_chain,
+            'Contracts': data.contracts,
+            'Days': data.days,
+            'Weeks': data.weeks,
+            'Months': data.month,
+            'First TX': moment((data.first_tx)).format("DD.MM.YY"),
+            'Last TX': moment((data.last_tx)).format("DD.MM.YY"),
+        })
+
+        jsonData.push({
             n: parseInt(index)+1,
             Wallet: wallet,
             Rank: data.rank,
@@ -83,10 +101,7 @@ async function fetchWallet(wallet, index) {
             'Months': data.month,
             'First TX': data.first_tx,
             'Last TX': data.last_tx,
-        }
-
-        p.addRow(row)
-        jsonData.push(row)
+        })
 
         iteration++
     }).catch(function (e) {
