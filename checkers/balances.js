@@ -54,6 +54,10 @@ const networks = {
             address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
             decimals: 18
         },
+        'USDC.e': {
+            address: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+            decimals: 6
+        },
         'DAI': {
             address: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
             decimals: 18
@@ -82,7 +86,7 @@ const networks = {
             decimals: 6
         },
         'USDC': {
-            address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+            address: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
             decimals: 18
         },
         'DAI': {
@@ -95,7 +99,7 @@ const networks = {
         provider: new ethers.providers.JsonRpcProvider('https://binance.llamarpc.com'),
         'USDT': {
             address: '0x55d398326f99059ff775485246999027b3197955',
-            decimals: 6
+            decimals: 18
         },
         'USDC': {
             address: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
@@ -128,7 +132,7 @@ const networks = {
 let wallets = readWallets('./addresses/evm.txt')
 let walletsData = []
 let csvData = []
-let stables = ['USDT', 'USDC', 'DAI']
+let stables = ['USDT', 'USDC', 'USDC.e', 'DAI']
 const p = new Table({
     columns: columns
 })
@@ -143,12 +147,20 @@ async function fetchWallet(wallet, index, network) {
         usd: (nativeBalance * networks[network].nativePrice).toFixed(2)
     }
 
+    walletData['USDC'] = 0
+    walletData['USDC.e'] = 0
+    walletData['USDT'] = 0
+    walletData['DAI'] = 0
+
     for (const stable of stables) {
         let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], networks[network].provider)
         let balance = await tokenContract.balanceOf(wallet)
         walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
         walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
     }
+
+    walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
+    delete walletData['USDC.e']
 
     walletsData.push(walletData)
 }
