@@ -56,7 +56,8 @@ async function fetchWallet(wallet, index) {
         days: 0,
         weeks: 0,
         month: 0,
-        first_tx: ''
+        first_tx: '',
+        last_tx: ''
     }
 
     await axios.get(apiUrl, {
@@ -80,7 +81,8 @@ async function fetchWallet(wallet, index) {
             'Days': data.days,
             'Weeks': data.weeks,
             'Months': data.month,
-            'First TX': data.first_tx
+            'First TX': data.first_tx,
+            'Last TX': data.last_tx,
         }
 
         p.addRow(row)

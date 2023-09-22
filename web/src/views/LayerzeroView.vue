@@ -23,6 +23,7 @@
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
                     <td :class="tdClass">{{ item['Months'] }}</td>
                     <td :class="tdClass">{{ formatDate(item['First TX']) }}</td>
+                    <td :class="tdClass">{{ formatDate(item['Last TX']) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -66,6 +67,7 @@ export default {
                 'Weeks',
                 'Months',
                 'First TX',
+                'Last TX',
             ]
         }
     },
