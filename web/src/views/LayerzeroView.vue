@@ -19,7 +19,10 @@
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
                     <td :class="tdClass">{{ item['Destination chains'] }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
+                    <td :class="tdClass">{{ item['Days'] }}</td>
+                    <td :class="tdClass">{{ item['Weeks'] }}</td>
                     <td :class="tdClass">{{ item['Months'] }}</td>
+                    <td :class="tdClass">{{ formatDate(item['First TX']) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -59,7 +62,10 @@ export default {
                 'Source chains',
                 'Destination chains',
                 'Contracts',
+                'Days',
+                'Weeks',
                 'Months',
+                'First TX',
             ]
         }
     },

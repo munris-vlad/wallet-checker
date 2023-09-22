@@ -16,8 +16,10 @@ const csvWriter = createObjectCsvWriter({
         { id: 'Source chains', title: 'Networks'},
         { id: 'Destination chains', title: 'Networks'},
         { id: 'Contracts', title: 'Contracts'},
+        { id: 'Days', title: 'Days'},
+        { id: 'Weeks', title: 'Weeks'},
         { id: 'Months', title: 'Months'},
-
+        { id: 'First TX', title: 'First TX'},
     ]
 })
 
@@ -31,67 +33,73 @@ const p = new Table({
         { name: 'Source chains', alignment: 'right', color: 'cyan'},
         { name: 'Destination chains', alignment: 'right', color: 'cyan'},
         { name: 'Contracts', alignment: 'right', color: 'cyan'},
+        { name: 'Days', alignment: 'right', color: 'cyan'},
+        { name: 'Weeks', alignment: 'right', color: 'cyan'},
         { name: 'Months', alignment: 'right', color: 'cyan'},
+        { name: 'First TX', alignment: 'right', color: 'cyan'},
     ],
     sort: (row1, row2) => +row1.n - +row2.n
 })
 
-const apiUrl = "https://api.nftcopilot.com/layer-zero-rank/check"
-
-let stats = []
+const apiUrl = "http://65.109.29.224:3000/api/data"
 let jsonData = []
-
 
 async function fetchWallet(wallet, index) {
     let data = {
-        txsCount: 0,
+        wallet: '',
+        rank: 0,
+        tx_count: 0,
         volume: 0,
-        distinctMonth: 0,
-        networks: 0,
+        source_chain: 0,
+        dest_chain: 0,
         contracts: 0,
-        destChains: 0,
-        distinctMonths: 0
+        days: 0,
+        weeks: 0,
+        month: 0,
+        first_tx: ''
     }
 
-    await axios.post(apiUrl, {
-        address: wallet
+    await axios.get(apiUrl, {
+        params: {
+            wallet: wallet
+        }
     }).then(response => {
         data = response.data
+        progressBar.update(iteration)
+        let row
 
+        row = {
+            n: parseInt(index)+1,
+            Wallet: wallet,
+            Rank: data.rank,
+            'TX Count': data.tx_count,
+            'Volume': data.volume,
+            'Source chains': data.source_chain,
+            'Destination chains': data.dest_chain,
+            'Contracts': data.contracts,
+            'Days': data.days,
+            'Weeks': data.weeks,
+            'Months': data.month,
+            'First TX': data.first_tx
+        }
+
+        p.addRow(row)
+        jsonData.push(row)
+
+        iteration++
     }).catch(function (e) {
-        console.log(e.toString())
+        console.log(e)
     })
-
-    progressBar.update(iteration)
-    let row
-
-    row = {
-        n: parseInt(index)+1,
-        Wallet: wallet,
-        Rank: data.rank,
-        'TX Count': data.txsCount,
-        'Volume': data.volume,
-        'Source chains': data.networks,
-        'Destination chains': data.destChains,
-        'Contracts': data.contracts,
-        'Months': data.distinctMonths
-    }
-
-    p.addRow(row)
-    jsonData.push(row)
-
-    iteration++
 }
 
 let wallets = readWallets('./addresses/layerzero.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
-let totalEth = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 function fetchWallets() {
-    const batchSize = 15
+    const batchSize = 100
     const batchCount = Math.ceil(wallets.length / batchSize)
 
     const walletPromises = [];
@@ -104,7 +112,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 3000)
+            }, i * 100000)
         })
 
         walletPromises.push(promise)
@@ -138,7 +146,6 @@ export async function layerzeroFetchDataAndPrintTable() {
 export async function layerzeroData() {
     wallets = readWallets('./addresses/layerzero.txt')
     jsonData = []
-    totalEth = 0
 
     await fetchWallets()
     await saveToCsv()
