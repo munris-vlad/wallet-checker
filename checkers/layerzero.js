@@ -127,9 +127,7 @@ function fetchWallets() {
         const batch = wallets.slice(startIndex, endIndex)
 
         const promise = new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(fetchBatch(batch))
-            }, i * 100000)
+            resolve(fetchBatch(batch))
         })
 
         walletPromises.push(promise)
