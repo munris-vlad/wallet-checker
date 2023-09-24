@@ -121,11 +121,27 @@ const networks = {
             address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
             decimals: 18
         },
+        'USDC.e': {
+            address: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664',
+            decimals: 18
+        },
         'DAI': {
             address: '0xd586E7F844cEa2F87f50152665BCbc2C279D8d70',
             decimals: 18
         },
         'nativePrice': await axios.get(priceApi+'?fsym=AVAX&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'Core': {
+        provider: new ethers.providers.JsonRpcProvider('https://rpc.coredao.org'),
+        'USDT': {
+            address: '0x900101d06a7426441ae63e9ab3b9b0f63be145f1',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0xa4151b2b3e269645181dccf2d426ce75fcbdeca9',
+            decimals: 6
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=CORE&tsyms=USD').then(r => { return r.data.USD})
     }
 }
 

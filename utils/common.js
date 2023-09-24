@@ -78,6 +78,9 @@ export function getNativeToken(network) {
         case 'Avalanche':
             token = 'AVAX'
             break
+        case 'Core':
+            token = 'CORE'
+            break
     }
 
     return token
@@ -276,6 +279,10 @@ export const chooiceNetwork = async () => {
                 {
                     name: "Avalanche",
                     value: "Avalanche",
+                },
+                {
+                    name: "Core",
+                    value: "Core",
                 }
             ],
             default: "web",
