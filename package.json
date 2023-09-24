@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node index.js",
+    "web": "node index.js web",
     "zksync": "node checkers/zksync.js",
     "starknet": "node checkers/starknet.js",
     "aptos": "node checkers/aptos.js",

@@ -79,4 +79,11 @@ async function startMenu() {
     }
 }
 
-await startMenu()
+const args = process.argv.slice(2)
+const mode = args[0]
+
+if (mode === 'web') {
+    startExpressServer()
+} else {
+    await startMenu()
+}
