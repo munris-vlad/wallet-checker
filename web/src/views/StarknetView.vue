@@ -19,7 +19,12 @@
                 <tr v-for="(item, index) in sortedData" :key="index" class="border-b dark:border-gray-700">
                     <td :class="tdClass">{{ item['n'] }}</td>
                     <td :class="tdClass + ' text-left'">
-                        <strong>{{ item['wallet'] }}</strong>
+                        <div class="flex space-x-2 pt-3 pb-2">
+                            <strong>{{ item['wallet'] }}</strong>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'Total'">
+                                <a target="_blank" :href="'https://starkscan.co/contract/'+item['wallet']"><img class="rounded-full mb-1" :src="'/stark-scan.png'" alt=""></a>
+                            </div>
+                        </div>
                         <div class="flex space-x-2 pt-3 pb-4 select-none" v-if="isShowProtocols">
                             <div class="h-4 w-4 text-center" v-for="(info, protocol) in item['Protocols']" :key="protocol" :title="protocol">
                                 <a :href="info.url" target="_blank">

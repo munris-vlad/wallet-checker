@@ -28,7 +28,35 @@
             <tbody>
                 <tr v-for="(item, index) in tableData" :key="index" class="border-b dark:border-gray-700">
                     <td :class="tdClass">{{ item['n'] }}</td>
-                    <td :class="tdClass + ' text-left'"><strong>{{ item['wallet'] }}</strong></td>
+                    <td :class="tdClass + ' text-left'">
+                        <div class="flex space-x-2 pt-3 pb-2">
+                            <strong>{{ item['wallet'] }}</strong>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL'">
+                                <a target="_blank" :href="'https://debank.com/profile/'+item['wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'ETH'">
+                                <a target="_blank" :href="'https://etherscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Arbitrum'">
+                                <a target="_blank" :href="'https://arbiscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/arb-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Optimism'">
+                                <a target="_blank" :href="'https://optimistic.etherscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/op-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Polygon'">
+                                <a target="_blank" :href="'https://polygonscan.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/polygon-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'BSC'">
+                                <a target="_blank" :href="'https://bscscan.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/bsc-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Avalanche'">
+                                <a target="_blank" :href="'https://avascan.info/blockchain/c/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/ava-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Core'">
+                                <a target="_blank" :href="'https://scan.coredao.org/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/core-scan.png'" alt=""></a>
+                            </div>
+                        </div>
+                    </td>
                     <td :class="[tdClass, parseFloat(item['native']) < 0.005 ? 'text-red-500' : '']">{{ item['native'] }} (${{ item['usd'] }})</td>
                     <td :class="tdClass">${{ item['USDT'] }}</td>
                     <td :class="tdClass">${{ item['USDC'] }}</td>

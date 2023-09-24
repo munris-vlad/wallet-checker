@@ -12,7 +12,17 @@
             <tbody>
                 <tr v-for="(item, index) in sortedData" :key="index" class="border-b dark:border-gray-700">
                     <td :class="tdClass">{{ item['n'] }}</td>
-                    <td :class="tdClass + ' text-left'"><strong>{{ item['wallet'] }}</strong></td>
+                    <td :class="tdClass + ' text-left'">
+                        <div class="flex space-x-2 pt-3 pb-2">
+                            <strong>{{ item['wallet'] }}</strong>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'Total'">
+                                <a target="_blank" :href="'https://debank.com/profile/'+item['wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'Total'">
+                                <a target="_blank" :href="'https://explorer.zora.energy/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/zora-scan.png'" alt=""></a>
+                            </div>
+                        </div>
+                    </td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.001 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Zora.co NFT'] }}</td>

@@ -12,7 +12,17 @@
             <tbody>
                 <tr v-for="(item, index) in sortedData" :key="index" class="border-b dark:border-gray-700">
                     <td :class="tdClass">{{ item['n'] }}</td>
-                    <td :class="tdClass + ' text-left'"><strong>{{ item['wallet'] }}</strong></td>
+                    <td :class="tdClass + ' text-left'">
+                        <div class="flex space-x-2 pt-3 pb-2">
+                            <strong>{{ item['wallet'] }}</strong>
+                            <div class="h-4 w-4">
+                                <a target="_blank" :href="'https://debank.com/profile/'+item['wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4">
+                                <a target="_blank" :href="'https://lineascan.build/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/linea-scan.png'" alt=""></a>
+                            </div>
+                        </div>
+                    </td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.005 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>

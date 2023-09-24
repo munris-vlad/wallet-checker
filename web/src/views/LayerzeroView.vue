@@ -12,7 +12,14 @@
             <tbody>
                 <tr v-for="(item, index) in sortedData" :key="index" class="border-b dark:border-gray-700">
                     <td :class="tdClass">{{ item['n'] }}</td>
-                    <td :class="tdClass + ' text-left'"><strong>{{ item['Wallet'] }}</strong></td>
+                    <td :class="tdClass + ' text-left'">
+                        <div class="flex space-x-2 pt-3 pb-2">
+                            <strong>{{ item['Wallet'] }}</strong>
+                            <div class="h-4 w-4">
+                                <a target="_blank" :href="'https://debank.com/profile/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
+                            </div>
+                        </div>
+                    </td>
                     <td :class="tdClass">{{ item['Rank'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">${{ item['Volume'] }}</td>
