@@ -72,6 +72,9 @@ export function getNativeToken(network) {
         case 'Polygon':
             token = 'MATIC'
             break
+        case 'polygon':
+            token = 'MATIC'
+            break
         case 'BSC':
             token = 'BNB'
             break

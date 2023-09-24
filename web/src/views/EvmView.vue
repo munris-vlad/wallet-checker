@@ -24,8 +24,23 @@
                     <td :class="tdClass + ' text-left'">
                         <div class="flex space-x-2 pt-3 pb-2">
                             <strong>{{ item['Wallet'] }}</strong>
-                            <div class="h-4 w-4">
+                            <div class="h-4 w-4" v-if="item['Wallet'] !== 'Total'">
                                 <a target="_blank" :href="'https://debank.com/profile/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['Wallet'] !== 'Total' && activeNetwork === 'eth'">
+                                <a target="_blank" :href="'https://etherscan.io/address/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['Wallet'] !== 'Total' && activeNetwork === 'arbitrum'">
+                                <a target="_blank" :href="'https://arbiscan.io/address/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/arb-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['Wallet'] !== 'Total' && activeNetwork === 'optimism'">
+                                <a target="_blank" :href="'https://optimistic.etherscan.io/address/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/op-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['Wallet'] !== 'Total' && activeNetwork === 'polygon'">
+                                <a target="_blank" :href="'https://polygonscan.com/address/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/polygon-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['Wallet'] !== 'Total' && activeNetwork === 'bsc'">
+                                <a target="_blank" :href="'https://bscscan.com/address/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/bsc-scan.png'" alt=""></a>
                             </div>
                         </div>
                     </td>
