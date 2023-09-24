@@ -70,7 +70,9 @@ async function getBalances(wallet) {
                 stats[wallet].nft_count += parseInt(token.value)
             }
         })
-    }).catch()
+    }).catch(e => {
+        console.log(e.toString())
+    })
 }
 
 async function getTxs(wallet) {
