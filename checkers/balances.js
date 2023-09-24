@@ -154,13 +154,18 @@ const p = new Table({
 })
 
 async function fetchWallet(wallet, index, network) {
-    const nativeBalanceWei = await networks[network].provider.getBalance(wallet)
-    const nativeBalance = parseInt(nativeBalanceWei)  / Math.pow(10, 18)
+    let nativeBalance = 0
+
+    try {
+        const nativeBalanceWei = await networks[network].provider.getBalance(wallet)
+        nativeBalance = parseInt(nativeBalanceWei)  / Math.pow(10, 18)
+    } catch (e) {}
+
     let walletData = {
         n: index,
         wallet: wallet,
         native: nativeBalance.toFixed(3),
-        usd: (nativeBalance * networks[network].nativePrice).toFixed(2)
+        usd: nativeBalance > 0 ? (nativeBalance * networks[network].nativePrice).toFixed(2) : 0
     }
 
     walletData['USDC'] = 0
@@ -168,17 +173,19 @@ async function fetchWallet(wallet, index, network) {
     walletData['USDT'] = 0
     walletData['DAI'] = 0
 
-    for (const stable of stables) {
-        if (networks[network][stable]) {
-            let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], networks[network].provider)
-            let balance = await tokenContract.balanceOf(wallet)
-            walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
-            walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
+    try {
+        for (const stable of stables) {
+            if (networks[network][stable]) {
+                let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], networks[network].provider)
+                let balance = await tokenContract.balanceOf(wallet)
+                walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
+                walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
+            }
         }
-    }
 
-    walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
-    delete walletData['USDC.e']
+        walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
+        delete walletData['USDC.e']
+    } catch (e) {}
 
     walletsData.push(walletData)
 }
