@@ -83,8 +83,8 @@ async function fetchWallet(wallet, index) {
             'Days': data.days,
             'Weeks': data.weeks,
             'Months': data.month,
-            'First TX': moment((data.first_tx)).format("DD.MM.YY"),
-            'Last TX': moment((data.last_tx)).format("DD.MM.YY"),
+            'First TX': data.first_tx ? moment((data.first_tx)).format("DD.MM.YY") : '-',
+            'Last TX': data.last_tx ? moment((data.last_tx)).format("DD.MM.YY") : '-',
         })
 
         jsonData.push({
