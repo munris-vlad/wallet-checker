@@ -49,7 +49,9 @@ async function fetchWallet(address, chain, network) {
             const result = response.toJSON()
 
             for (const tx of result.result) {
-                txs.push(tx)
+                if (tx.from_address.toLowerCase() === address.toLowerCase()) {
+                    txs.push(tx)
+                }
             }
 
             cursor = response.pagination.cursor
@@ -58,15 +60,13 @@ async function fetchWallet(address, chain, network) {
     } catch (e) {}
 
     for (const tx of txs) {
-        if (tx.from_address === address.toLowerCase()) {
-            totalTx++
-            totalSpent += tx.gas_price * tx.gas
-            if (tx.block_timestamp) {
-                const date = new Date(tx.block_timestamp)
-                uniqueDays.add(date.toDateString())
-                uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-                uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-            }
+        totalTx++
+        totalSpent += tx.gas_price * tx.gas
+        if (tx.block_timestamp) {
+            const date = new Date(tx.block_timestamp)
+            uniqueDays.add(date.toDateString())
+            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
         }
     }
 
