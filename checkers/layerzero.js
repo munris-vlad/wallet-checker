@@ -50,7 +50,6 @@ let jsonData = []
 async function fetchWallet(wallet, index) {
     let data = {
         wallet: '',
-        rank: 0,
         tx_count: 0,
         volume: 0,
         source_chain: 0,
@@ -74,7 +73,6 @@ async function fetchWallet(wallet, index) {
         p.addRow({
             n: parseInt(index)+1,
             Wallet: wallet,
-            Rank: data.rank,
             'TX Count': data.tx_count,
             'Volume': data.volume,
             'Source chains': data.source_chain,

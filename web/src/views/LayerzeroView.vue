@@ -20,7 +20,6 @@
                             </div>
                         </div>
                     </td>
-                    <td :class="tdClass">{{ item['Rank'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">${{ item['Volume'] }}</td>
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
@@ -64,7 +63,6 @@ export default {
             headers: [
                 'n',
                 'Wallet',
-                'Rank',
                 'TX Count',
                 'Volume',
                 'Source chains',
