@@ -11,7 +11,6 @@ const csvWriter = createObjectCsvWriter({
     header: [
         { id: 'n', title: '№'},
         { id: 'Wallet', title: 'Wallet'},
-        { id: 'Rank', title: 'Rank'},
         { id: 'TX Count', title: 'TX Count'},
         { id: 'Volume', title: 'Volume'},
         { id: 'Source chains', title: 'Networks'},
@@ -29,7 +28,6 @@ const p = new Table({
     columns: [
         { name: 'n', color: 'green', alignment: "right"},
         { name: 'Wallet', color: 'green', alignment: "right"},
-        { name: 'Rank', alignment: 'right', color: 'cyan'},
         { name: 'TX Count', alignment: 'right', color: 'cyan'},
         { name: 'Volume', alignment: 'right', color: 'cyan'},
         { name: 'Source chains', alignment: 'right', color: 'cyan'},
@@ -62,49 +60,53 @@ async function fetchWallet(wallet, index) {
         last_tx: ''
     }
 
-    await axios.get(apiUrl, {
-        params: {
-            wallet: wallet
-        }
-    }).then(response => {
-        data = response.data
-        progressBar.update(iteration)
+    let isParsed = false
+    
+    while (!isParsed) {
+        await axios.get(apiUrl, {
+            params: {
+                wallet: wallet
+            }
+        }).then(response => {
+            data = response.data
+            progressBar.update(iteration)
 
-        p.addRow({
-            n: parseInt(index)+1,
-            Wallet: wallet,
-            'TX Count': data.tx_count,
-            'Volume': data.volume,
-            'Source chains': data.source_chain,
-            'Destination chains': data.dest_chain,
-            'Contracts': data.contracts,
-            'Days': data.days,
-            'Weeks': data.weeks,
-            'Months': data.month,
-            'First TX': data.first_tx ? moment((data.first_tx)).format("DD.MM.YY") : '-',
-            'Last TX': data.last_tx ? moment((data.last_tx)).format("DD.MM.YY") : '-',
+            p.addRow({
+                n: parseInt(index)+1,
+                Wallet: wallet,
+                'TX Count': data.tx_count,
+                'Volume': data.volume,
+                'Source chains': data.source_chain,
+                'Destination chains': data.dest_chain,
+                'Contracts': data.contracts,
+                'Days': data.days,
+                'Weeks': data.weeks,
+                'Months': data.month,
+                'First TX': data.first_tx ? moment((data.first_tx)).format("DD.MM.YY") : '-',
+                'Last TX': data.last_tx ? moment((data.last_tx)).format("DD.MM.YY") : '-',
+            })
+
+            jsonData.push({
+                n: parseInt(index)+1,
+                Wallet: wallet,
+                'TX Count': data.tx_count,
+                'Volume': data.volume,
+                'Source chains': data.source_chain,
+                'Destination chains': data.dest_chain,
+                'Contracts': data.contracts,
+                'Days': data.days,
+                'Weeks': data.weeks,
+                'Months': data.month,
+                'First TX': data.first_tx,
+                'Last TX': data.last_tx,
+            })
+
+            isParsed = true
+            iteration++
+        }).catch(function (e) {
+            
         })
-
-        jsonData.push({
-            n: parseInt(index)+1,
-            Wallet: wallet,
-            Rank: data.rank,
-            'TX Count': data.tx_count,
-            'Volume': data.volume,
-            'Source chains': data.source_chain,
-            'Destination chains': data.dest_chain,
-            'Contracts': data.contracts,
-            'Days': data.days,
-            'Weeks': data.weeks,
-            'Months': data.month,
-            'First TX': data.first_tx,
-            'Last TX': data.last_tx,
-        })
-
-        iteration++
-    }).catch(function (e) {
-        console.log(e)
-    })
+    }
 }
 
 let wallets = readWallets('./addresses/layerzero.txt')
@@ -114,7 +116,7 @@ let csvData = []
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 function fetchWallets() {
-    const batchSize = 100
+    const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
 
     const walletPromises = [];
@@ -125,7 +127,9 @@ function fetchWallets() {
         const batch = wallets.slice(startIndex, endIndex)
 
         const promise = new Promise((resolve) => {
-            resolve(fetchBatch(batch))
+            setTimeout(() => {
+                resolve(fetchBatch(batch))
+            }, i * 5000)
         })
 
         walletPromises.push(promise)
