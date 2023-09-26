@@ -376,7 +376,7 @@ async function fetchWallet(wallet, index) {
     let row
 
     row = {
-        n: index,
+        n: parseInt(index)+1,
         wallet: wallet,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -404,7 +404,7 @@ async function fetchWallet(wallet, index) {
     }
 
     jsonData.push({
-        n: index,
+        n: parseInt(index)+1,
         wallet: wallet,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
