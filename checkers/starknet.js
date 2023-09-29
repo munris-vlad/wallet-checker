@@ -78,6 +78,11 @@ let protocolsData = [
         url: 'https://fibrous.finance/'
     },
     {
+        address: '0x03201e8057a781dca378564b9d3bbe9b5b7617fac4ad9d9deaa1024cf63f877e',
+        name: 'fibrous.finance',
+        url: 'https://fibrous.finance/'
+    },
+    {
         address: '0x04c0a5193d58f74fbace4b74dcf65481e734ed1714121bdc571da345540efa05',
         name: 'zklend',
         url: 'https://zklend.com/'
