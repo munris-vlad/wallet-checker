@@ -1,0 +1,245 @@
+import '../utils/common.js'
+import {readWallets, getBalance} from '../utils/common.js'
+import axios from "axios"
+import { Table } from 'console-table-printer'
+import { createObjectCsvWriter } from 'csv-writer'
+import moment from 'moment'
+import cliProgress from 'cli-progress'
+
+const csvWriter = createObjectCsvWriter({
+    path: './results/base.csv',
+    header: [
+        { id: 'n', title: '№'},
+        { id: 'wallet', title: 'wallet'},
+        { id: 'ETH', title: 'ETH'},
+        { id: 'TX Count', title: 'TX Count'},
+        { id: 'Volume', title: 'Volume'},
+        { id: 'Contracts', title: 'Contracts'},
+        { id: 'Days', title: 'Days'},
+        { id: 'Weeks', title: 'Weeks'},
+        { id: 'Months', title: 'Months'},
+        { id: 'First tx', title: 'First tx'},
+        { id: 'Last tx', title: 'Last tx'},
+        { id: 'Total gas spent', title: 'Total gas spent'},
+    ]
+})
+
+const p = new Table({
+    columns: [
+        { name: 'n', color: 'green', alignment: "right"},
+        { name: 'wallet', color: 'green', alignment: "right"},
+        { name: 'ETH', alignment: 'right', color: 'cyan'},
+        { name: 'TX Count', alignment: 'right', color: 'cyan'},
+        { name: 'Volume', alignment: 'right', color: 'cyan'},
+        { name: 'Contracts', alignment: 'right', color: 'cyan'},
+        { name: 'Days', alignment: 'right', color: 'cyan'},
+        { name: 'Weeks', alignment: 'right', color: 'cyan'},
+        { name: 'Months', alignment: 'right', color: 'cyan'},
+        { name: 'First tx', alignment: 'right', color: 'cyan'},
+        { name: 'Last tx', alignment: 'right', color: 'cyan'},
+        { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
+    ],
+    sort: (row1, row2) => +row1.n - +row2.n
+})
+
+const apiUrl = "https://base.blockscout.com/api/v2"
+
+let stats = []
+let jsonData = []
+let totalGas = 0
+const filterSymbol = ['USDC', 'DAI']
+
+async function getBalances(wallet) {
+    await axios.get(apiUrl+'/addresses/'+wallet).then(response => {
+        stats[wallet].balance = getBalance(response.data.coin_balance, 18)
+    }).catch(function (error) {
+        console.log(error)
+    })
+
+    await axios.get(apiUrl+'/addresses/'+wallet+'/token-balances').then(response => {
+        let tokens = response.data
+
+        Object.values(tokens).forEach(token => {
+            
+        })
+    }).catch(e => {
+        console.log(e.toString())
+    })
+}
+
+async function getTxs(wallet) {
+    const uniqueDays = new Set()
+    const uniqueWeeks = new Set()
+    const uniqueMonths = new Set()
+    const uniqueContracts = new Set()
+
+    let txs = []
+    let params = {
+        block_number: '',
+        index: '',
+        items_count: ''
+    }
+    let isAllTxCollected = false
+
+    while (!isAllTxCollected) {
+        await axios.get(apiUrl+'/addresses/'+wallet+'/transactions', {
+            params: params.block_number === '' ? {} : params
+        }).then(response => {
+            let items = response.data.items
+            Object.values(items).forEach(tx => {
+                if (tx.from.hash.toLowerCase() == wallet.toLowerCase() && tx.result === 'success') {
+                    txs.push(tx)
+                }
+            })
+
+            if (response.data.next_page_params === null) {
+                isAllTxCollected = true
+            } else {
+                params = response.data.next_page_params
+            }
+        }).catch(function (e) {
+            isAllTxCollected = true
+        })
+    }
+
+    stats[wallet].txcount = txs.length
+    let totalFee = 0
+    let volume = 0
+    Object.values(txs).forEach(tx => {
+        const date = new Date(tx.timestamp)
+        uniqueDays.add(date.toDateString())
+        uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+        uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+        uniqueContracts.add(tx.to.hash)
+        totalFee += parseInt(tx.fee.value) / Math.pow(10, 18)
+        volume += (parseInt(tx.value) / Math.pow(10, 18)) * ethPrice
+    })
+
+    const numUniqueDays = uniqueDays.size
+    const numUniqueWeeks = uniqueWeeks.size
+    const numUniqueMonths = uniqueMonths.size
+
+    if (txs.length) {
+        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].timestamp)
+        stats[wallet].last_tx_date = new Date(txs[0].timestamp)
+        stats[wallet].unique_days = numUniqueDays
+        stats[wallet].unique_weeks = numUniqueWeeks
+        stats[wallet].unique_months = numUniqueMonths
+        stats[wallet].unique_contracts = uniqueContracts.size
+        stats[wallet].totalFee = totalFee
+        stats[wallet].volume = volume
+    }
+}
+
+async function fetchWallet(wallet, index) {
+    stats[wallet] = {
+        balance: 0,
+    }
+
+    await getBalances(wallet)
+    await getTxs(wallet)
+    progressBar.update(iteration)
+    let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
+    let usdFeeEthValue = (stats[wallet].totalFee*ethPrice).toFixed(2)
+    totalGas += stats[wallet].totalFee > 0 ? stats[wallet].totalFee : 0
+    totalEth += stats[wallet].balance
+
+    let row
+    row = {
+        n: index,
+        wallet: wallet,
+        'ETH': stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})`,
+        'TX Count': stats[wallet].txcount,
+        'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
+        'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Days': stats[wallet].unique_days ?? 0,
+        'Weeks': stats[wallet].unique_weeks ?? 0,
+        'Months': stats[wallet].unique_months ?? 0,
+        'First tx': stats[wallet].first_tx_date ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '-',
+        'Last tx': stats[wallet].last_tx_date ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '-',
+        'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) + ` ($${usdFeeEthValue})` : 0,
+    }
+
+    p.addRow(row)
+    jsonData.push({
+        n: index,
+        wallet: wallet,
+        'ETH': stats[wallet].balance.toFixed(4),
+        'ETH USDVALUE': usdEthValue,
+        'TX Count': stats[wallet].txcount,
+        'Volume': stats[wallet].volume ? stats[wallet].volume.toFixed(2) : '-',
+        'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Days': stats[wallet].unique_days ?? 0,
+        'Weeks': stats[wallet].unique_weeks ?? 0,
+        'Months': stats[wallet].unique_months ?? 0,
+        'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
+        'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
+        'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) : 0,
+        'Total gas spent USDVALUE': stats[wallet].totalFee ? usdFeeEthValue : 0
+    })
+
+    iteration++
+}
+
+let ethPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
+    ethPrice = response.data.USD
+})
+
+let wallets = readWallets('./addresses/base.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+let totalEth = 0
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+
+function fetchWallets() {
+    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    return Promise.all(walletPromises)
+}
+
+async function saveToCsv() {
+    p.table.rows.map((row) => {
+        csvData.push(row.text)
+    })
+
+    csvData.sort((a, b) => a.n - b.n)
+
+    csvWriter.writeRecords(csvData).then().catch()
+}
+
+export async function baseFetchDataAndPrintTable() {
+    progressBar.start(iterations, 0)
+    await fetchWallets()
+    progressBar.stop()
+
+    let row = {
+        wallet: 'Total',
+        'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
+        'Total gas spent': totalGas.toFixed(4) + ` ($${(totalGas*ethPrice).toFixed(2)})`,
+    }
+    p.addRow(row)
+    p.printTable()
+
+    await saveToCsv()
+}
+
+export async function baseData() {
+    wallets = readWallets('./addresses/base.txt')
+    jsonData = []
+    totalEth = 0
+    totalGas = 0
+    await fetchWallets()
+
+    jsonData.push({
+        wallet: 'Total',
+        'ETH': totalEth.toFixed(4),
+        'ETH USDVALUE': (totalEth*ethPrice).toFixed(2),
+        'Total gas spent': totalGas.toFixed(4),
+        'Total gas spent USDVALUE': (totalGas*ethPrice).toFixed(2),
+    })
+
+    await saveToCsv()
+
+    return jsonData
+}
