@@ -9,7 +9,7 @@ import {evmFetchDataAndPrintTable} from "./checkers/evm.js"
 import {filterFetchDataAndPrintTable} from "./checkers/filter.js"
 import {nftFetchDataAndPrintTable} from "./checkers/nft.js"
 import {exec} from "child_process"
-import {layerzeroFetchDataAndPrintTable} from "./checkers/layerzero.js";
+import {layerzeroFetchDataAndPrintTable} from "./checkers/layerzero.js"
 import { baseFetchDataAndPrintTable } from "./checkers/base.js"
 
 function startExpressServer() {

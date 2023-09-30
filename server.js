@@ -14,8 +14,8 @@ import {evmData} from "./checkers/evm.js"
 import {readWallets} from "./utils/common.js"
 import {layerzeroData} from "./checkers/layerzero.js"
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const app = express()
 const port = 80
@@ -99,5 +99,5 @@ apiRoutes.get('/evm', async (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Чекер запущен: http://localhost`);
+  console.log(`Чекер запущен: http://localhost`)
 })

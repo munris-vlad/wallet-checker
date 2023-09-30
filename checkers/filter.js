@@ -1,6 +1,6 @@
 import { readWallets } from '../utils/common.js'
-import { AnkrProvider } from '@ankr.com/ankr.js';
-import dotenv from 'dotenv';
+import { AnkrProvider } from '@ankr.com/ankr.js'
+import dotenv from 'dotenv'
 
 dotenv.config()
 

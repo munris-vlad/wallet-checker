@@ -12,6 +12,8 @@ const csvWriter = createObjectCsvWriter({
         { id: 'n', title: '№'},
         { id: 'wallet', title: 'wallet'},
         { id: 'ETH', title: 'ETH'},
+        { id: 'USDC', title: 'USDC'},
+        { id: 'DAI', title: 'DAI'},
         { id: 'TX Count', title: 'TX Count'},
         { id: 'Volume', title: 'Volume'},
         { id: 'Contracts', title: 'Contracts'},
@@ -29,6 +31,8 @@ const p = new Table({
         { name: 'n', color: 'green', alignment: "right"},
         { name: 'wallet', color: 'green', alignment: "right"},
         { name: 'ETH', alignment: 'right', color: 'cyan'},
+        { name: 'USDC', alignment: 'right', color: 'cyan'},
+        { name: 'DAI', alignment: 'right', color: 'cyan'},
         { name: 'TX Count', alignment: 'right', color: 'cyan'},
         { name: 'Volume', alignment: 'right', color: 'cyan'},
         { name: 'Contracts', alignment: 'right', color: 'cyan'},
@@ -47,7 +51,9 @@ const apiUrl = "https://base.blockscout.com/api/v2"
 let stats = []
 let jsonData = []
 let totalGas = 0
-const filterSymbol = ['USDC', 'DAI']
+let totalUsdc = 0
+let totalDai = 0
+const filterSymbol = ['USDbC', 'DAI']
 
 async function getBalances(wallet) {
     await axios.get(apiUrl+'/addresses/'+wallet).then(response => {
@@ -60,7 +66,9 @@ async function getBalances(wallet) {
         let tokens = response.data
 
         Object.values(tokens).forEach(token => {
-            
+            if (filterSymbol.includes(token.token.symbol)) {
+                stats[wallet].balances[token.token.symbol] = getBalance(token.value, token.token.decimals)
+            }
         })
     }).catch(e => {
         console.log(e.toString())
@@ -133,7 +141,11 @@ async function getTxs(wallet) {
 
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
-        balance: 0,
+        balances: {
+            USDbC: 0,
+            DAI: 0
+        },
+        balance: 0
     }
 
     await getBalances(wallet)
@@ -143,12 +155,16 @@ async function fetchWallet(wallet, index) {
     let usdFeeEthValue = (stats[wallet].totalFee*ethPrice).toFixed(2)
     totalGas += stats[wallet].totalFee > 0 ? stats[wallet].totalFee : 0
     totalEth += stats[wallet].balance
+    totalUsdc += parseFloat(stats[wallet].balances['USDbC'])
+    totalDai += parseFloat(stats[wallet].balances['DAI'])
 
     let row
     row = {
         n: index,
         wallet: wallet,
         'ETH': stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})`,
+        'USDC': parseFloat(stats[wallet].balances['USDbC']).toFixed(2),
+        'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
         'TX Count': stats[wallet].txcount,
         'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
@@ -166,6 +182,8 @@ async function fetchWallet(wallet, index) {
         wallet: wallet,
         'ETH': stats[wallet].balance.toFixed(4),
         'ETH USDVALUE': usdEthValue,
+        'USDC': parseFloat(stats[wallet].balances['USDbC']).toFixed(2),
+        'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
         'TX Count': stats[wallet].txcount,
         'Volume': stats[wallet].volume ? stats[wallet].volume.toFixed(2) : '-',
         'Contracts': stats[wallet].unique_contracts ?? 0,
@@ -216,6 +234,8 @@ export async function baseFetchDataAndPrintTable() {
     let row = {
         wallet: 'Total',
         'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
+        'USDC': totalUsdc,
+        'DAI': totalDai,
         'Total gas spent': totalGas.toFixed(4) + ` ($${(totalGas*ethPrice).toFixed(2)})`,
     }
     p.addRow(row)
@@ -229,12 +249,16 @@ export async function baseData() {
     jsonData = []
     totalEth = 0
     totalGas = 0
+    totalUsdc = 0
+    totalDai = 0
     await fetchWallets()
 
     jsonData.push({
         wallet: 'Total',
         'ETH': totalEth.toFixed(4),
         'ETH USDVALUE': (totalEth*ethPrice).toFixed(2),
+        'USDC': totalUsdc,
+        'DAI': totalDai,
         'Total gas spent': totalGas.toFixed(4),
         'Total gas spent USDVALUE': (totalGas*ethPrice).toFixed(2),
     })

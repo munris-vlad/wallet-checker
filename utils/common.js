@@ -2,69 +2,69 @@ import fs from "fs"
 import axios from "axios"
 import inquirer from "inquirer"
 
-export const wait = ms => new Promise(r => setTimeout(r, ms));
-export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis));
+export const wait = ms => new Promise(r => setTimeout(r, ms))
+export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis))
 
 export function random(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1) + min);
+    min = Math.ceil(min)
+    max = Math.floor(max)
+    return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
 export function readWallets(filePath) {
     try {
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line !== '');
-        return lines;
+        const fileContent = fs.readFileSync(filePath, 'utf-8')
+        const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line !== '')
+        return lines
     } catch (error) {
-        console.error('Error reading the file:', error.message);
-        return [];
+        console.error('Error reading the file:', error.message)
+        return []
     }
 }
 
 export function writeLineToFile(filePath, line) {
     try {
-        fs.appendFileSync(filePath, line + '\n', 'utf-8');
+        fs.appendFileSync(filePath, line + '\n', 'utf-8')
     } catch (error) {
-        console.error('Error appending to the file:', error.message);
+        console.error('Error appending to the file:', error.message)
     }
 }
 
 export function getBalance(balance, decimal) {
-    return parseFloat((parseInt(balance) / 10 ** decimal).toFixed(6));
+    return parseFloat((parseInt(balance) / 10 ** decimal).toFixed(6))
 }
 
 export function timestampToDate(timestamp) {
-  return new Date(parseInt(timestamp) * 1000);
+  return new Date(parseInt(timestamp) * 1000)
 }
 
 Date.prototype.getWeek = function (dowOffset) {
 /*getWeek() was developed by Nick Baicoianu at MeanFreePath: http://www.meanfreepath.com */
 
-    dowOffset = typeof(dowOffset) == 'number' ? dowOffset : 0; //default dowOffset to zero
-    var newYear = new Date(this.getFullYear(),0,1);
-    var day = newYear.getDay() - dowOffset; //the day of week the year begins on
-    day = (day >= 0 ? day : day + 7);
+    dowOffset = typeof(dowOffset) == 'number' ? dowOffset : 0 //default dowOffset to zero
+    var newYear = new Date(this.getFullYear(),0,1)
+    var day = newYear.getDay() - dowOffset //the day of week the year begins on
+    day = (day >= 0 ? day : day + 7)
     var daynum = Math.floor((this.getTime() - newYear.getTime() -
-    (this.getTimezoneOffset()-newYear.getTimezoneOffset())*60000)/86400000) + 1;
-    var weeknum;
+    (this.getTimezoneOffset()-newYear.getTimezoneOffset())*60000)/86400000) + 1
+    var weeknum
     //if the year starts before the middle of a week
     if(day < 4) {
-        weeknum = Math.floor((daynum+day-1)/7) + 1;
+        weeknum = Math.floor((daynum+day-1)/7) + 1
         if(weeknum > 52) {
-            let nYear = new Date(this.getFullYear() + 1,0,1);
-            let nday = nYear.getDay() - dowOffset;
-            nday = nday >= 0 ? nday : nday + 7;
+            let nYear = new Date(this.getFullYear() + 1,0,1)
+            let nday = nYear.getDay() - dowOffset
+            nday = nday >= 0 ? nday : nday + 7
             /*if the next year starts before the middle of
               the week, it is week #1 of that year*/
-            weeknum = nday < 4 ? 1 : 53;
+            weeknum = nday < 4 ? 1 : 53
         }
     }
     else {
-        weeknum = Math.floor((daynum+day-1)/7);
+        weeknum = Math.floor((daynum+day-1)/7)
     }
-    return weeknum;
-};
+    return weeknum
+}
 
 export function getNativeToken(network) {
     let token = 'ETH'
@@ -151,9 +151,9 @@ export async function getEthPriceForDate(date) {
 
             if (response.data.prices && response.data.prices.length > 0) {
                 isDone = true
-                return response.data.prices[0][1];
+                return response.data.prices[0][1]
             } else {
-                return null;
+                return null
             }
         } catch (error) {
             await sleep(10 * 1000)
@@ -344,5 +344,5 @@ export const evmNetwork = async () => {
 }
 
 export function getKeyByValue(object, value) {
-    return Object.keys(object).find((key) => object[key] === value);
+    return Object.keys(object).find((key) => object[key] === value)
 }

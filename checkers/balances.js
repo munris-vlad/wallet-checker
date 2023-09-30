@@ -1,8 +1,8 @@
 import ethers from "ethers"
-import {getNativeToken, readWallets} from "../utils/common.js";
-import axios from "axios";
-import {Table} from "console-table-printer";
-import {createObjectCsvWriter} from "csv-writer";
+import {getNativeToken, readWallets} from "../utils/common.js"
+import axios from "axios"
+import {Table} from "console-table-printer"
+import {createObjectCsvWriter} from "csv-writer"
 
 
 let columns = [

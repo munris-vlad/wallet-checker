@@ -32,6 +32,8 @@
                         </div>
                     </td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.005 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
+                    <td :class="tdClass">{{ item['USDC'] }}</td>
+                    <td :class="tdClass">{{ item['DAI'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Volume'] > 0 ? '$'+item['Volume'] : '' }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
@@ -75,6 +77,8 @@ export default {
                 'n',
                 'Wallet',
                 'ETH',
+                'USDC',
+                'DAI',
                 'TX Count',
                 'Volume',
                 'Contracts',

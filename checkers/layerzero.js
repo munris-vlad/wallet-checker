@@ -119,7 +119,7 @@ function fetchWallets() {
     const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
 
-    const walletPromises = [];
+    const walletPromises = []
 
     for (let i = 0; i < batchCount; i++) {
         const startIndex = i * batchSize

@@ -111,7 +111,7 @@ function fetchWallets() {
     const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
 
-    const walletPromises = [];
+    const walletPromises = []
 
     for (let i = 0; i < batchCount; i++) {
         const startIndex = i * batchSize
@@ -179,7 +179,7 @@ export async function evmFetchDataAndPrintTable(network) {
 
     p.addRow(totalRow)
     p.table.rows.map((row) => {
-        csvData.push(row.text);
+        csvData.push(row.text)
     })
 
     const csvWriter = createObjectCsvWriter({
