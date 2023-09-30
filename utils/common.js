@@ -283,6 +283,11 @@ export const chooiceNetwork = async () => {
                     name: "Avalanche",
                     value: "Avalanche",
                 },
+
+                {
+                    name: "Base",
+                    value: "Base",
+                },
                 {
                     name: "Core",
                     value: "Core",
