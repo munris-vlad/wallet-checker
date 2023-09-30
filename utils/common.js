@@ -219,6 +219,10 @@ export const entryPoint = async () => {
                     value: "zora",
                 },
                 {
+                    name: "Base",
+                    value: "base",
+                },
+                {
                     name: "Aptos",
                     value: "aptos",
                 },

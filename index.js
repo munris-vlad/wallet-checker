@@ -10,6 +10,7 @@ import {filterFetchDataAndPrintTable} from "./checkers/filter.js"
 import {nftFetchDataAndPrintTable} from "./checkers/nft.js"
 import {exec} from "child_process"
 import {layerzeroFetchDataAndPrintTable} from "./checkers/layerzero.js";
+import { baseFetchDataAndPrintTable } from "./checkers/base.js"
 
 function startExpressServer() {
     const expressServer = exec('node server.js', (error, stdout, stderr) => {
@@ -48,6 +49,10 @@ async function startMenu() {
             break
         case "zora":
             await zoraFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+            await startMenu()
+            break
+        case "base":
+            await baseFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             await startMenu()
             break
         case "aptos":

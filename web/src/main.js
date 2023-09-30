@@ -12,6 +12,7 @@ import LineaView from "@/views/LineaView"
 import BalancesView from "@/views/BalancesView"
 import EvmView from "@/views/EvmView"
 import LayerzeroView from "@/views/LayerzeroView"
+import BaseView from "@/views/BaseView"
 
 const app = createApp(App)
 
@@ -26,6 +27,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$stark_count = data.starknet_wallets.length
     app.config.globalProperties.$layerzero_count = data.layerzero_wallets.length
     app.config.globalProperties.$zora_count = data.zora_wallets.length
+    app.config.globalProperties.$base_count = data.base_wallets.length
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
     app.config.globalProperties.$linea_count = data.linea_wallets.length
     app.config.globalProperties.$evm_count = data.evm_wallets.length
@@ -58,6 +60,11 @@ const routes = [
         path: '/zora',
         name: 'Zora',
         component: ZoraView,
+    },
+    {
+        path: '/base',
+        name: 'Base',
+        component: BaseView,
     },
     {
         path: '/aptos',

@@ -479,7 +479,7 @@ async function saveToCsv() {
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
-
+    csvData.sort((a, b) => a.n - b.n)
     csvWriter.writeRecords(csvData).then().catch()
 }
 
@@ -518,6 +518,7 @@ export async function starknetFetchDataAndPrintTable() {
 export async function starknetData() {
     wallets = readWallets('./addresses/starknet.txt')
     jsonData = []
+    csvData = []
     total = {
         eth: 0,
         usdc: 0,

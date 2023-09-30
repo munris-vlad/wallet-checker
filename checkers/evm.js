@@ -107,52 +107,37 @@ let iteration = 1
 let iterations = wallets.length
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
+function fetchWallets() {
+    const batchSize = 50
+    const batchCount = Math.ceil(wallets.length / batchSize)
+
+    const walletPromises = [];
+
+    for (let i = 0; i < batchCount; i++) {
+        const startIndex = i * batchSize
+        const endIndex = (i + 1) * batchSize
+        const batch = wallets.slice(startIndex, endIndex)
+
+        const promise = new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(fetchBatch(batch))
+            }, i * 5000)
+        })
+
+        walletPromises.push(promise)
+    }
+
+    return Promise.all(walletPromises)
+}
+
+async function fetchBatch(batch) {
+    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
+}
+
 async function fetchBalances(chain, network) {
     for (let wallet of wallets) {
         await fetchWallet(wallet, chain, network)
         progressBar.update(iteration++)
-
-        if (!--iterations) {
-            total = total / Math.pow(10, 18)
-            const totalRow = {
-                'Wallet': 'Total',
-                'TX Count': '',
-                'Gas spent': `${total.toFixed(4)} ${getNativeToken(network)}`
-            }
-
-            jsonData.push({
-                'Wallet': 'Total',
-                'TX Count': '',
-                'Gas spent': total.toFixed(4),
-                'Native token': getNativeToken(network)
-            })
-
-            p.addRow(totalRow)
-            p.table.rows.map((row) => {
-                csvData.push(row.text);
-            })
-
-            const csvWriter = createObjectCsvWriter({
-                path: `./results/evm_${network}.csv`,
-                header: [
-                    {id: 'Wallet', title: 'Wallet'},
-                    {id: 'TX Count', title: 'TX Count'},
-                    {id: 'Days', title: 'Days'},
-                    {id: 'Weeks', title: 'Weeks'},
-                    {id: 'Months', title: 'Months'},
-                    {id: 'Gas spent', title: 'Gas spent'},
-                    {id: 'First tx', title: 'First tx'},
-                    {id: 'Last tx', title: 'Last tx'},
-                ]
-            })
-
-            csvWriter.writeRecords(csvData).then().catch()
-
-            if (!isJson) {
-                progressBar.stop()
-                p.printTable()
-            }
-        }
     }
 }
 
@@ -177,6 +162,46 @@ export async function evmFetchDataAndPrintTable(network) {
             break
     }
     await fetchBalances(chain, network)
+
+    total = total / Math.pow(10, 18)
+    const totalRow = {
+        'Wallet': 'Total',
+        'TX Count': '',
+        'Gas spent': `${total.toFixed(4)} ${getNativeToken(network)}`
+    }
+
+    jsonData.push({
+        'Wallet': 'Total',
+        'TX Count': '',
+        'Gas spent': total.toFixed(4),
+        'Native token': getNativeToken(network)
+    })
+
+    p.addRow(totalRow)
+    p.table.rows.map((row) => {
+        csvData.push(row.text);
+    })
+
+    const csvWriter = createObjectCsvWriter({
+        path: `./results/evm_${network}.csv`,
+        header: [
+            {id: 'Wallet', title: 'Wallet'},
+            {id: 'TX Count', title: 'TX Count'},
+            {id: 'Days', title: 'Days'},
+            {id: 'Weeks', title: 'Weeks'},
+            {id: 'Months', title: 'Months'},
+            {id: 'Gas spent', title: 'Gas spent'},
+            {id: 'First tx', title: 'First tx'},
+            {id: 'Last tx', title: 'Last tx'},
+        ]
+    })
+
+    csvWriter.writeRecords(csvData).then().catch()
+
+    if (!isJson) {
+        progressBar.stop()
+        p.printTable()
+    }
 }
 
 export async function evmData(network) {

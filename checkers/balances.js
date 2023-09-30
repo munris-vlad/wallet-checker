@@ -276,6 +276,7 @@ export async function balancesFetchDataAndPrintTable(network) {
 
 export async function balancesData(network) {
     wallets = readWallets('./addresses/evm.txt')
+    walletsData = []
     await collectData(network)
     await saveToCsv(network)
     return walletsData

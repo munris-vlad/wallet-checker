@@ -202,6 +202,8 @@ async function saveToCsv() {
         csvData.push(row.text)
     })
 
+    csvData.sort((a, b) => a.n - b.n)
+
     csvWriter.writeRecords(csvData).then().catch()
 }
 

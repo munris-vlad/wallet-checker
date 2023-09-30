@@ -6,6 +6,7 @@ import cors from 'cors'
 import {zkSyncData} from "./checkers/zksync.js"
 import {starknetData} from "./checkers/starknet.js"
 import {zoraData} from "./checkers/zora.js"
+import {baseData} from "./checkers/base.js"
 import {aptosData} from "./checkers/aptos.js"
 import {lineaData} from "./checkers/linea.js"
 import {balancesData} from "./checkers/balances.js"
@@ -34,6 +35,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const zksyncWallets = readWallets('./addresses/zksync.txt')
     const layerzeroWallets = readWallets('./addresses/layerzero.txt')
     const zoraWallets = readWallets('./addresses/zora.txt')
+    const baseWallets = readWallets('./addresses/base.txt')
     const aptosWallets = readWallets('./addresses/aptos.txt')
     const lineaWallets = readWallets('./addresses/linea.txt')
     const evmWallets = readWallets('./addresses/evm.txt')
@@ -42,6 +44,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'zksync_wallets': zksyncWallets,
         'layerzero_wallets': layerzeroWallets,
         'zora_wallets': zoraWallets,
+        'base_wallets': baseWallets,
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
         'evm_wallets': evmWallets,
@@ -65,6 +68,11 @@ apiRoutes.get('/layerzero', async (req, res) => {
 
 apiRoutes.get('/zora', async (req, res) => {
     const responseData = await zoraData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/base', async (req, res) => {
+    const responseData = await baseData()
     res.json(responseData)
 })
 
