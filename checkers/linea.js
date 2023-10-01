@@ -258,7 +258,7 @@ async function fetchWallets() {
         sort: (row1, row2) => +row1.n - +row2.n
     })
 
-    const batchSize = 50
+    const batchSize = 7
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -270,7 +270,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 5000)
+            }, i * 1200)
         })
 
         walletPromises.push(promise)
