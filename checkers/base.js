@@ -6,54 +6,60 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 
-const csvWriter = createObjectCsvWriter({
-    path: './results/base.csv',
-    header: [
-        { id: 'n', title: '№'},
-        { id: 'wallet', title: 'wallet'},
-        { id: 'ETH', title: 'ETH'},
-        { id: 'USDC', title: 'USDC'},
-        { id: 'DAI', title: 'DAI'},
-        { id: 'TX Count', title: 'TX Count'},
-        { id: 'Volume', title: 'Volume'},
-        { id: 'Contracts', title: 'Contracts'},
-        { id: 'Days', title: 'Days'},
-        { id: 'Weeks', title: 'Weeks'},
-        { id: 'Months', title: 'Months'},
-        { id: 'First tx', title: 'First tx'},
-        { id: 'Last tx', title: 'Last tx'},
-        { id: 'Total gas spent', title: 'Total gas spent'},
-    ]
-})
+const headers = [
+    { id: 'n', title: '№'},
+    { id: 'wallet', title: 'wallet'},
+    { id: 'ETH', title: 'ETH'},
+    { id: 'USDC', title: 'USDC'},
+    { id: 'DAI', title: 'DAI'},
+    { id: 'TX Count', title: 'TX Count'},
+    { id: 'Volume', title: 'Volume'},
+    { id: 'Contracts', title: 'Contracts'},
+    { id: 'Days', title: 'Days'},
+    { id: 'Weeks', title: 'Weeks'},
+    { id: 'Months', title: 'Months'},
+    { id: 'First tx', title: 'First tx'},
+    { id: 'Last tx', title: 'Last tx'},
+    { id: 'Total gas spent', title: 'Total gas spent'},
+]
 
-const p = new Table({
-    columns: [
-        { name: 'n', color: 'green', alignment: "right"},
-        { name: 'wallet', color: 'green', alignment: "right"},
-        { name: 'ETH', alignment: 'right', color: 'cyan'},
-        { name: 'USDC', alignment: 'right', color: 'cyan'},
-        { name: 'DAI', alignment: 'right', color: 'cyan'},
-        { name: 'TX Count', alignment: 'right', color: 'cyan'},
-        { name: 'Volume', alignment: 'right', color: 'cyan'},
-        { name: 'Contracts', alignment: 'right', color: 'cyan'},
-        { name: 'Days', alignment: 'right', color: 'cyan'},
-        { name: 'Weeks', alignment: 'right', color: 'cyan'},
-        { name: 'Months', alignment: 'right', color: 'cyan'},
-        { name: 'First tx', alignment: 'right', color: 'cyan'},
-        { name: 'Last tx', alignment: 'right', color: 'cyan'},
-        { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-    ],
-    sort: (row1, row2) => +row1.n - +row2.n
-})
+const columns = [
+    { name: 'n', color: 'green', alignment: "right"},
+    { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'ETH', alignment: 'right', color: 'cyan'},
+    { name: 'USDC', alignment: 'right', color: 'cyan'},
+    { name: 'DAI', alignment: 'right', color: 'cyan'},
+    { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Volume', alignment: 'right', color: 'cyan'},
+    { name: 'Contracts', alignment: 'right', color: 'cyan'},
+    { name: 'Days', alignment: 'right', color: 'cyan'},
+    { name: 'Weeks', alignment: 'right', color: 'cyan'},
+    { name: 'Months', alignment: 'right', color: 'cyan'},
+    { name: 'First tx', alignment: 'right', color: 'cyan'},
+    { name: 'Last tx', alignment: 'right', color: 'cyan'},
+    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
+]
 
 const apiUrl = "https://base.blockscout.com/api/v2"
 
+let csvWriter
+let p
 let stats = []
 let jsonData = []
 let totalGas = 0
 let totalUsdc = 0
 let totalDai = 0
 const filterSymbol = ['USDbC', 'DAI']
+let wallets = readWallets('./addresses/base.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+let totalEth = 0
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+let ethPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
+    ethPrice = response.data.USD
+})
 
 async function getBalances(wallet) {
     await axios.get(apiUrl+'/addresses/'+wallet).then(response => {
@@ -199,19 +205,27 @@ async function fetchWallet(wallet, index) {
     iteration++
 }
 
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
-
-let wallets = readWallets('./addresses/base.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-let totalEth = 0
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-
 function fetchWallets() {
+    csvWriter = createObjectCsvWriter({
+        path: './results/base.csv',
+        header: headers
+    })
+    
+    p = new Table({
+        columns: columns,
+        sort: (row1, row2) => +row1.n - +row2.n
+    })
+
+    wallets = readWallets('./addresses/base.txt')
+    iterations = wallets.length
+    iteration = 1
+    jsonData = []
+    csvData = []
+    totalEth = 0
+    totalGas = 0
+    totalUsdc = 0
+    totalDai = 0
+
     const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
     return Promise.all(walletPromises)
 }
@@ -220,38 +234,34 @@ async function saveToCsv() {
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
-
     csvData.sort((a, b) => a.n - b.n)
-
     csvWriter.writeRecords(csvData).then().catch()
 }
 
-export async function baseFetchDataAndPrintTable() {
-    progressBar.start(iterations, 0)
-    await fetchWallets()
-    progressBar.stop()
-
-    let row = {
+async function addTotalRow() {
+    p.addRow({})
+    p.addRow({
         wallet: 'Total',
         'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
         'USDC': totalUsdc,
         'DAI': totalDai,
         'Total gas spent': totalGas.toFixed(4) + ` ($${(totalGas*ethPrice).toFixed(2)})`,
-    }
-    p.addRow(row)
-    p.printTable()
+    })
+}
 
+export async function baseFetchDataAndPrintTable() {
+    progressBar.start(iterations, 0)
+    await fetchWallets()
+    await addTotalRow()
     await saveToCsv()
+    progressBar.stop()
+    p.printTable()
 }
 
 export async function baseData() {
-    wallets = readWallets('./addresses/base.txt')
-    jsonData = []
-    totalEth = 0
-    totalGas = 0
-    totalUsdc = 0
-    totalDai = 0
     await fetchWallets()
+    await addTotalRow()
+    await saveToCsv()
 
     jsonData.push({
         wallet: 'Total',
@@ -262,8 +272,6 @@ export async function baseData() {
         'Total gas spent': totalGas.toFixed(4),
         'Total gas spent USDVALUE': (totalGas*ethPrice).toFixed(2),
     })
-
-    await saveToCsv()
 
     return jsonData
 }

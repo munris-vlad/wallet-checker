@@ -132,19 +132,23 @@ let headers = [
     { id: 'Last tx', title: 'Last tx'},
 ]
 
-const csvWriter = createObjectCsvWriter({
-    path: './results/starknet.csv',
-    header: headers
-})
-
-const p = new Table({
-    columns: columns,
-    sort: (row1, row2) => +row1.n - +row2.n
-})
-
+let p
+let csvWriter
 let stats = []
 let jsonData = []
+let wallets = readWallets('./addresses/starknet.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+let total = {
+    eth: 0,
+    usdc: 0,
+    usdt: 0,
+    dai: 0,
+    gas: 0
+}
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 const contracts = [
     {
@@ -434,25 +438,36 @@ async function fetchWallet(wallet, index) {
     iteration++
 }
 
-let wallets = readWallets('./addresses/starknet.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-let total = {
-    eth: 0,
-    usdc: 0,
-    usdt: 0,
-    dai: 0,
-    gas: 0
-}
-
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-
 function fetchWallets() {
+    wallets = readWallets('./addresses/starknet.txt')
+    iterations = wallets.length
+    iteration = 1
+    jsonData = []
+    csvData = []
+    
     const batchSize = 250
     const batchCount = Math.ceil(wallets.length / batchSize)
-
     const walletPromises = []
+
+    total = {
+        eth: 0,
+        usdc: 0,
+        usdt: 0,
+        dai: 0,
+        gas: 0,
+        lite_eth: 0
+    }
+
+    csvData = []
+    p = new Table({
+        columns: columns,
+        sort: (row1, row2) => +row1.n - +row2.n
+    })
+
+    csvWriter = createObjectCsvWriter({
+        path: './results/starknet.csv',
+        header: headers
+    })
 
     for (let i = 0; i < batchCount; i++) {
         const startIndex = i * batchSize
@@ -483,11 +498,7 @@ async function saveToCsv() {
     csvWriter.writeRecords(csvData).then().catch()
 }
 
-export async function starknetFetchDataAndPrintTable() {
-    progressBar.start(iterations, 0)
-    await fetchWallets()
-    progressBar.stop()
-
+async function addTotalRow() {
     p.addRow({})
 
     let row = {
@@ -509,26 +520,20 @@ export async function starknetFetchDataAndPrintTable() {
     }
 
     p.addRow(row, { color: "cyan" })
+}
 
+export async function starknetFetchDataAndPrintTable() {
+    progressBar.start(iterations, 0)
+    await fetchWallets()
+    await addTotalRow()
     await saveToCsv()
-
+    progressBar.stop()
     p.printTable()
 }
 
 export async function starknetData() {
-    wallets = readWallets('./addresses/starknet.txt')
-    jsonData = []
-    csvData = []
-    total = {
-        eth: 0,
-        usdc: 0,
-        usdt: 0,
-        dai: 0,
-        gas: 0,
-        lite_eth: 0
-    }
-
     await fetchWallets()
+    await addTotalRow()
     await saveToCsv()
 
     jsonData.push({

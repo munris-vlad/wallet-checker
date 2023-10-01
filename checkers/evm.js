@@ -1,7 +1,7 @@
 import Moralis from "moralis"
 import { EvmChain } from "@moralisweb3/common-evm-utils"
 import dotenv from 'dotenv'
-import {getNativeToken, readWallets, sleep} from '../utils/common.js'
+import {getNativeToken, readWallets, sleep, getKeyByValue} from '../utils/common.js'
 import {Table} from "console-table-printer"
 import cliProgress from "cli-progress"
 import {createObjectCsvWriter} from "csv-writer"
@@ -15,6 +15,7 @@ await Moralis.start({
 
 const p = new Table({
     columns: [
+        { name: 'n', color: 'green', alignment: "right"},
         { name: 'Wallet', color: 'green', alignment: "right"},
         { name: 'TX Count', alignment: "right", color: 'cyan' },
         { name: 'Days', alignment: 'right', color: 'cyan'},
@@ -29,8 +30,13 @@ const p = new Table({
 let total = 0
 let jsonData = []
 let isJson = false
+let wallets = readWallets('./addresses/evm.txt')
+let csvData = []
+let iteration = 1
+let iterations = wallets.length
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
-async function fetchWallet(address, chain, network) {
+async function fetchWallet(address, index, chain, network) {
     let cursor = null
     let totalTx = 0
     let totalSpent = 0
@@ -73,8 +79,8 @@ async function fetchWallet(address, chain, network) {
     total += totalSpent
     totalSpent = totalSpent / Math.pow(10, 18)
 
-    const walletRow = {
-        'n': iteration,
+    p.addRow({
+        'n': parseInt(index)+1,
         'Wallet': address,
         'TX Count': totalTx,
         'Days': uniqueDays.size,
@@ -83,11 +89,10 @@ async function fetchWallet(address, chain, network) {
         'Gas spent': `${totalSpent.toFixed(4)} ${getNativeToken(network)}`,
         'First tx': txs.length ? moment(new Date(txs[txs.length - 1].block_timestamp)).format("DD.MM.YY") : '',
         'Last tx': txs.length ? moment(new Date(txs[0].block_timestamp)).format("DD.MM.YY") : ''
-    }
+    })
 
-    p.addRow(walletRow)
     jsonData.push({
-        'n': iteration,
+        'n': parseInt(index)+1,
         'Wallet': address,
         'TX Count': totalTx,
         'Days': uniqueDays.size,
@@ -98,19 +103,22 @@ async function fetchWallet(address, chain, network) {
         'Last tx': txs.length ? new Date(txs[0].block_timestamp) : '',
         'Native token': getNativeToken(network)
     })
+
+    progressBar.update(iteration++)
 }
 
-let wallets = readWallets('./addresses/evm.txt')
+async function fetchBatch(batch, chain, network) {
+    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account), chain, network)))
+}
 
-let csvData = []
-let iteration = 1
-let iterations = wallets.length
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+async function fetchWallets(chain, network) {
+    wallets = readWallets('./addresses/evm.txt')
+    jsonData = []
+    iteration = 1
+    total = 0
 
-function fetchWallets() {
-    const batchSize = 50
+    const batchSize = process.env.EVM_BATCH_SIZE ? process.env.EVM_BATCH_SIZE : 3
     const batchCount = Math.ceil(wallets.length / batchSize)
-
     const walletPromises = []
 
     for (let i = 0; i < batchCount; i++) {
@@ -120,8 +128,8 @@ function fetchWallets() {
 
         const promise = new Promise((resolve) => {
             setTimeout(() => {
-                resolve(fetchBatch(batch))
-            }, i * 5000)
+                resolve(fetchBatch(batch, chain, network))
+            }, i * (process.env.EVM_BATCH_TIMEOUT ? process.env.EVM_BATCH_TIMEOUT * 1000 : 1000 ))
         })
 
         walletPromises.push(promise)
@@ -130,15 +138,13 @@ function fetchWallets() {
     return Promise.all(walletPromises)
 }
 
-async function fetchBatch(batch) {
-    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
-}
-
-async function fetchBalances(chain, network) {
-    for (let wallet of wallets) {
-        await fetchWallet(wallet, chain, network)
-        progressBar.update(iteration++)
-    }
+async function addTotalRow(network) {
+    total = total / Math.pow(10, 18) 
+    p.addRow({
+        'Wallet': 'Total',
+        'TX Count': '',
+        'Gas spent': `${total.toFixed(4)} ${getNativeToken(network)}`
+    })
 }
 
 export async function evmFetchDataAndPrintTable(network) {
@@ -161,30 +167,18 @@ export async function evmFetchDataAndPrintTable(network) {
             chain = EvmChain.BSC
             break
     }
-    await fetchBalances(chain, network)
+    await fetchWallets(chain, network)
+    await addTotalRow(network)
 
-    total = total / Math.pow(10, 18)
-    const totalRow = {
-        'Wallet': 'Total',
-        'TX Count': '',
-        'Gas spent': `${total.toFixed(4)} ${getNativeToken(network)}`
-    }
-
-    jsonData.push({
-        'Wallet': 'Total',
-        'TX Count': '',
-        'Gas spent': total.toFixed(4),
-        'Native token': getNativeToken(network)
-    })
-
-    p.addRow(totalRow)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
+    csvData.sort((a, b) => a.n - b.n)
 
     const csvWriter = createObjectCsvWriter({
         path: `./results/evm_${network}.csv`,
         header: [
+            {id: 'n', title: 'n'},
             {id: 'Wallet', title: 'Wallet'},
             {id: 'TX Count', title: 'TX Count'},
             {id: 'Days', title: 'Days'},
@@ -205,10 +199,6 @@ export async function evmFetchDataAndPrintTable(network) {
 }
 
 export async function evmData(network) {
-    wallets = readWallets('./addresses/evm.txt')
-    jsonData = []
-    iteration = 1
-    total = 0
     isJson = true
     let chain
     switch (network) {
@@ -228,7 +218,15 @@ export async function evmData(network) {
             chain = EvmChain.BSC
             break
     }
-    await fetchBalances(chain, network)
+    await fetchWallets(chain, network)
+    await addTotalRow(network)
+    
+    jsonData.push({
+        'Wallet': 'Total',
+        'TX Count': '',
+        'Gas spent': total.toFixed(4),
+        'Native token': getNativeToken(network)
+    })
 
     return jsonData
 }

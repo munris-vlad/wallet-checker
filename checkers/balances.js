@@ -4,7 +4,6 @@ import axios from "axios"
 import {Table} from "console-table-printer"
 import {createObjectCsvWriter} from "csv-writer"
 
-
 let columns = [
     { name: 'n', alignment: 'left', color: 'green'},
     { name: 'wallet', color: 'green', alignment: "right"},
@@ -161,9 +160,7 @@ let wallets = readWallets('./addresses/evm.txt')
 let walletsData = []
 let csvData = []
 let stables = ['USDT', 'USDC', 'USDC.e', 'DAI']
-const p = new Table({
-    columns: columns
-})
+let p
 
 async function fetchWallet(wallet, index, network) {
     let nativeBalance = 0
@@ -203,6 +200,13 @@ async function fetchWallet(wallet, index, network) {
 }
 
 async function fetchWallets(network) {
+    walletsData = []
+    csvData = []
+    wallets = readWallets('./addresses/evm.txt')
+    p = new Table({
+        columns: columns
+    })
+
     const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1, network))
     return Promise.all(walletPromises)
 }
@@ -211,8 +215,6 @@ async function collectData(network) {
     if (!network) {
         network = 'ETH'
     }
-    walletsData = []
-    csvData = []
     await fetchWallets(network)
 
     let totalRow = {
@@ -275,8 +277,6 @@ export async function balancesFetchDataAndPrintTable(network) {
 }
 
 export async function balancesData(network) {
-    wallets = readWallets('./addresses/evm.txt')
-    walletsData = []
     await collectData(network)
     await saveToCsv(network)
     return walletsData

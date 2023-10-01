@@ -6,49 +6,54 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 
-const csvWriter = createObjectCsvWriter({
-    path: './results/aptos.csv',
-    header: [
-        { id: 'n', title: '№'},
-        { id: 'wallet', title: 'wallet'},
-        { id: 'APT', title: 'APT'},
-        { id: 'USDC', title: 'USDC'},
-        { id: 'USDT', title: 'USDT'},
-        { id: 'DAI', title: 'DAI'},
-        { id: 'TX Count', title: 'TX Count'},
-        { id: 'Days', title: 'Days'},
-        { id: 'Weeks', title: 'Weeks'},
-        { id: 'Months', title: 'Months'},
-        { id: 'First tx', title: 'First tx'},
-        { id: 'Last tx', title: 'Last tx'},
-        { id: 'Total gas spent', title: 'Total gas spent'}
-    ]
-})
+const columns = [
+    { name: 'n', color: 'green', alignment: "right"},
+    { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'APT', alignment: 'right', color: 'cyan'},
+    { name: 'USDC', alignment: 'right', color: 'cyan'},
+    { name: 'USDT', alignment: 'right', color: 'cyan'},
+    { name: 'DAI', alignment: 'right', color: 'cyan'},
+    { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Days', alignment: 'right', color: 'cyan'},
+    { name: 'Weeks', alignment: 'right', color: 'cyan'},
+    { name: 'Months', alignment: 'right', color: 'cyan'},
+    { name: 'First tx', alignment: 'right', color: 'cyan'},
+    { name: 'Last tx', alignment: 'right', color: 'cyan'},
+    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
+]
 
-const p = new Table({
-    columns: [
-        { name: 'n', color: 'green', alignment: "right"},
-        { name: 'wallet', color: 'green', alignment: "right"},
-        { name: 'APT', alignment: 'right', color: 'cyan'},
-        { name: 'USDC', alignment: 'right', color: 'cyan'},
-        { name: 'USDT', alignment: 'right', color: 'cyan'},
-        { name: 'DAI', alignment: 'right', color: 'cyan'},
-        { name: 'TX Count', alignment: 'right', color: 'cyan'},
-        { name: 'Days', alignment: 'right', color: 'cyan'},
-        { name: 'Weeks', alignment: 'right', color: 'cyan'},
-        { name: 'Months', alignment: 'right', color: 'cyan'},
-        { name: 'First tx', alignment: 'right', color: 'cyan'},
-        { name: 'Last tx', alignment: 'right', color: 'cyan'},
-        { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-    ],
-    sort: (row1, row2) => +row1.n - +row2.n
-})
+const headers = [
+    { id: 'n', title: '№'},
+    { id: 'wallet', title: 'wallet'},
+    { id: 'APT', title: 'APT'},
+    { id: 'USDC', title: 'USDC'},
+    { id: 'USDT', title: 'USDT'},
+    { id: 'DAI', title: 'DAI'},
+    { id: 'TX Count', title: 'TX Count'},
+    { id: 'Days', title: 'Days'},
+    { id: 'Weeks', title: 'Weeks'},
+    { id: 'Months', title: 'Months'},
+    { id: 'First tx', title: 'First tx'},
+    { id: 'Last tx', title: 'Last tx'},
+    { id: 'Total gas spent', title: 'Total gas spent'}
+]
 
 const apiUrl = "https://api.apscan.io"
 
 let stats = []
 let jsonData = []
+let csvData = []
+let p
+let csvWriter
 const filterSymbol = ['APT', 'USDT', 'USDC', 'DAI']
+let wallets = readWallets('./addresses/aptos.txt')
+let iterations = wallets.length
+let iteration = 1
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+let aptPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=APT&tsyms=USD').then(response => {
+    aptPrice = response.data.USD
+})
 
 async function getBalances(wallet) {
     filterSymbol.forEach(symbol => {
@@ -181,29 +186,32 @@ async function fetchWallet(wallet, index) {
     iteration++
 }
 
-let aptPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=APT&tsyms=USD').then(response => {
-    aptPrice = response.data.USD
-})
-
-let wallets = readWallets('./addresses/aptos.txt')
-let iterations = wallets.length
-let iteration = 1
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-
 function fetchWallets() {
+    wallets = readWallets('./addresses/aptos.txt')
+    iterations = wallets.length
+    iteration = 1
+    csvData = []
+    jsonData = []
+    
+    csvWriter = createObjectCsvWriter({
+        path: './results/aptos.csv',
+        header: headers
+    })
+    
+    p = new Table({
+        columns: columns,
+        sort: (row1, row2) => +row1.n - +row2.n
+    })
+
     const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
     return Promise.all(walletPromises)
 }
 
 async function saveToCsv() {
-    let csvData = []
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
-
     csvData.sort((a, b) => a.n - b.n)
-
     csvWriter.writeRecords(csvData).then().catch()
 }
 
@@ -216,8 +224,6 @@ export async function aptosFetchDataAndPrintTable() {
 }
 
 export async function aptosData() {
-    wallets = readWallets('./addresses/aptos.txt')
-    jsonData = []
     await fetchWallets()
     await saveToCsv()
 

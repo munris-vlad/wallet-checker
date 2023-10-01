@@ -193,15 +193,6 @@ if (!args.includes('no-lite')) {
     columns.push({ name: 'Lite last TX', alignment: 'right', color: 'cyan'})
 }
 
-const csvWriter = createObjectCsvWriter({
-    path: './results/zksync.csv',
-    header: headers
-})
-
-const p = new Table({
-    columns: columns,
-    sort: (row1, row2) => +row1.n - +row2.n
-})
 
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
 
@@ -210,11 +201,25 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
     ethPrice = response.data.USD
 })
 
+let p
+let csvWriter
 let stats = []
 let jsonData = []
+let wallets = readWallets('./addresses/zksync.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+let total = {
+    eth: 0,
+    usdc: 0,
+    usdt: 0,
+    dai: 0,
+    gas: 0,
+    lite_eth: 0
+}
+
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const stableSymbol = ['USDT', 'USDC', 'BUSD', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC', 'ETH']
-
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function getBalances(wallet) {
@@ -478,23 +483,33 @@ async function fetchWallet(wallet, index) {
     }
 }
 
-let wallets = readWallets('./addresses/zksync.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-let total = {
-    eth: 0,
-    usdc: 0,
-    usdt: 0,
-    dai: 0,
-    gas: 0,
-    lite_eth: 0
-}
-
 function fetchWallets() {
+    wallets = readWallets('./addresses/zksync.txt')
+    iterations = wallets.length
+    iteration = 1
+    jsonData = []
+    csvData = []
+    total = {
+        eth: 0,
+        usdc: 0,
+        usdt: 0,
+        dai: 0,
+        gas: 0,
+        lite_eth: 0
+    }
+
+    csvWriter = createObjectCsvWriter({
+        path: './results/zksync.csv',
+        header: headers
+    })
+    
+    p = new Table({
+        columns: columns,
+        sort: (row1, row2) => +row1.n - +row2.n
+    })
+
     const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
-
     const walletPromises = []
 
     for (let i = 0; i < batchCount; i++) {
@@ -526,11 +541,7 @@ async function saveToCsv() {
     csvWriter.writeRecords(csvData).then().catch()
 }
 
-export async function zkSyncFetchDataAndPrintTable() {
-    progressBar.start(iterations, 0)
-    await fetchWallets()
-
-    progressBar.stop()
+async function addTotalRow() {
     p.addRow({})
 
     let row = {
@@ -547,24 +558,21 @@ export async function zkSyncFetchDataAndPrintTable() {
     }
 
     p.addRow(row)
+}
 
-    p.printTable()
-
+export async function zkSyncFetchDataAndPrintTable() {
+    progressBar.start(iterations, 0)
+    await fetchWallets()
+    await addTotalRow()
     await saveToCsv()
+    progressBar.stop()
+    p.printTable()
 }
 
 export async function zkSyncData() {
-    wallets = readWallets('./addresses/zksync.txt')
-    jsonData = []
-    total = {
-        eth: 0,
-        usdc: 0,
-        usdt: 0,
-        dai: 0,
-        gas: 0,
-        lite_eth: 0
-    }
     await fetchWallets()
+    await addTotalRow()
+    await saveToCsv()
 
     let row = {
         wallet: 'Total',
@@ -582,7 +590,5 @@ export async function zkSyncData() {
     }
 
     jsonData.push(row)
-
-    await saveToCsv()
     return jsonData
 }

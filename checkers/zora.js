@@ -9,46 +9,53 @@ import { HttpsProxyAgent } from "https-proxy-agent"
 
 const agent = new HttpsProxyAgent('http://munris:munrisproxy@65.109.29.224:3128')
 
-const csvWriter = createObjectCsvWriter({
-    path: './results/zora.csv',
-    header: [
-        { id: 'n', title: '№'},
-        { id: 'wallet', title: 'wallet'},
-        { id: 'ETH', title: 'ETH'},
-        { id: 'TX Count', title: 'TX Count'},
-        { id: 'Zora.co NFT', title: 'Zora.co NFT'},
-        { id: 'Collection count', title: 'Collection count'},
-        { id: 'NFT count', title: 'NFT count'},
-        { id: 'Days', title: 'Days'},
-        { id: 'Weeks', title: 'Weeks'},
-        { id: 'Months', title: 'Months'},
-        { id: 'First tx', title: 'First tx'},
-        { id: 'Last tx', title: 'Last tx'},
-    ]
-})
+const headers = [
+    { id: 'n', title: '№'},
+    { id: 'wallet', title: 'wallet'},
+    { id: 'ETH', title: 'ETH'},
+    { id: 'TX Count', title: 'TX Count'},
+    { id: 'Zora.co NFT', title: 'Zora.co NFT'},
+    { id: 'Collection count', title: 'Collection count'},
+    { id: 'NFT count', title: 'NFT count'},
+    { id: 'Days', title: 'Days'},
+    { id: 'Weeks', title: 'Weeks'},
+    { id: 'Months', title: 'Months'},
+    { id: 'First tx', title: 'First tx'},
+    { id: 'Last tx', title: 'Last tx'},
+]
 
-const p = new Table({
-    columns: [
-        { name: 'n', color: 'green', alignment: "right"},
-        { name: 'wallet', color: 'green', alignment: "right"},
-        { name: 'ETH', alignment: 'right', color: 'cyan'},
-        { name: 'TX Count', alignment: 'right', color: 'cyan'},
-        { name: 'Zora.co NFT', alignment: 'right', color: 'cyan'},
-        { name: 'Collection count', alignment: 'right', color: 'cyan'},
-        { name: 'NFT count', alignment: 'right', color: 'cyan'},
-        { name: 'Days', alignment: 'right', color: 'cyan'},
-        { name: 'Weeks', alignment: 'right', color: 'cyan'},
-        { name: 'Months', alignment: 'right', color: 'cyan'},
-        { name: 'First tx', alignment: 'right', color: 'cyan'},
-        { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    ],
-    sort: (row1, row2) => +row1.n - +row2.n
-})
+const columns = [
+    { name: 'n', color: 'green', alignment: "right"},
+    { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'ETH', alignment: 'right', color: 'cyan'},
+    { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Zora.co NFT', alignment: 'right', color: 'cyan'},
+    { name: 'Collection count', alignment: 'right', color: 'cyan'},
+    { name: 'NFT count', alignment: 'right', color: 'cyan'},
+    { name: 'Days', alignment: 'right', color: 'cyan'},
+    { name: 'Weeks', alignment: 'right', color: 'cyan'},
+    { name: 'Months', alignment: 'right', color: 'cyan'},
+    { name: 'First tx', alignment: 'right', color: 'cyan'},
+    { name: 'Last tx', alignment: 'right', color: 'cyan'},
+]
 
 const apiUrl = "https://explorer.zora.energy/api/v2"
 
+let p
+let csvWriter
 let stats = []
 let jsonData = []
+let wallets = readWallets('./addresses/zora.txt')
+let iterations = wallets.length
+let iteration = 1
+let csvData = []
+let totalEth = 0
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+
+let ethPrice = 0
+await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
+    ethPrice = response.data.USD
+})
 
 async function getBalances(wallet) {
     await axios.get(apiUrl+'/addresses/'+wallet, {
@@ -185,19 +192,24 @@ async function fetchWallet(wallet, index) {
 
 }
 
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
-
-let wallets = readWallets('./addresses/zora.txt')
-let iterations = wallets.length
-let iteration = 1
-let csvData = []
-let totalEth = 0
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-
 function fetchWallets() {
+    wallets = readWallets('./addresses/zora.txt')
+    iterations = wallets.length
+    iteration = 1
+    jsonData = []
+    csvData = []
+    totalEth = 0
+
+    csvWriter = createObjectCsvWriter({
+        path: './results/zora.csv',
+        header: headers
+    })
+    
+    p = new Table({
+        columns: columns,
+        sort: (row1, row2) => +row1.n - +row2.n
+    })
+
     const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
     return Promise.all(walletPromises)
 }
@@ -210,34 +222,33 @@ async function saveToCsv() {
     csvWriter.writeRecords(csvData).then().catch()
 }
 
+async function addTotalRow() {
+    p.addRow({})
+    p.addRow({
+        wallet: 'Total',
+        'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
+    })
+}
+
 export async function zoraFetchDataAndPrintTable() {
     progressBar.start(iterations, 0)
     await fetchWallets()
-    progressBar.stop()
-
-    let row = {
-        wallet: 'Total',
-        'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
-    }
-    p.addRow(row)
-    p.printTable()
-
+    await addTotalRow()
     await saveToCsv()
+    progressBar.stop()
+    p.printTable()
 }
 
 export async function zoraData() {
-    wallets = readWallets('./addresses/zora.txt')
-    jsonData = []
-    totalEth = 0
     await fetchWallets()
+    await addTotalRow()
+    await saveToCsv()
 
     jsonData.push({
         wallet: 'Total',
         'ETH': totalEth.toFixed(4),
         'ETH USDVALUE': (totalEth*ethPrice).toFixed(2),
     })
-
-    await saveToCsv()
 
     return jsonData
 }
