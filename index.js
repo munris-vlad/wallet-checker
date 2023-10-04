@@ -29,8 +29,11 @@ function startExpressServer() {
     })
 }
 
-async function startMenu() {
-    let mode = await entryPoint()
+async function startMenu(menu) {
+    if (menu === undefined) {
+        mode = await entryPoint()
+    }
+
     switch (mode) {
         case "web":
             startExpressServer()
@@ -90,5 +93,5 @@ const mode = args[0]
 if (mode === 'web') {
     startExpressServer()
 } else {
-    await startMenu()
+    await startMenu(mode)
 }
