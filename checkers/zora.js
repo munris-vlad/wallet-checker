@@ -63,7 +63,7 @@ async function getBalances(wallet) {
     }).then(response => {
         stats[wallet].balance = getBalance(response.data.coin_balance, 18)
     }).catch(function (error) {
-        console.log(error)
+        console.log(error.toString())
     })
 
     await axios.get(apiUrl+'/addresses/'+wallet+'/token-balances', {
