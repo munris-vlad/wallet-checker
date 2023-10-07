@@ -264,6 +264,10 @@ export const chooiceNetwork = async () => {
             message: "Сеть:",
             choices: [
                 {
+                    name: "All",
+                    value: "all",
+                },
+                {
                     name: "Ethereum",
                     value: "ETH",
                 },

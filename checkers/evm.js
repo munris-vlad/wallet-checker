@@ -6,6 +6,7 @@ import {Table} from "console-table-printer"
 import cliProgress from "cli-progress"
 import {createObjectCsvWriter} from "csv-writer"
 import moment from "moment"
+import { AxiosError } from "axios"
 
 dotenv.config()
 
@@ -63,7 +64,11 @@ async function fetchWallet(address, index, chain, network) {
             cursor = response.pagination.cursor
             await sleep(100)
         } while (cursor !== "" && cursor != null)
-    } catch (e) {}
+    } catch (e) {
+        if (e.toString().includes('Invalid key')) {
+            console.log('Moralis API reached daily limit. Upgrade to paid plan or try tomorrow')
+        }
+    }
 
     for (const tx of txs) {
         totalTx++

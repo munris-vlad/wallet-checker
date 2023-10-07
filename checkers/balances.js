@@ -7,8 +7,7 @@ import {createObjectCsvWriter} from "csv-writer"
 let columns = [
     { name: 'n', alignment: 'left', color: 'green'},
     { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'native', alignment: 'right', color: 'cyan'},
-    { name: 'usd', alignment: 'right', color: 'cyan'},
+    { name: 'NativeUSD', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
@@ -17,8 +16,7 @@ let columns = [
 let headers = [
     { id: 'n', title: 'n'},
     { id: 'wallet', title: 'wallet'},
-    { id: 'native', title: 'native'},
-    { id: 'usd', title: 'usd'},
+    { id: 'NativeUSD', title: 'NativeUSD'},
     { id: 'USDT', title: 'USDT'},
     { id: 'USDC', title: 'USDC'},
     { id: 'DAI', title: 'DAI'},
@@ -161,6 +159,7 @@ let walletsData = []
 let csvData = []
 let stables = ['USDT', 'USDC', 'USDC.e', 'DAI']
 let p
+let isJson = false
 
 async function fetchWallet(wallet, index, network) {
     let nativeBalance = 0
@@ -173,8 +172,8 @@ async function fetchWallet(wallet, index, network) {
     let walletData = {
         n: index,
         wallet: wallet,
-        native: nativeBalance.toFixed(3),
-        usd: nativeBalance > 0 ? (nativeBalance * networks[network].nativePrice).toFixed(2) : 0
+        Native: nativeBalance.toFixed(3),
+        NativeUSD: nativeBalance > 0 ? (nativeBalance * networks[network].nativePrice).toFixed(2) : 0
     }
 
     walletData['USDC'] = 0
@@ -199,15 +198,65 @@ async function fetchWallet(wallet, index, network) {
     walletsData.push(walletData)
 }
 
+async function fetchWalletAllNetwork(wallet, index) {
+    let nativeBalance = 0
+    let walletData = {
+        n: index,
+        wallet: wallet,
+        NativeUSD: 0,
+        USDC: 0,
+        'USDC.e': 0,
+        USDT: 0,
+        DAI: 0
+    }
+
+    for (const [networkName, network] of Object.entries(networks)) {
+        try {
+            const nativeBalanceWei = await network.provider.getBalance(wallet)
+            nativeBalance = parseInt(nativeBalanceWei)  / Math.pow(10, 18)
+        } catch (e) {}
+
+        walletData.NativeUSD = parseFloat(walletData.NativeUSD) + parseFloat(nativeBalance > 0 ? (nativeBalance * network.nativePrice).toFixed(2) : 0)
+
+        try {
+            for (const stable of stables) {
+                if (network[stable]) {
+                    let stableData
+                    let tokenContract = new ethers.Contract(network[stable].address, ['function balanceOf(address) view returns (uint256)'], network.provider)
+                    let balance = await tokenContract.balanceOf(wallet)
+                    stableData = parseInt(balance) / Math.pow(10, network[stable].decimals)
+                    stableData = parseFloat(stableData) > 0 ? stableData.toFixed(2) : 0
+                    walletData[stable] = (parseFloat(walletData[stable]) + parseFloat(stableData)).toFixed(2)
+                }
+            }
+        } catch (e) {}
+    }
+    walletData.NativeUSD = parseFloat(walletData.NativeUSD.toFixed(2))
+    walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
+    walletData['USDT'] = parseFloat(walletData['USDT'])
+    walletData['DAI'] = parseFloat(walletData['DAI'])
+    delete walletData['USDC.e']
+    walletsData.push(walletData)
+}
+
 async function fetchWallets(network) {
     walletsData = []
     csvData = []
     wallets = readWallets('./addresses/evm.txt')
+    let walletPromises
+
+    if (network === 'all') {
+        walletPromises = wallets.map((account, index) => fetchWalletAllNetwork(account, index+1))
+    } else {
+        columns.push({ name: 'Native', alignment: 'right', color: 'cyan'})
+        headers.push({ id: 'Native', title: 'Native'})
+        walletPromises = wallets.map((account, index) => fetchWallet(account, index+1, network))
+    }
+
     p = new Table({
         columns: columns
     })
 
-    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1, network))
     return Promise.all(walletPromises)
 }
 
@@ -218,8 +267,7 @@ async function collectData(network) {
     await fetchWallets(network)
 
     let totalRow = {
-        native: 0,
-        usd: 0,
+        NativeUSD: 0,
         USDT: 0,
         USDC: 0,
         DAI: 0,
@@ -229,17 +277,27 @@ async function collectData(network) {
         for (const key in totalRow) {
             totalRow[key] += parseFloat(obj[key]) || 0
         }
-        obj.native = obj.native  + ' ' + getNativeToken(network)
+        if (network != 'all') {
+            if (isJson) {
+                obj.Native = obj.Native
+                obj.Native_name = getNativeToken(network)
+            } else {
+                obj.Native = obj.Native + ' ' + getNativeToken(network)
+            }
+        }
     })
 
     for (const key in totalRow) {
-        totalRow[key] = totalRow[key] > 0 ? parseFloat(totalRow[key]).toFixed(key === 'native' ? 3 : 2) : 0
+        totalRow[key] = totalRow[key] > 0 ? parseFloat(totalRow[key]).toFixed(key === 'Native' ? 3 : 2) : 0
     }
 
-    totalRow.native = totalRow.native  + ' ' + getNativeToken(network)
+    if (network != 'all') {
+        totalRow.Native = 0
+        totalRow.Native = totalRow.Native  + ' ' + getNativeToken(network)
+    }
 
     totalRow.n = wallets.length+1
-    totalRow.wallet = 'TOTAL'
+    totalRow.wallet = 'Total'
 
     walletsData.push(totalRow)
 
@@ -277,6 +335,7 @@ export async function balancesFetchDataAndPrintTable(network) {
 }
 
 export async function balancesData(network) {
+    isJson = true
     await collectData(network)
     await saveToCsv(network)
     return walletsData
