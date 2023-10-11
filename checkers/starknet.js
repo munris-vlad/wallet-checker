@@ -2,6 +2,7 @@ import '../utils/common.js'
 import {
     getKeyByValue,
     readWallets,
+    sleep,
     starknetApiUrl, starknetBalanceQuery,
     starknetHeaders, starknetTransfersQuery, starknetTxQuery,
 } from '../utils/common.js'
@@ -188,29 +189,33 @@ async function getBalances(wallet) {
         stats[wallet].balances[symbol] = 0
     })
 
-    let parseBalances = await fetch(starknetApiUrl, {
-        method: "POST",
-        headers: starknetHeaders,
-        body: JSON.stringify({
-            query: starknetBalanceQuery,
-            variables: {
-                input: { owner_address: wallet },
-            },
-        }),
-    })
+    try {
+        let parseBalances = await fetch(starknetApiUrl, {
+            method: "POST",
+            headers: starknetHeaders,
+            body: JSON.stringify({
+                query: starknetBalanceQuery,
+                variables: {
+                    input: { owner_address: wallet },
+                },
+            }),
+        })
 
-    let balancesParse = await parseBalances.json()
+        let balancesParse = await parseBalances.json()
 
-    if (balancesParse.data) {
-        const balances = balancesParse.data.erc20BalancesByOwnerAddress
+        if (balancesParse.data) {
+            const balances = balancesParse.data.erc20BalancesByOwnerAddress
 
-        if (balances) {
-            Object.values(balances).forEach(balance => {
-                if (filterSymbol.includes(balance.contract_erc20_contract.symbol)) {
-                    stats[wallet].balances[balance.contract_erc20_contract.symbol] = balance.balance_display
-                }
-            })
+            if (balances) {
+                Object.values(balances).forEach(balance => {
+                    if (filterSymbol.includes(balance.contract_erc20_contract.symbol)) {
+                        stats[wallet].balances[balance.contract_erc20_contract.symbol] = balance.balance_display
+                    }
+                })
+            }
         }
+    } catch (e) {
+        console.log(e.toString())
     }
 }
 
@@ -232,52 +237,56 @@ async function getTxs(wallet) {
         protocols[protocol.name].url = protocol.url
     })
 
-    let parseTransactions = await fetch(starknetApiUrl, {
-        method: "POST",
-        headers: starknetHeaders,
-        body: JSON.stringify({
-            query: starknetTxQuery,
-            variables: {
-                'first': 1000,
-                'after': null,
-                'input': {
-                    'initiator_address': wallet,
-                    'sort_by': 'timestamp',
-                    'order_by': 'desc',
-                    'min_block_number': null,
-                    'max_block_number': null,
-                    'min_timestamp': null,
-                    'max_timestamp': null
-                }
-            },
-        }),
-    })
+    try {
+        let parseTransactions = await fetch(starknetApiUrl, {
+            method: "POST",
+            headers: starknetHeaders,
+            body: JSON.stringify({
+                query: starknetTxQuery,
+                variables: {
+                    'first': 1000,
+                    'after': null,
+                    'input': {
+                        'initiator_address': wallet,
+                        'sort_by': 'timestamp',
+                        'order_by': 'desc',
+                        'min_block_number': null,
+                        'max_block_number': null,
+                        'min_timestamp': null,
+                        'max_timestamp': null
+                    }
+                },
+            }),
+        })
 
-    let transactions = await parseTransactions.json()
-    if (transactions.data) {
-        txs = transactions.data.transactions.edges
-    }
+        let transactions = await parseTransactions.json()
+        if (transactions.data) {
+            txs = transactions.data.transactions.edges
+        }
 
-    let parseTransfers = await fetch(starknetApiUrl, {
-        method: "POST",
-        headers: starknetHeaders,
-        body: JSON.stringify({
-            query: starknetTransfersQuery,
-            variables: {
-                'first': 1000,
-                'after': null,
-                'input': {
-                    'transfer_from_or_to_address': wallet,
-                    'sort_by': 'timestamp',
-                    'order_by': 'desc'
-                }
-            },
-        }),
-    })
+        let parseTransfers = await fetch(starknetApiUrl, {
+            method: "POST",
+            headers: starknetHeaders,
+            body: JSON.stringify({
+                query: starknetTransfersQuery,
+                variables: {
+                    'first': 1000,
+                    'after': null,
+                    'input': {
+                        'transfer_from_or_to_address': wallet,
+                        'sort_by': 'timestamp',
+                        'order_by': 'desc'
+                    }
+                },
+            }),
+        })
 
-    let transfersData = await parseTransfers.json()
-    if (transfersData.data) {
-        transfers = transfersData.data.erc20TransferEvents.edges
+        let transfersData = await parseTransfers.json()
+        if (transfersData.data) {
+            transfers = transfersData.data.erc20TransferEvents.edges
+        }
+    } catch (e) {
+        console.log(e.toString())
     }
 
     if (txs.length) {
@@ -445,7 +454,7 @@ function fetchWallets() {
     jsonData = []
     csvData = []
     
-    const batchSize = 250
+    const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -477,7 +486,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 5000)
+            }, i * 2000)
         })
 
         walletPromises.push(promise)
