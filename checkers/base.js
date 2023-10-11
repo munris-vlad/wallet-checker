@@ -124,7 +124,11 @@ async function getTxs(wallet) {
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        uniqueContracts.add(tx.to.hash)
+        
+        if (tx.to) {
+            uniqueContracts.add(tx.to.hash)
+        }
+
         totalFee += parseInt(tx.fee.value) / Math.pow(10, 18)
         volume += (parseInt(tx.value) / Math.pow(10, 18)) * ethPrice
     })

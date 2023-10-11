@@ -486,7 +486,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 2000)
+            }, i * 3000)
         })
 
         walletPromises.push(promise)
