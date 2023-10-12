@@ -229,6 +229,8 @@ async function getTxs(wallet) {
     let volume = 0
     let txs = []
     let transfers = []
+    let bridgeTo = 0
+    let bridgeFrom = 0
 
     let protocols = {}
     protocolsData.forEach(protocol => {
@@ -237,53 +239,77 @@ async function getTxs(wallet) {
         protocols[protocol.name].url = protocol.url
     })
 
-    try {
-        let parseTransactions = await fetch(starknetApiUrl, {
-            method: "POST",
-            headers: starknetHeaders,
-            body: JSON.stringify({
-                query: starknetTxQuery,
-                variables: {
-                    'first': 1000,
-                    'after': null,
-                    'input': {
-                        'initiator_address': wallet,
-                        'sort_by': 'timestamp',
-                        'order_by': 'desc',
-                        'min_block_number': null,
-                        'max_block_number': null,
-                        'min_timestamp': null,
-                        'max_timestamp': null
-                    }
-                },
-            }),
-        })
+    let isSuccessTxParse = false
+    let isSuccessTransfersParse = false
+    let retryCount = 0
+    let retryTransfersCount = 0
 
-        let transactions = await parseTransactions.json()
-        if (transactions.data) {
-            txs = transactions.data.transactions.edges
+    try {
+        while (!isSuccessTxParse && retryCount < 5) {
+            let parseTransactions = await fetch(starknetApiUrl, {
+                method: "POST",
+                headers: starknetHeaders,
+                body: JSON.stringify({
+                    query: starknetTxQuery,
+                    variables: {
+                        'first': 1000,
+                        'after': null,
+                        'input': {
+                            'initiator_address': wallet,
+                            'sort_by': 'timestamp',
+                            'order_by': 'desc',
+                            'min_block_number': null,
+                            'max_block_number': null,
+                            'min_timestamp': null,
+                            'max_timestamp': null
+                        }
+                    },
+                }),
+            }).catch(e => {
+                console.log(e.toString())
+            })
+
+            let transactions = await parseTransactions.json()
+
+            if (transactions.data) {
+                if (transactions.data.transactions.edges.length) {
+                    txs = transactions.data.transactions.edges
+                    isSuccessTxParse = true
+                } else {
+                    retryCount++
+                }
+            }
         }
 
-        let parseTransfers = await fetch(starknetApiUrl, {
-            method: "POST",
-            headers: starknetHeaders,
-            body: JSON.stringify({
-                query: starknetTransfersQuery,
-                variables: {
-                    'first': 1000,
-                    'after': null,
-                    'input': {
-                        'transfer_from_or_to_address': wallet,
-                        'sort_by': 'timestamp',
-                        'order_by': 'desc'
-                    }
-                },
-            }),
-        })
+        while (!isSuccessTransfersParse && retryTransfersCount < 3) {
+            let parseTransfers = await fetch(starknetApiUrl, {
+                method: "POST",
+                headers: starknetHeaders,
+                body: JSON.stringify({
+                    query: starknetTransfersQuery,
+                    variables: {
+                        'first': 1000,
+                        'after': null,
+                        'input': {
+                            'transfer_from_or_to_address': wallet,
+                            'sort_by': 'timestamp',
+                            'order_by': 'desc'
+                        }
+                    },
+                }),
+            }).catch(e => {
+                console.log(e.toString())
+            })
 
-        let transfersData = await parseTransfers.json()
-        if (transfersData.data) {
-            transfers = transfersData.data.erc20TransferEvents.edges
+            let transfersData = await parseTransfers.json()
+            if (transfersData.data) {
+                if (transfersData.data.erc20TransferEvents.edges.length) {
+                    transfers = transfersData.data.erc20TransferEvents.edges
+                    isSuccessTransfersParse = true
+                } else {
+                    retryTransfersCount++
+                }
+            }
         }
     } catch (e) {
         console.log(e.toString())
@@ -337,8 +363,6 @@ async function getTxs(wallet) {
             }
         }
 
-        let bridgeTo = 0
-        let bridgeFrom = 0
         for (const transfer of Object.values(transfers)) {
             if (transfer.node.main_call) {
                 if (transfer.node.transfer_from_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
@@ -403,7 +427,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount ?? 0,
         'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
-        'Bridge to / from': `${stats[wallet].bridge_to} / ${stats[wallet].bridge_from}`,
+        'Bridge to / from': `${stats[wallet].bridge_to ?? 0} / ${stats[wallet].bridge_from ?? 0}`,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
@@ -432,8 +456,8 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount ?? 0,
         'Volume': stats[wallet].volume ? stats[wallet].volume?.toFixed(2) : 0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
-        'Bridge to': stats[wallet].bridge_to,
-        'Bridge from': stats[wallet].bridge_from,
+        'Bridge to': stats[wallet].bridge_to ?? 0,
+        'Bridge from': stats[wallet].bridge_from ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
