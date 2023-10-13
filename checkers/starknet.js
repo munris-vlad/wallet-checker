@@ -193,14 +193,17 @@ async function getBalances(wallet) {
         let parseBalances = await fetch(starknetApiUrl, {
             method: "POST",
             headers: starknetHeaders,
+            redirect: 'follow',
             body: JSON.stringify({
                 query: starknetBalanceQuery,
                 variables: {
                     input: { owner_address: wallet },
                 },
             }),
+        }).catch(e => {
+            console.log(e)
         })
-
+       
         let balancesParse = await parseBalances.json()
 
         if (balancesParse.data) {
