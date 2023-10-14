@@ -11,6 +11,7 @@ import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
+import { curly } from 'node-libcurl'
 
 let ethPrice = 0
 await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
@@ -190,24 +191,18 @@ async function getBalances(wallet) {
     })
 
     try {
-        let parseBalances = await fetch(starknetApiUrl, {
-            method: "POST",
-            headers: starknetHeaders,
-            redirect: 'follow',
-            body: JSON.stringify({
+        const balancesData = await curly.post(starknetApiUrl, {
+            postFields: JSON.stringify({
                 query: starknetBalanceQuery,
                 variables: {
                     input: { owner_address: wallet },
                 },
             }),
-        }).catch(e => {
-            console.log(e)
+            httpHeader: starknetHeaders
         })
        
-        let balancesParse = await parseBalances.json()
-
-        if (balancesParse.data) {
-            const balances = balancesParse.data.erc20BalancesByOwnerAddress
+        if (balancesData.data) {
+            const balances = balancesData.data.data.erc20BalancesByOwnerAddress
 
             if (balances) {
                 Object.values(balances).forEach(balance => {
@@ -249,10 +244,8 @@ async function getTxs(wallet) {
 
     try {
         while (!isSuccessTxParse && retryCount < 5) {
-            let parseTransactions = await fetch(starknetApiUrl, {
-                method: "POST",
-                headers: starknetHeaders,
-                body: JSON.stringify({
+            const transactions = await curly.post(starknetApiUrl, {
+                postFields: JSON.stringify({
                     query: starknetTxQuery,
                     variables: {
                         'first': 1000,
@@ -268,15 +261,12 @@ async function getTxs(wallet) {
                         }
                     },
                 }),
-            }).catch(e => {
-                console.log(e.toString())
+                httpHeader: starknetHeaders
             })
 
-            let transactions = await parseTransactions.json()
-
             if (transactions.data) {
-                if (transactions.data.transactions.edges.length) {
-                    txs = transactions.data.transactions.edges
+                if (transactions.data.data.transactions.edges.length) {
+                    txs = transactions.data.data.transactions.edges
                     isSuccessTxParse = true
                 } else {
                     retryCount++
@@ -285,10 +275,8 @@ async function getTxs(wallet) {
         }
 
         while (!isSuccessTransfersParse && retryTransfersCount < 3) {
-            let parseTransfers = await fetch(starknetApiUrl, {
-                method: "POST",
-                headers: starknetHeaders,
-                body: JSON.stringify({
+            const transfersData = await curly.post(starknetApiUrl, {
+                postFields: JSON.stringify({
                     query: starknetTransfersQuery,
                     variables: {
                         'first': 1000,
@@ -300,14 +288,12 @@ async function getTxs(wallet) {
                         }
                     },
                 }),
-            }).catch(e => {
-                console.log(e.toString())
+                httpHeader: starknetHeaders
             })
 
-            let transfersData = await parseTransfers.json()
             if (transfersData.data) {
-                if (transfersData.data.erc20TransferEvents.edges.length) {
-                    transfers = transfersData.data.erc20TransferEvents.edges
+                if (transfersData.data.data.erc20TransferEvents.edges.length) {
+                    transfers = transfersData.data.data.erc20TransferEvents.edges
                     isSuccessTransfersParse = true
                 } else {
                     retryTransfersCount++
