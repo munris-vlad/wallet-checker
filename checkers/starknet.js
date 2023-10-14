@@ -200,8 +200,8 @@ async function getBalances(wallet) {
             }),
             httpHeader: starknetHeaders
         })
-       
-        if (balancesData.data) {
+
+        if (balancesData.data.data.erc20BalancesByOwnerAddress) {
             const balances = balancesData.data.data.erc20BalancesByOwnerAddress
 
             if (balances) {
@@ -467,7 +467,7 @@ function fetchWallets() {
     jsonData = []
     csvData = []
     
-    const batchSize = 50
+    const batchSize = 1
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -499,7 +499,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 3000)
+            }, i * 2000)
         })
 
         walletPromises.push(promise)
