@@ -344,10 +344,10 @@ export const entryPoint = async () => {
                     name: "ZkSync",
                     value: "zksync",
                 },
-                {
-                    name: "Starknet",
-                    value: "starknet",
-                },
+                // {
+                //     name: "Starknet",
+                //     value: "starknet",
+                // },
                 {
                     name: "Layerzero",
                     value: "layerzero",
