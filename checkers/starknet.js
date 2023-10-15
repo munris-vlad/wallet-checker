@@ -192,17 +192,6 @@ async function getBalances(wallet) {
     })
 
     try {
-        // let parseBalances = await fetch(starknetApiUrl, {
-        //     method: "POST",
-        //     headers: starknetHeaders,
-        //     body: JSON.stringify({
-        //         query: starknetBalanceQuery,
-        //         variables: {
-        //             input: { owner_address: wallet },
-        //         },
-        //     }),
-        // })
-
         let parseBalances = await cycleTLS.post(starknetApiUrl, {
             method: "POST",
             headers: starknetHeaders,
@@ -250,7 +239,7 @@ async function getTxs(wallet) {
     })
 
     try {
-        let parseTransactions = await fetch(starknetApiUrl, {
+        let transactions = await cycleTLS.post(starknetApiUrl, {
             method: "POST",
             headers: starknetHeaders,
             body: JSON.stringify({
@@ -269,14 +258,14 @@ async function getTxs(wallet) {
                     }
                 },
             }),
+            disableRedirect: true
         })
 
-        let transactions = await parseTransactions.json()
-        if (transactions.data) {
-            txs = transactions.data.transactions.edges
+        if (transactions.body.data) {
+            txs = transactions.body.data.transactions.edges
         }
 
-        let parseTransfers = await fetch(starknetApiUrl, {
+        let transfersData = await cycleTLS.post(starknetApiUrl, {
             method: "POST",
             headers: starknetHeaders,
             body: JSON.stringify({
@@ -291,11 +280,11 @@ async function getTxs(wallet) {
                     }
                 },
             }),
+            disableRedirect: true
         })
 
-        let transfersData = await parseTransfers.json()
-        if (transfersData.data) {
-            transfers = transfersData.data.erc20TransferEvents.edges
+        if (transfersData.body.data) {
+            transfers = transfersData.body.data.erc20TransferEvents.edges
         }
     } catch (e) {
         console.log(e.toString())
@@ -392,7 +381,7 @@ async function fetchWallet(wallet, index) {
     }
 
     await getBalances(wallet)
-    // await getTxs(wallet)
+    await getTxs(wallet)
     progressBar.update(iteration)
 
     total.gas += stats[wallet].total_gas
@@ -466,7 +455,7 @@ function fetchWallets() {
     jsonData = []
     csvData = []
     
-    const batchSize = 50
+    const batchSize = 1
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -544,11 +533,11 @@ async function addTotalRow() {
 }
 
 export async function starknetFetchDataAndPrintTable() {
-    // progressBar.start(iterations, 0)
+    progressBar.start(iterations, 0)
     await fetchWallets()
     await addTotalRow()
     await saveToCsv()
-    // progressBar.stop()
+    progressBar.stop()
     p.printTable()
 }
 
