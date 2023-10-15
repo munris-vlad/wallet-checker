@@ -1,7 +1,7 @@
 import {chooiceNetwork, entryPoint, evmNetwork} from "./utils/common.js"
 import {zkSyncFetchDataAndPrintTable} from "./checkers/zksync.js"
 import {aptosFetchDataAndPrintTable} from "./checkers/aptos.js"
-// import {starknetFetchDataAndPrintTable} from "./checkers/starknet.js"
+import {starknetFetchDataAndPrintTable} from "./checkers/starknet.js"
 import {zoraFetchDataAndPrintTable} from "./checkers/zora.js"
 import {lineaFetchDataAndPrintTable} from "./checkers/linea.js"
 import {balancesFetchDataAndPrintTable} from "./checkers/balances.js"
@@ -45,10 +45,10 @@ async function startMenu(menu) {
             await zkSyncFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()
             break
-        // case "starknet":
-        //     await starknetFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
-        //     if (startOver) await startMenu()
-        //     break
+        case "starknet":
+            await starknetFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+            if (startOver) await startMenu()
+            break
         case "layerzero":
             await layerzeroFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()

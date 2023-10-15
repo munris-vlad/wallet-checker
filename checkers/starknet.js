@@ -11,6 +11,7 @@ import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
+import initCycleTLS from 'cycletls'
 
 let ethPrice = 0
 await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
@@ -150,6 +151,7 @@ let total = {
 }
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+const cycleTLS = await initCycleTLS()
 
 const contracts = [
     {
@@ -190,18 +192,31 @@ async function getBalances(wallet) {
     })
 
     try {
-        const balancesData = await curly.post(starknetApiUrl, {
-            postFields: JSON.stringify({
+        // let parseBalances = await fetch(starknetApiUrl, {
+        //     method: "POST",
+        //     headers: starknetHeaders,
+        //     body: JSON.stringify({
+        //         query: starknetBalanceQuery,
+        //         variables: {
+        //             input: { owner_address: wallet },
+        //         },
+        //     }),
+        // })
+
+        let parseBalances = await cycleTLS.post(starknetApiUrl, {
+            method: "POST",
+            headers: starknetHeaders,
+            body: JSON.stringify({
                 query: starknetBalanceQuery,
                 variables: {
                     input: { owner_address: wallet },
                 },
             }),
-            httpHeader: starknetHeaders
+            disableRedirect: true
         })
 
-        if (balancesData.data.data.erc20BalancesByOwnerAddress) {
-            const balances = balancesData.data.data.erc20BalancesByOwnerAddress
+        if (parseBalances.body.data) {
+            const balances = parseBalances.body.data.erc20BalancesByOwnerAddress
 
             if (balances) {
                 Object.values(balances).forEach(balance => {
@@ -226,8 +241,6 @@ async function getTxs(wallet) {
     let volume = 0
     let txs = []
     let transfers = []
-    let bridgeTo = 0
-    let bridgeFrom = 0
 
     let protocols = {}
     protocolsData.forEach(protocol => {
@@ -236,68 +249,53 @@ async function getTxs(wallet) {
         protocols[protocol.name].url = protocol.url
     })
 
-    let isSuccessTxParse = false
-    let isSuccessTransfersParse = false
-    let retryCount = 0
-    let retryTransfersCount = 0
-
     try {
-        while (!isSuccessTxParse && retryCount < 5) {
-            const transactions = await curly.post(starknetApiUrl, {
-                postFields: JSON.stringify({
-                    query: starknetTxQuery,
-                    variables: {
-                        'first': 1000,
-                        'after': null,
-                        'input': {
-                            'initiator_address': wallet,
-                            'sort_by': 'timestamp',
-                            'order_by': 'desc',
-                            'min_block_number': null,
-                            'max_block_number': null,
-                            'min_timestamp': null,
-                            'max_timestamp': null
-                        }
-                    },
-                }),
-                httpHeader: starknetHeaders
-            })
+        let parseTransactions = await fetch(starknetApiUrl, {
+            method: "POST",
+            headers: starknetHeaders,
+            body: JSON.stringify({
+                query: starknetTxQuery,
+                variables: {
+                    'first': 1000,
+                    'after': null,
+                    'input': {
+                        'initiator_address': wallet,
+                        'sort_by': 'timestamp',
+                        'order_by': 'desc',
+                        'min_block_number': null,
+                        'max_block_number': null,
+                        'min_timestamp': null,
+                        'max_timestamp': null
+                    }
+                },
+            }),
+        })
 
-            if (transactions.data) {
-                if (transactions.data.data.transactions.edges.length) {
-                    txs = transactions.data.data.transactions.edges
-                    isSuccessTxParse = true
-                } else {
-                    retryCount++
-                }
-            }
+        let transactions = await parseTransactions.json()
+        if (transactions.data) {
+            txs = transactions.data.transactions.edges
         }
 
-        while (!isSuccessTransfersParse && retryTransfersCount < 3) {
-            const transfersData = await curly.post(starknetApiUrl, {
-                postFields: JSON.stringify({
-                    query: starknetTransfersQuery,
-                    variables: {
-                        'first': 1000,
-                        'after': null,
-                        'input': {
-                            'transfer_from_or_to_address': wallet,
-                            'sort_by': 'timestamp',
-                            'order_by': 'desc'
-                        }
-                    },
-                }),
-                httpHeader: starknetHeaders
-            })
+        let parseTransfers = await fetch(starknetApiUrl, {
+            method: "POST",
+            headers: starknetHeaders,
+            body: JSON.stringify({
+                query: starknetTransfersQuery,
+                variables: {
+                    'first': 1000,
+                    'after': null,
+                    'input': {
+                        'transfer_from_or_to_address': wallet,
+                        'sort_by': 'timestamp',
+                        'order_by': 'desc'
+                    }
+                },
+            }),
+        })
 
-            if (transfersData.data) {
-                if (transfersData.data.data.erc20TransferEvents.edges.length) {
-                    transfers = transfersData.data.data.erc20TransferEvents.edges
-                    isSuccessTransfersParse = true
-                } else {
-                    retryTransfersCount++
-                }
-            }
+        let transfersData = await parseTransfers.json()
+        if (transfersData.data) {
+            transfers = transfersData.data.erc20TransferEvents.edges
         }
     } catch (e) {
         console.log(e.toString())
@@ -351,6 +349,8 @@ async function getTxs(wallet) {
             }
         }
 
+        let bridgeTo = 0
+        let bridgeFrom = 0
         for (const transfer of Object.values(transfers)) {
             if (transfer.node.main_call) {
                 if (transfer.node.transfer_from_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
@@ -392,7 +392,7 @@ async function fetchWallet(wallet, index) {
     }
 
     await getBalances(wallet)
-    await getTxs(wallet)
+    // await getTxs(wallet)
     progressBar.update(iteration)
 
     total.gas += stats[wallet].total_gas
@@ -415,7 +415,7 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount ?? 0,
         'Volume': stats[wallet].volume ? '$'+stats[wallet].volume?.toFixed(2) : '$'+0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
-        'Bridge to / from': `${stats[wallet].bridge_to ?? 0} / ${stats[wallet].bridge_from ?? 0}`,
+        'Bridge to / from': `${stats[wallet].bridge_to} / ${stats[wallet].bridge_from}`,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
@@ -444,8 +444,8 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount ?? 0,
         'Volume': stats[wallet].volume ? stats[wallet].volume?.toFixed(2) : 0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
-        'Bridge to': stats[wallet].bridge_to ?? 0,
-        'Bridge from': stats[wallet].bridge_from ?? 0,
+        'Bridge to': stats[wallet].bridge_to,
+        'Bridge from': stats[wallet].bridge_from,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
@@ -466,7 +466,7 @@ function fetchWallets() {
     jsonData = []
     csvData = []
     
-    const batchSize = 1
+    const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -544,11 +544,11 @@ async function addTotalRow() {
 }
 
 export async function starknetFetchDataAndPrintTable() {
-    progressBar.start(iterations, 0)
+    // progressBar.start(iterations, 0)
     await fetchWallets()
     await addTotalRow()
     await saveToCsv()
-    progressBar.stop()
+    // progressBar.stop()
     p.printTable()
 }
 
