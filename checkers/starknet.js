@@ -142,6 +142,7 @@ let wallets = readWallets('./addresses/starknet.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
+let cycleTLS
 let total = {
     eth: 0,
     usdc: 0,
@@ -151,7 +152,6 @@ let total = {
 }
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-const cycleTLS = await initCycleTLS()
 
 const contracts = [
     {
@@ -478,12 +478,13 @@ async function fetchWallet(wallet, index) {
     iteration++
 }
 
-function fetchWallets() {
+async function fetchWallets() {
     wallets = readWallets('./addresses/starknet.txt')
     iterations = wallets.length
     iteration = 1
     jsonData = []
     csvData = []
+    cycleTLS = await initCycleTLS()
     
     const batchSize = 1
     const batchCount = Math.ceil(wallets.length / batchSize)
@@ -569,6 +570,7 @@ export async function starknetFetchDataAndPrintTable() {
     await saveToCsv()
     progressBar.stop()
     p.printTable()
+    cycleTLS.exit()
 }
 
 export async function starknetData() {
