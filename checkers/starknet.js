@@ -238,53 +238,83 @@ async function getTxs(wallet) {
         protocols[protocol.name].url = protocol.url
     })
 
-    try {
-        let transactions = await cycleTLS.post(starknetApiUrl, {
-            method: "POST",
-            headers: starknetHeaders,
-            body: JSON.stringify({
-                query: starknetTxQuery,
-                variables: {
-                    'first': 1000,
-                    'after': null,
-                    'input': {
-                        'initiator_address': wallet,
-                        'sort_by': 'timestamp',
-                        'order_by': 'desc',
-                        'min_block_number': null,
-                        'max_block_number': null,
-                        'min_timestamp': null,
-                        'max_timestamp': null
-                    }
-                },
-            }),
-            disableRedirect: true
-        })
+    let isAllTxCollected = false
+    let isAllTransfersCollected = false
+    let first = 30
+    let after = null
+    let firstTransfers = 30
+    let afterTransfers = null
 
-        if (transactions.body.data) {
-            txs = transactions.body.data.transactions.edges
+    try {
+        while (!isAllTxCollected) {
+            let transactions = await cycleTLS.post(starknetApiUrl, {
+                method: "POST",
+                headers: starknetHeaders,
+                body: JSON.stringify({
+                    query: starknetTxQuery,
+                    variables: {
+                        'first': first,
+                        'after': after,
+                        'input': {
+                            'initiator_address': wallet,
+                            'sort_by': 'timestamp',
+                            'order_by': 'desc',
+                            'min_block_number': null,
+                            'max_block_number': null,
+                            'min_timestamp': null,
+                            'max_timestamp': null,
+                            'transaction_types': null
+                        }
+                    },
+                }),
+                disableRedirect: true
+            })
+
+            if (transactions.body.data) {
+                if (transactions.body.data.transactions.edges) {
+                    txs.push(...transactions.body.data.transactions.edges)
+                }
+
+                if (transactions.body.data.transactions.pageInfo.hasNextPage) {
+                    after = transactions.body.data.transactions.pageInfo.endCursor
+                    await sleep(500)
+                } else {
+                    isAllTxCollected = true
+                }
+            }
         }
 
-        let transfersData = await cycleTLS.post(starknetApiUrl, {
-            method: "POST",
-            headers: starknetHeaders,
-            body: JSON.stringify({
-                query: starknetTransfersQuery,
-                variables: {
-                    'first': 1000,
-                    'after': null,
-                    'input': {
-                        'transfer_from_or_to_address': wallet,
-                        'sort_by': 'timestamp',
-                        'order_by': 'desc'
-                    }
-                },
-            }),
-            disableRedirect: true
-        })
+        while (!isAllTransfersCollected) {
+            let transfersData = await cycleTLS.post(starknetApiUrl, {
+                method: "POST",
+                headers: starknetHeaders,
+                body: JSON.stringify({
+                    query: starknetTransfersQuery,
+                    variables: {
+                        'first': firstTransfers,
+                        'after': afterTransfers,
+                        'input': {
+                            'transfer_from_or_to_address': wallet,
+                            'sort_by': 'timestamp',
+                            'order_by': 'desc'
+                        }
+                    },
+                }),
+                disableRedirect: true
+            })
 
-        if (transfersData.body.data) {
-            transfers = transfersData.body.data.erc20TransferEvents.edges
+            if (transfersData.body.data) {
+                if (transfersData.body.data) {
+                    transfers.push(...transfersData.body.data.erc20TransferEvents.edges)
+                }
+
+                if (transfersData.body.data.erc20TransferEvents.pageInfo.hasNextPage) {
+                    afterTransfers = transfersData.body.data.erc20TransferEvents.pageInfo.endCursor
+                    await sleep(500)
+                } else {
+                    isAllTransfersCollected = true
+                }
+            }
         }
     } catch (e) {
         console.log(e.toString())
@@ -487,7 +517,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 2000)
+            }, i * 3000)
         })
 
         walletPromises.push(promise)
