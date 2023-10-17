@@ -21,6 +21,7 @@ const headers = [
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
     { id: 'Total gas spent', title: 'Total gas spent'},
+    { id: 'FT Points', title: 'FT Points'},
 ]
 
 const columns = [
@@ -38,6 +39,7 @@ const columns = [
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
+    { name: 'FT Points', alignment: 'right', color: 'cyan'},
 ]
 
 const apiUrl = "https://base.blockscout.com/api/v2"
@@ -78,6 +80,14 @@ async function getBalances(wallet) {
         })
     }).catch(e => {
         console.log(e.toString())
+    })
+}
+
+async function getFtPoints(wallet) {
+    await axios.get('https://prod-api.kosetto.com/points/'+wallet).then(response => {
+        stats[wallet].ft_points = response.data.totalPoints
+    }).catch(function (error) {
+        console.log(error.toString())
     })
 }
 
@@ -124,7 +134,11 @@ async function getTxs(wallet) {
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        uniqueContracts.add(tx.to.hash)
+        
+        if (tx.to) {
+            uniqueContracts.add(tx.to.hash)
+        }
+
         totalFee += parseInt(tx.fee.value) / Math.pow(10, 18)
         volume += (parseInt(tx.value) / Math.pow(10, 18)) * ethPrice
     })
@@ -156,6 +170,7 @@ async function fetchWallet(wallet, index) {
 
     await getBalances(wallet)
     await getTxs(wallet)
+    await getFtPoints(wallet)
     progressBar.update(iteration)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let usdFeeEthValue = (stats[wallet].totalFee*ethPrice).toFixed(2)
@@ -180,6 +195,7 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].first_tx_date ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '-',
         'Last tx': stats[wallet].last_tx_date ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '-',
         'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) + ` ($${usdFeeEthValue})` : 0,
+        'FT Points': stats[wallet].ft_points ?? 0
     }
 
     p.addRow(row)
@@ -199,7 +215,8 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) : 0,
-        'Total gas spent USDVALUE': stats[wallet].totalFee ? usdFeeEthValue : 0
+        'Total gas spent USDVALUE': stats[wallet].totalFee ? usdFeeEthValue : 0,
+        'FT Points': stats[wallet].ft_points ?? 0
     })
 
     iteration++
