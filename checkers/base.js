@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import {readWallets, getBalance} from '../utils/common.js'
+import {readWallets, getBalance, getKeyByValue} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -20,8 +20,7 @@ const headers = [
     { id: 'Months', title: 'Months'},
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
-    { id: 'Total gas spent', title: 'Total gas spent'},
-    { id: 'FT Points', title: 'FT Points'},
+    { id: 'Total gas spent', title: 'Total gas spent'}
 ]
 
 const columns = [
@@ -38,8 +37,7 @@ const columns = [
     { name: 'Months', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-    { name: 'FT Points', alignment: 'right', color: 'cyan'},
+    { name: 'Total gas spent', alignment: 'right', color: 'cyan'}
 ]
 
 const apiUrl = "https://base.blockscout.com/api/v2"
@@ -80,14 +78,6 @@ async function getBalances(wallet) {
         })
     }).catch(e => {
         console.log(e.toString())
-    })
-}
-
-async function getFtPoints(wallet) {
-    await axios.get('https://prod-api.kosetto.com/points/'+wallet).then(response => {
-        stats[wallet].ft_points = response.data.totalPoints
-    }).catch(function (error) {
-        console.log(error.toString())
     })
 }
 
@@ -170,7 +160,6 @@ async function fetchWallet(wallet, index) {
 
     await getBalances(wallet)
     await getTxs(wallet)
-    await getFtPoints(wallet)
     progressBar.update(iteration)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let usdFeeEthValue = (stats[wallet].totalFee*ethPrice).toFixed(2)
@@ -194,8 +183,7 @@ async function fetchWallet(wallet, index) {
         'Months': stats[wallet].unique_months ?? 0,
         'First tx': stats[wallet].first_tx_date ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '-',
         'Last tx': stats[wallet].last_tx_date ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '-',
-        'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) + ` ($${usdFeeEthValue})` : 0,
-        'FT Points': stats[wallet].ft_points ?? 0
+        'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) + ` ($${usdFeeEthValue})` : 0
     }
 
     p.addRow(row)
@@ -215,8 +203,7 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) : 0,
-        'Total gas spent USDVALUE': stats[wallet].totalFee ? usdFeeEthValue : 0,
-        'FT Points': stats[wallet].ft_points ?? 0
+        'Total gas spent USDVALUE': stats[wallet].totalFee ? usdFeeEthValue : 0
     })
 
     iteration++
@@ -234,6 +221,9 @@ function fetchWallets() {
     })
 
     wallets = readWallets('./addresses/base.txt')
+    const batchSize = 50
+    const batchCount = Math.ceil(wallets.length / batchSize)
+    const walletPromises = []
     iterations = wallets.length
     iteration = 1
     jsonData = []
@@ -243,7 +233,20 @@ function fetchWallets() {
     totalUsdc = 0
     totalDai = 0
 
-    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    for (let i = 0; i < batchCount; i++) {
+        const startIndex = i * batchSize
+        const endIndex = (i + 1) * batchSize
+        const batch = wallets.slice(startIndex, endIndex)
+
+        const promise = new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(fetchBatch(batch))
+            }, i * 3000)
+        })
+
+        walletPromises.push(promise)
+    }
+
     return Promise.all(walletPromises)
 }
 
@@ -264,6 +267,10 @@ async function addTotalRow() {
         'DAI': totalDai,
         'Total gas spent': totalGas.toFixed(4) + ` ($${(totalGas*ethPrice).toFixed(2)})`,
     })
+}
+
+async function fetchBatch(batch) {
+    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
 }
 
 export async function baseFetchDataAndPrintTable() {
