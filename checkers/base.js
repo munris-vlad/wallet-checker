@@ -271,7 +271,7 @@ async function addTotalRow() {
 }
 
 async function fetchBatch(batch) {
-    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
+    await Promise.all(batch.map((account, index) => fetchWallet(account, parseInt(getKeyByValue(wallets, account))+1)))
 }
 
 export async function baseFetchDataAndPrintTable() {
