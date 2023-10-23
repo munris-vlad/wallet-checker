@@ -42,6 +42,7 @@ const columns = [
 
 const apiUrl = "https://base.blockscout.com/api/v2"
 
+let debug = false
 let csvWriter
 let p
 let stats = []
@@ -65,7 +66,7 @@ async function getBalances(wallet) {
     await axios.get(apiUrl+'/addresses/'+wallet).then(response => {
         stats[wallet].balance = getBalance(response.data.coin_balance, 18)
     }).catch(function (error) {
-        console.log(error)
+        if (debug) console.log(e.toString())
     })
 
     await axios.get(apiUrl+'/addresses/'+wallet+'/token-balances').then(response => {
@@ -77,7 +78,7 @@ async function getBalances(wallet) {
             }
         })
     }).catch(e => {
-        console.log(e.toString())
+        if (debug) console.log(e.toString())
     })
 }
 
