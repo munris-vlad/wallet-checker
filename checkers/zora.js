@@ -5,9 +5,9 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import { HttpProxyAgent } from "http-proxy-agent"
+import { HttpsProxyAgent } from "https-proxy-agent"
 
-const agent = new HttpProxyAgent('http://munris:munrisproxy@65.109.29.224:3128')
+const agent = new HttpsProxyAgent('http://munris:munrisproxy@65.109.29.224:3128')
 
 const headers = [
     { id: 'n', title: '№'},
