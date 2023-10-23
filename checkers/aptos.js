@@ -20,6 +20,7 @@ const columns = [
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
+    { name: 'Aptos ONE', alignment: 'right', color: 'cyan'},
 ]
 
 const headers = [
@@ -35,7 +36,8 @@ const headers = [
     { id: 'Months', title: 'Months'},
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
-    { id: 'Total gas spent', title: 'Total gas spent'}
+    { id: 'Total gas spent', title: 'Total gas spent'},
+    { id: 'Aptos ONE', title: 'Aptos ONE'}
 ]
 
 const apiUrl = "https://api.apscan.io"
@@ -62,6 +64,7 @@ async function getBalances(wallet) {
 
     try {
         await axios.get(apiUrl+'/accounts?address=eq.'+wallet).then(response => {
+            console.log(response)
             if (response.data.length) {
                 let balances = response.data[0].all_balances
 
@@ -69,6 +72,24 @@ async function getBalances(wallet) {
                     if (balance.coin_info) {
                         if (filterSymbol.includes(balance.coin_info.symbol)) {
                             stats[wallet].balances[balance.coin_info.symbol] = getBalance(balance.balance, balance.coin_info.decimals)
+                        }
+                    }
+                })
+            }
+        }).catch()
+    } catch (e) {
+        return e.toString()
+    }
+
+    try {
+        await axios.get(apiUrl+'/tokens_by_address?address=eq.'+wallet).then(response => {
+            if (response.data.length) {
+                let tokens = response.data
+
+                Object.values(tokens).forEach(token => {
+                    if (token.token_info) {
+                        if (token.token_info.name === 'Aptos ONE Mainnet Anniversary 2023') {
+                            stats[wallet].aptos_one_nft = true
                         }
                     }
                 })
@@ -140,7 +161,8 @@ async function fetchWallet(wallet, index) {
     wallet = wallet.replace('0x0', '0x')
 
     stats[wallet] = {
-        balances: []
+        balances: [],
+        aptos_one_nft: false
     }
 
     await getBalances(wallet)
@@ -161,7 +183,8 @@ async function fetchWallet(wallet, index) {
         'Months': stats[wallet].unique_months,
         'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
         'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
+        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0,
+        'Aptos ONE': stats[wallet].aptos_one_nft ? 'Yes' : 'No'
     }
 
     p.addRow(row)
@@ -180,7 +203,8 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
-        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0
+        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0,
+        'Aptos ONE': stats[wallet].aptos_one_nft ? 'Yes' : 'No'
     })
 
     iteration++
