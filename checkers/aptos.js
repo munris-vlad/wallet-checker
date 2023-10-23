@@ -64,7 +64,6 @@ async function getBalances(wallet) {
 
     try {
         await axios.get(apiUrl+'/accounts?address=eq.'+wallet).then(response => {
-            console.log(response)
             if (response.data.length) {
                 let balances = response.data[0].all_balances
 
@@ -85,6 +84,7 @@ async function getBalances(wallet) {
         await axios.get(apiUrl+'/tokens_by_address?address=eq.'+wallet).then(response => {
             if (response.data.length) {
                 let tokens = response.data
+                console.log(tokens)
 
                 Object.values(tokens).forEach(token => {
                     if (token.token_info) {

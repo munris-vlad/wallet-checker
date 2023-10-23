@@ -31,6 +31,7 @@
                     <td :class="tdClass">{{ formatDate(item['First tx']) }}</td>
                     <td :class="tdClass">{{ formatDate(item['Last tx']) }}</td>
                     <td :class="tdClass">{{ item['Total gas spent'] }} (${{ item['Total gas spent USDVALUE'] }})</td>
+                    <td :class="tdClass">{{ item['Aptos ONE'] }}</td>
                 </tr>
             </tbody>
         </table>
@@ -74,7 +75,8 @@ export default {
                 'Months',
                 'First tx',
                 'Last tx',
-                'Total gas spent'
+                'Total gas spent',
+                'Aptos ONE'
             ]
         }
     },
