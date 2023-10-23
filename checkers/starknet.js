@@ -4,14 +4,14 @@ import {
     readWallets,
     sleep,
     starknetApiUrl, starknetBalanceQuery,
-    starknetHeaders, starknetTransfersQuery, starknetTxQuery,
+    starknetHeaders, starknetTransfersQuery, starknetTxQuery, timestampToDate,
 } from '../utils/common.js'
 import axios from "axios"
 import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import initCycleTLS from 'cycletls'
+import {HttpProxyAgent} from "http-proxy-agent"
 
 let ethPrice = 0
 await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
@@ -139,10 +139,10 @@ let csvWriter
 let stats = []
 let jsonData = []
 let wallets = readWallets('./addresses/starknet.txt')
+let proxies = readWallets('./proxies.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
-let cycleTLS
 let total = {
     eth: 0,
     usdc: 0,
@@ -151,7 +151,9 @@ let total = {
     gas: 0
 }
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
+const stables = ['USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+const apiUrl = 'https://voyager.online/api'
 
 const contracts = [
     {
@@ -186,41 +188,36 @@ const contracts = [
     }
 ]
 
-async function getBalances(wallet) {
+async function getBalances(wallet, proxy = null) {
+    let config = {}
+    if (proxy) {
+        config.httpAgent = new HttpProxyAgent(proxy)
+    }
+
     filterSymbol.forEach(symbol => {
         stats[wallet].balances[symbol] = 0
     })
 
-    try {
-        let parseBalances = await cycleTLS.post(starknetApiUrl, {
-            method: "POST",
-            headers: starknetHeaders,
-            body: JSON.stringify({
-                query: starknetBalanceQuery,
-                variables: {
-                    input: { owner_address: wallet },
-                },
-            }),
-            disableRedirect: true
-        })
-
-        if (parseBalances.body.data) {
-            const balances = parseBalances.body.data.erc20BalancesByOwnerAddress
-
+    let isBalancesFetched = false
+    while (!isBalancesFetched) {
+        await axios.get(apiUrl+'/contract/' + wallet + '/balances', config).then(async response => {
+            let balances = response.data
+            
             if (balances) {
+                isBalancesFetched = true
                 Object.values(balances).forEach(balance => {
-                    if (filterSymbol.includes(balance.contract_erc20_contract.symbol)) {
-                        stats[wallet].balances[balance.contract_erc20_contract.symbol] = balance.balance_display
+                    if (filterSymbol.includes(balance.symbol)) {
+                        stats[wallet].balances[balance.symbol] = balance.formattedBalance
                     }
                 })
             }
-        }
-    } catch (e) {
-        console.log(e.toString())
+        }).catch(e => {
+            console.log(e.toString())
+        })
     }
 }
 
-async function getTxs(wallet) {
+async function getTxs(wallet, proxy = null) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -230,6 +227,30 @@ async function getTxs(wallet) {
     let volume = 0
     let txs = []
     let transfers = []
+    let bridgeTo = 0
+    let bridgeFrom = 0
+    let isAllTxCollected = false
+    let isAllTransfersCollected = false
+
+    let config = {
+        params: {
+            to: wallet,
+            p: 1,
+            ps: 100
+        }
+    }
+
+    let transferConfig = {
+        params: {
+            p: 1,
+            ps: 100
+        }
+    }
+
+    if (proxy) {
+        config.httpAgent = new HttpProxyAgent(proxy)
+        transferConfig.httpAgent = new HttpProxyAgent(proxy)
+    }
 
     let protocols = {}
     protocolsData.forEach(protocol => {
@@ -238,166 +259,90 @@ async function getTxs(wallet) {
         protocols[protocol.name].url = protocol.url
     })
 
-    let isAllTxCollected = false
-    let isAllTransfersCollected = false
-    let first = 30
-    let after = null
-    let firstTransfers = 30
-    let afterTransfers = null
-
-    try {
-        while (!isAllTxCollected) {
-            let transactions = await cycleTLS.post(starknetApiUrl, {
-                method: "POST",
-                headers: starknetHeaders,
-                body: JSON.stringify({
-                    query: starknetTxQuery,
-                    variables: {
-                        'first': first,
-                        'after': after,
-                        'input': {
-                            'initiator_address': wallet,
-                            'sort_by': 'timestamp',
-                            'order_by': 'desc',
-                            'min_block_number': null,
-                            'max_block_number': null,
-                            'min_timestamp': null,
-                            'max_timestamp': null,
-                            'transaction_types': null
-                        }
-                    },
-                }),
-                disableRedirect: true
+    while (!isAllTxCollected) {
+        await axios.get(apiUrl + '/txns', config).then(async response => {
+            let items = response.data.items
+            let lastPage = response.data.lastPage
+            Object.values(items).forEach(tx => {
+                txs.push(tx)
             })
 
-            if (transactions.body.data) {
-                if (transactions.body.data.transactions.edges) {
-                    txs.push(...transactions.body.data.transactions.edges)
-                }
-
-                if (transactions.body.data.transactions.pageInfo.hasNextPage) {
-                    after = transactions.body.data.transactions.pageInfo.endCursor
-                    await sleep(500)
-                } else {
-                    isAllTxCollected = true
-                }
+            if (config.params.p === lastPage) {
+                isAllTxCollected = true
+            } else {
+                config.params.p++
             }
-        }
+        }).catch((e) => {
+            console.log(e.toString())
+        })
+    }
 
-        while (!isAllTransfersCollected) {
-            let transfersData = await cycleTLS.post(starknetApiUrl, {
-                method: "POST",
-                headers: starknetHeaders,
-                body: JSON.stringify({
-                    query: starknetTransfersQuery,
-                    variables: {
-                        'first': firstTransfers,
-                        'after': afterTransfers,
-                        'input': {
-                            'transfer_from_or_to_address': wallet,
-                            'sort_by': 'timestamp',
-                            'order_by': 'desc'
-                        }
-                    },
-                }),
-                disableRedirect: true
+    while (!isAllTransfersCollected) {
+        await axios.get(apiUrl + '/contract/' + wallet + '/transfers', transferConfig).then(async response => {
+            let items = response.data.items
+            let lastPage = response.data.lastPage
+            Object.values(items).forEach(transfer => {
+                transfers.push(transfer)
             })
 
-            if (transfersData.body.data) {
-                if (transfersData.body.data) {
-                    transfers.push(...transfersData.body.data.erc20TransferEvents.edges)
-                }
-
-                if (transfersData.body.data.erc20TransferEvents.pageInfo.hasNextPage) {
-                    afterTransfers = transfersData.body.data.erc20TransferEvents.pageInfo.endCursor
-                    await sleep(500)
-                } else {
-                    isAllTransfersCollected = true
-                }
+            if (transferConfig.params.p === lastPage) {
+                isAllTransfersCollected = true
+            } else {
+                transferConfig.params.p++
             }
-        }
-    } catch (e) {
-        console.log(e.toString())
+        }).catch((e) => {
+            console.log(e.toString())
+        })
     }
 
     if (txs.length) {
         stats[wallet].txcount = txs.length
 
         for (const tx of Object.values(txs)) {
-            const date = new Date(tx.node.timestamp * 1000)
+            const date = new Date(timestampToDate(tx.timestamp))
             uniqueDays.add(date.toDateString())
             uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
             uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-
-            if (tx.node.actual_fee) {
-                totalGasUsed += parseInt(tx.node.actual_fee) / Math.pow(10, 18)
-            }
-
-            if (tx.node.main_calls) {
-                for (const call of Object.values(tx.node.main_calls)) {
-                    uniqueContracts.add(call.contract_address)
-                    let protocol = protocolsData.find(protocol => protocol.address.toLowerCase() === call.contract_address.toLowerCase())
-
-                    if (protocol) {
-                        protocols[protocol.name].count++
-                    }
-                    contracts.forEach(contract => {
-                        if (call.contract_address === contract.address) {
-                            for (const data of Object.values(call.calldata_decoded)) {
-                                if (data.name === 'amount') {
-                                    let txVolume
-                                    let value
-                                    if (typeof data.value === 'string') {
-                                        value = data.value
-                                    } else {
-                                        value = data.value[0].value
-                                    }
-
-                                    if (contract.name.includes('ETH')) {
-                                        txVolume = (parseInt(value, 16) / Math.pow(10, contract.decimals)) * ethPrice
-                                        if (txVolume > 10000) { txVolume = 0 }
-                                    } else {
-                                        txVolume = parseInt(value, 16) / Math.pow(10, contract.decimals)
-                                    }
-                                    volume += parseFloat(txVolume.toFixed(4))
-                                }
-                            }
-                        }
-                    })
-                }
-            }
+            totalGasUsed += parseInt(tx.actual_fee) / Math.pow(10, 18)
         }
 
-        let bridgeTo = 0
-        let bridgeFrom = 0
-        for (const transfer of Object.values(transfers)) {
-            if (transfer.node.main_call) {
-                if (transfer.node.transfer_from_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
-                    transfer.node.main_call.selector_identifier === 'handle_deposit'
-                ) {
-                    bridgeTo++
-                }
-
-                if (transfer.node.transfer_to_address === '0x0000000000000000000000000000000000000000000000000000000000000000' &&
-                    transfer.node.main_call.selector_identifier === 'initiate_withdraw'
-                ) {
-                    bridgeFrom++
-                }
-            }
-        }
-
-        const numUniqueDays = uniqueDays.size
-        const numUniqueWeeks = uniqueWeeks.size
-        const numUniqueMonths = uniqueMonths.size
-        const numUniqueContracts = uniqueContracts.size
-
-        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].node.timestamp*1000)
-        stats[wallet].last_tx_date = new Date(txs[0].node.timestamp*1000)
-        stats[wallet].unique_days = numUniqueDays
-        stats[wallet].unique_weeks = numUniqueWeeks
-        stats[wallet].unique_months = numUniqueMonths
-        stats[wallet].unique_contracts = numUniqueContracts
+        stats[wallet].first_tx_date = new Date(timestampToDate(txs[txs.length - 1].timestamp))
+        stats[wallet].last_tx_date = new Date(timestampToDate(txs[0].timestamp))
+        stats[wallet].unique_days = uniqueDays.size
+        stats[wallet].unique_weeks = uniqueWeeks.size
+        stats[wallet].unique_months = uniqueMonths.size
         stats[wallet].total_gas = totalGasUsed
+    }
+
+    if (transfers.length) {
+        for (const transfer of Object.values(transfers)) {
+            uniqueContracts.add(transfer.transfer_to)
+            let protocol = protocolsData.find(protocol => protocol.address.toLowerCase() === transfer.transfer_to.toLowerCase())
+
+            if (protocol) {
+                protocols[protocol.name].count++
+            }
+
+            if (transfer.token_symbol === 'ETH') {
+                volume += parseFloat(transfer.transfer_value) * ethPrice
+            }
+
+            if (stables.includes(transfer.token_symbol)) {
+                volume += parseFloat(transfer.transfer_value)
+            }
+
+            if (transfer.transfer_from === '0x0000000000000000000000000000000000000000000000000000000000000000' 
+                && transfer.call_name === 'permissionedMint') {
+                bridgeTo++
+            }
+
+            if (transfer.transfer_from === '0x0000000000000000000000000000000000000000000000000000000000000000' 
+                && transfer.call_name === 'permissionedBurn') {
+                bridgeFrom++
+            }
+        }
+
+        stats[wallet].unique_contracts = uniqueContracts.size
         stats[wallet].volume = volume
         stats[wallet].bridge_to = bridgeTo
         stats[wallet].bridge_from = bridgeFrom
@@ -407,11 +352,17 @@ async function getTxs(wallet) {
 
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
-        balances: []
+        balances: [],
+        volume: 0
     }
 
-    await getBalances(wallet)
-    await getTxs(wallet)
+    let proxy = null
+    if (proxies.length && proxies[index]) {
+        proxy = proxies[index]
+    }
+
+    await getBalances(wallet, proxy)
+    await getTxs(wallet, proxy)
     progressBar.update(iteration)
 
     total.gas += stats[wallet].total_gas
@@ -480,13 +431,20 @@ async function fetchWallet(wallet, index) {
 
 async function fetchWallets() {
     wallets = readWallets('./addresses/starknet.txt')
+    proxies = readWallets('./proxies.txt')
     iterations = wallets.length
     iteration = 1
     jsonData = []
     csvData = []
-    cycleTLS = await initCycleTLS()
     
-    const batchSize = 1
+    let batchSize = 3
+    let timeout = 10000
+
+    if (wallets.length === proxies.length) {
+        batchSize = 50
+        timeout = 1000
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -518,13 +476,16 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 3000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
     }
 
-    return Promise.all(walletPromises)
+    await Promise.all(walletPromises)
+
+
+    return true
 }
 
 async function fetchBatch(batch) {
@@ -570,7 +531,6 @@ export async function starknetFetchDataAndPrintTable() {
     await saveToCsv()
     progressBar.stop()
     p.printTable()
-    cycleTLS.exit()
 }
 
 export async function starknetData() {
