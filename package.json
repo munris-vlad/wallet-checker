@@ -31,6 +31,7 @@
     "inquirer": "^9.2.11",
     "moment": "^2.29.4",
     "moralis": "^2.22.5",
+    "socks-proxy-agent": "^8.0.2",
     "vue": "^3.3.4"
   },
   "type": "module"

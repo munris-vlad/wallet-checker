@@ -12,6 +12,7 @@ import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import {HttpProxyAgent} from "http-proxy-agent"
+import {SocksProxyAgent} from "socks-proxy-agent"
 
 let ethPrice = 0
 await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
@@ -191,7 +192,13 @@ const contracts = [
 async function getBalances(wallet, proxy = null) {
     let config = {}
     if (proxy) {
-        config.httpAgent = new HttpProxyAgent(proxy)
+        if (proxy.includes('http')) {
+            config.httpAgent = new HttpProxyAgent(proxy)
+        }
+
+        if (proxy.includes('socks')) {
+            config.httpAgent = new SocksProxyAgent(proxy)
+        }
     }
 
     filterSymbol.forEach(symbol => {
@@ -248,8 +255,15 @@ async function getTxs(wallet, proxy = null) {
     }
 
     if (proxy) {
-        config.httpAgent = new HttpProxyAgent(proxy)
-        transferConfig.httpAgent = new HttpProxyAgent(proxy)
+        if (proxy.includes('http')) {
+            config.httpAgent = new HttpProxyAgent(proxy)
+            transferConfig.httpAgent = new HttpProxyAgent(proxy)
+        }
+
+        if (proxy.includes('socks')) {
+            config.httpAgent = new SocksProxyAgent(proxy)
+            transferConfig.httpAgent = new SocksProxyAgent(proxy)
+        }
     }
 
     let protocols = {}
