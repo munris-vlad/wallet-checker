@@ -2,9 +2,7 @@ import '../utils/common.js'
 import {
     getKeyByValue,
     readWallets,
-    sleep,
-    starknetApiUrl, starknetBalanceQuery,
-    starknetHeaders, starknetTransfersQuery, starknetTxQuery, timestampToDate,
+    timestampToDate
 } from '../utils/common.js'
 import axios from "axios"
 import {Table} from 'console-table-printer'
@@ -330,19 +328,21 @@ async function getTxs(wallet, proxy = null) {
 
     if (transfers.length) {
         for (const transfer of Object.values(transfers)) {
-            uniqueContracts.add(transfer.transfer_to)
-            let protocol = protocolsData.find(protocol => protocol.address.toLowerCase() === transfer.transfer_to.toLowerCase())
+            if (transfer.from_alias === null && transfer.to_alias !== null) {
+                uniqueContracts.add(transfer.transfer_to)
+                let protocol = protocolsData.find(protocol => protocol.address.toLowerCase() === transfer.transfer_to.toLowerCase())
 
-            if (protocol) {
-                protocols[protocol.name].count++
-            }
+                if (protocol) {
+                    protocols[protocol.name].count++
+                }
 
-            if (transfer.token_symbol === 'ETH') {
-                volume += parseFloat(transfer.transfer_value) * ethPrice
-            }
+                if (transfer.token_symbol === 'ETH') {
+                    volume += parseFloat(transfer.transfer_value) * ethPrice
+                }
 
-            if (stables.includes(transfer.token_symbol)) {
-                volume += parseFloat(transfer.transfer_value)
+                if (stables.includes(transfer.token_symbol)) {
+                    volume += parseFloat(transfer.transfer_value)
+                }
             }
 
             if (transfer.transfer_from === '0x0000000000000000000000000000000000000000000000000000000000000000' 
