@@ -181,7 +181,6 @@ async function getTxs(wallet) {
         })
     }
 
-    stats[wallet].txcount = txs.length
     let totalGasUsed = 0
 
     Object.values(txs).forEach(tx => {
@@ -189,9 +188,13 @@ async function getTxs(wallet) {
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        uniqueContracts.add(tx.to)
 
         totalGasUsed += parseInt(tx.gasPrice) * parseInt(tx.gasUsed) / Math.pow(10, 18)
+
+        if (tx.from.toLowerCase() === wallet.toLowerCase()) {
+            uniqueContracts.add(tx.to)
+            stats[wallet].txcount++
+        }
     })
 
     const numUniqueDays = uniqueDays.size
@@ -212,6 +215,7 @@ async function getTxs(wallet) {
 
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
+        txcount: 0,
         balances: [],
         voyagenft: ''
     }
