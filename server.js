@@ -9,6 +9,7 @@ import {zoraData} from "./checkers/zora.js"
 import {baseData} from "./checkers/base.js"
 import {aptosData} from "./checkers/aptos.js"
 import {lineaData} from "./checkers/linea.js"
+import {scrollData} from "./checkers/scroll.js"
 import {balancesData} from "./checkers/balances.js"
 import {evmData} from "./checkers/evm.js"
 import {readWallets} from "./utils/common.js"
@@ -38,6 +39,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const baseWallets = readWallets('./addresses/base.txt')
     const aptosWallets = readWallets('./addresses/aptos.txt')
     const lineaWallets = readWallets('./addresses/linea.txt')
+    const scrollWallets = readWallets('./addresses/scroll.txt')
     const evmWallets = readWallets('./addresses/evm.txt')
     res.json({
         'starknet_wallets': starknetWallets,
@@ -47,6 +49,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'base_wallets': baseWallets,
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
+        'scroll_wallets': scrollWallets,
         'evm_wallets': evmWallets,
     })
 })
@@ -83,6 +86,11 @@ apiRoutes.get('/aptos', async (req, res) => {
 
 apiRoutes.get('/linea', async (req, res) => {
     const responseData = await lineaData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/scroll', async (req, res) => {
+    const responseData = await scrollData()
     res.json(responseData)
 })
 

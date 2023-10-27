@@ -10,6 +10,7 @@
                 <router-link v-if="base_count" class="text-gray-500 hover:text-gray-600 px-2" to="/base">Base</router-link>
                 <router-link v-if="aptos_count" class="text-gray-500 hover:text-gray-600 px-2" to="/aptos">Aptos</router-link>
                 <router-link v-if="linea_count" class="text-gray-500 hover:text-gray-600 px-2" to="/linea">Linea</router-link>
+                <router-link v-if="scroll_count" class="text-gray-500 hover:text-gray-600 px-2" to="/scroll">Scroll</router-link>
                 <router-link v-if="evm_count" class="text-gray-500 hover:text-gray-600 px-2" to="/balances">Balance</router-link>
                 <router-link v-if="evm_count" class="text-gray-500 hover:text-gray-600 px-2" to="/evm">EVM</router-link>
             </nav>
@@ -29,6 +30,7 @@ export default {
             base_count: this.$base_count,
             aptos_count: this.$aptos_count,
             linea_count: this.$linea_count,
+            scroll_count: this.$scroll_count,
             evm_count: this.$evm_count,
         }
     },

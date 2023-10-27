@@ -1,7 +1,7 @@
 <template>
     <div class="pb-5">
         <div class="min-w-full text-center header pb-4 pt-4">
-            <h1 class="text-3xl">Linea</h1>
+            <h1 class="text-3xl">Scroll</h1>
         </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700" v-if="isDataLoaded && !isError">
             <thead class="border-b font-medium dark:border-gray-700">
@@ -19,11 +19,10 @@
                                 <a target="_blank" :href="'https://debank.com/profile/'+item['wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
                             </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'Total'">
-                                <a target="_blank" :href="'https://lineascan.build/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/linea-scan.png'" alt=""></a>
+                                <a target="_blank" :href="'https://blockscout.scroll.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/scroll-scan.png'" alt=""></a>
                             </div>
                         </div>
                     </td>
-                    <td :class="tdClass">{{ item['Voyage NFT'] }}</td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.005 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
@@ -33,6 +32,7 @@
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
                     <td :class="tdClass">{{ item['Months'] }}</td>
+                    <td :class="tdClass">{{ item['Contract deployed'] }}</td>
                     <td :class="tdClass">{{ formatDate(item['First tx']) }}</td>
                     <td :class="tdClass">{{ formatDate(item['Last tx']) }}</td>
                     <td :class="tdClass">{{ item['Total gas spent'] }} (${{ item['Total gas spent USDVALUE'] }})</td>
@@ -69,7 +69,6 @@ export default {
             headers: [
                 'n',
                 'Wallet',
-                'Voyage NFT',
                 'ETH',
                 'USDC',
                 'USDT',
@@ -79,6 +78,7 @@ export default {
                 'Days',
                 'Weeks',
                 'Months',
+                'Contract deployed',
                 'First tx',
                 'Last tx',
                 'Total gas spent'
@@ -101,7 +101,7 @@ export default {
     methods: {
         formatDate,
         loadData() {
-            this.$axios.get('/api/linea').then((response) => {
+            this.$axios.get('/api/scroll').then((response) => {
                 this.data = response.data.sort((a, b) => a.n - b.n)
                 this.isDataLoaded = true
             }).catch((error) => {

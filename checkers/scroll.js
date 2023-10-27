@@ -9,7 +9,6 @@ import cliProgress from 'cli-progress'
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'Voyage NFT', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
@@ -19,6 +18,7 @@ const columns = [
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
     { name: 'Months', alignment: 'right', color: 'cyan'},
+    { name: 'Contract deployed', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
@@ -27,7 +27,6 @@ const columns = [
 const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
-    { id: 'Voyage NFT', title: 'Voyage NFT'},
     { id: 'ETH', title: 'ETH'},
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
@@ -37,6 +36,7 @@ const headers = [
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
     { id: 'Months', title: 'Months'},
+    { id: 'Contract deployed', title: 'Contract deployed'},
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
     { id: 'Total gas spent', title: 'Total gas spent'}
@@ -66,12 +66,12 @@ const contracts = [
 ]
 
 let debug = true
-const apiUrl = "https://explorer.linea.build/api"
+const apiUrl = "https://blockscout.scroll.io/api"
 let p
 let csvWriter
 let stats = []
 let isJson = false
-let wallets = readWallets('./addresses/linea.txt')
+let wallets = readWallets('./addresses/scroll.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -116,40 +116,6 @@ async function getBalances(wallet) {
             if (debug) console.log(error)
         })
     }
-    let voyageNft = '-'
-    await axios.get(apiUrl, {
-        params: {
-            module: 'account',
-            action: 'tokenlist',
-            address: wallet
-        }
-    }).then(response => {
-        response.data.result.forEach(token => {
-            if (token.symbol === 'VOYAGE') {
-                switch (token.id) {
-                    case '1':
-                        voyageNft = 'Alpha'
-                        break
-                    case '2':
-                        voyageNft = 'Beta'
-                        break
-                    case '3':
-                        voyageNft = 'Gamma'
-                        break
-                    case '4':
-                        voyageNft = 'Delta'
-                        break
-                    case '5':
-                        voyageNft = 'Omega'
-                        break
-                }
-            }
-        })
-    }).catch(function (error) {
-        if (debug) console.log(error)
-    })
-
-    stats[wallet].voyagenft = voyageNft
 }
 
 async function getTxs(wallet) {
@@ -192,6 +158,10 @@ async function getTxs(wallet) {
         uniqueContracts.add(tx.to)
 
         totalGasUsed += parseInt(tx.gasPrice) * parseInt(tx.gasUsed) / Math.pow(10, 18)
+
+        if (tx.to === '') {
+            stats[wallet].contractdeployed = 'Yes'
+        }
     })
 
     const numUniqueDays = uniqueDays.size
@@ -213,7 +183,7 @@ async function getTxs(wallet) {
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
         balances: [],
-        voyagenft: ''
+        contractdeployed: 'No'
     }
 
     await getBalances(wallet)
@@ -231,7 +201,6 @@ async function fetchWallet(wallet, index) {
     p.addRow({
         n: parseInt(index)+1,
         wallet: wallet,
-        'Voyage NFT': stats[wallet].voyagenft,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
@@ -241,6 +210,7 @@ async function fetchWallet(wallet, index) {
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
+        'Contract deployed': stats[wallet].contractdeployed,
         'First tx': stats[wallet].txcount ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '-',
         'Last tx': stats[wallet].txcount ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '-',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
@@ -249,7 +219,6 @@ async function fetchWallet(wallet, index) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
-        'Voyage NFT': stats[wallet].voyagenft,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -260,6 +229,7 @@ async function fetchWallet(wallet, index) {
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
+        'Contract deployed': stats[wallet].contractdeployed,
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
@@ -274,7 +244,7 @@ async function fetchBatch(batch) {
 }
 
 async function fetchWallets() {
-    wallets = readWallets('./addresses/linea.txt')
+    wallets = readWallets('./addresses/scroll.txt')
     iterations = wallets.length
     csvData = []
     jsonData = []
@@ -288,7 +258,7 @@ async function fetchWallets() {
     }
 
     csvWriter = createObjectCsvWriter({
-        path: './results/linea.csv',
+        path: './results/scroll.csv',
         header: headers
     })
     
@@ -309,7 +279,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 1200)
+            }, i * 3000)
         })
 
         walletPromises.push(promise)
@@ -338,7 +308,7 @@ async function addTotalRow() {
     })
 }
 
-export async function lineaFetchDataAndPrintTable() {
+export async function scrollFetchDataAndPrintTable() {
     progressBar.start(iterations, 0)
     await fetchWallets()
     await addTotalRow()
@@ -347,7 +317,7 @@ export async function lineaFetchDataAndPrintTable() {
     p.printTable()
 }
 
-export async function lineaData() {
+export async function scrollData() {
     await fetchWallets()
     await addTotalRow()
     await saveToCsv()

@@ -201,6 +201,10 @@ export const entryPoint = async () => {
                     value: "linea",
                 },
                 {
+                    name: "Scroll",
+                    value: "scroll",
+                },
+                {
                     name: "EVM checker",
                     value: "evm",
                 },

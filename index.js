@@ -4,6 +4,7 @@ import {aptosFetchDataAndPrintTable} from "./checkers/aptos.js"
 import {starknetFetchDataAndPrintTable} from "./checkers/starknet.js"
 import {zoraFetchDataAndPrintTable} from "./checkers/zora.js"
 import {lineaFetchDataAndPrintTable} from "./checkers/linea.js"
+import {scrollFetchDataAndPrintTable} from "./checkers/scroll.js"
 import {balancesFetchDataAndPrintTable} from "./checkers/balances.js"
 import {evmFetchDataAndPrintTable} from "./checkers/evm.js"
 import {filterFetchDataAndPrintTable} from "./checkers/filter.js"
@@ -67,6 +68,10 @@ async function startMenu(menu) {
             break
         case "linea":
             await lineaFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+            if (startOver) await startMenu()
+            break
+        case "scroll":
+            await scrollFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()
             break
         case "evm":

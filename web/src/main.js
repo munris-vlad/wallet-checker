@@ -9,6 +9,7 @@ import HomeView from "@/views/HomeView"
 import ZoraView from "@/views/ZoraView"
 import AptosView from "@/views/AptosView"
 import LineaView from "@/views/LineaView"
+import ScrollView from "@/views/ScrollView"
 import BalancesView from "@/views/BalancesView"
 import EvmView from "@/views/EvmView"
 import LayerzeroView from "@/views/LayerzeroView"
@@ -30,6 +31,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$base_count = data.base_wallets.length
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
     app.config.globalProperties.$linea_count = data.linea_wallets.length
+    app.config.globalProperties.$scroll_count = data.scroll_wallets.length
     app.config.globalProperties.$evm_count = data.evm_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
@@ -65,6 +67,11 @@ const routes = [
         path: '/base',
         name: 'Base',
         component: BaseView,
+    },
+    {
+        path: '/scroll',
+        name: 'Scroll',
+        component: ScrollView,
     },
     {
         path: '/aptos',

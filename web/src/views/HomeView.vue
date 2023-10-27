@@ -22,6 +22,7 @@
                 <li class="pt-2">Zora: {{ data.zora_wallets.length }}</li>
                 <li class="pt-2">Aptos: {{ data.aptos_wallets.length }}</li>
                 <li class="pt-2">Linea: {{ data.linea_wallets.length }}</li>
+                <li class="pt-2">Scroll: {{ data.scroll_wallets.length }}</li>
                 <li class="pt-2">EVM / Balances: {{ data.evm_wallets.length }}</li>
             </ul>
 
