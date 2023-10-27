@@ -9,6 +9,7 @@ import cliProgress from 'cli-progress'
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'Voyage NFT', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
@@ -26,6 +27,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
+    { id: 'Voyage NFT', title: 'Voyage NFT'},
     { id: 'ETH', title: 'ETH'},
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
@@ -63,6 +65,7 @@ const contracts = [
     }
 ]
 
+let debug = true
 const apiUrl = "https://explorer.linea.build/api"
 let p
 let csvWriter
@@ -96,7 +99,7 @@ async function getBalances(wallet) {
     }).then(response => {
         stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
     }).catch(function (error) {
-        console.log(error)
+        if (debug) console.log(error)
     })
 
     for (const contract of contracts) {
@@ -110,9 +113,44 @@ async function getBalances(wallet) {
         }).then(response => {
             stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
         }).catch(function (error) {
-            console.log(error)
+            if (debug) console.log(error)
         })
     }
+    let voyageNft = '-'
+    await axios.get(apiUrl, {
+        params: {
+            module: 'account',
+            action: 'tokenlist',
+            address: wallet
+        }
+    }).then(response => {
+        response.data.result.forEach(token => {
+            console.log(token)
+            if (token.symbol === 'VOYAGE') {
+                switch (token.id) {
+                    case '1':
+                        voyageNft = 'Alpha'
+                        break
+                    case '2':
+                        voyageNft = 'Beta'
+                        break
+                    case '3':
+                        voyageNft = 'Gamma'
+                        break
+                    case '4':
+                        voyageNft = 'Delta'
+                        break
+                    case '5':
+                        voyageNft = 'Omega'
+                        break
+                }
+            }
+        })
+    }).catch(function (error) {
+        if (debug) console.log(error)
+    })
+
+    stats[wallet].voyagenft = voyageNft
 }
 
 async function getTxs(wallet) {
@@ -140,7 +178,7 @@ async function getTxs(wallet) {
                 txs.push(tx)
             })
         }).catch(function (error) {
-            console.log(error)
+            if (debug) console.log(error)
         })
     }
 
@@ -175,7 +213,8 @@ async function getTxs(wallet) {
 
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
-        balances: []
+        balances: [],
+        voyagenft: ''
     }
 
     await getBalances(wallet)
@@ -194,6 +233,7 @@ async function fetchWallet(wallet, index) {
     p.addRow({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Voyage NFT': stats[wallet].voyagenft,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
@@ -211,6 +251,7 @@ async function fetchWallet(wallet, index) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Voyage NFT': stats[wallet].voyagenft,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),

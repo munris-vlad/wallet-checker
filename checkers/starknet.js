@@ -452,7 +452,7 @@ async function fetchWallets() {
     csvData = []
     
     let batchSize = 3
-    let timeout = 10000
+    let timeout = 11000
 
     if (wallets.length === proxies.length) {
         batchSize = 50

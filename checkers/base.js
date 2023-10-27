@@ -42,7 +42,7 @@ const columns = [
 
 const apiUrl = "https://base.blockscout.com/api/v2"
 
-let debug = false
+let debug = true
 let csvWriter
 let p
 let stats = []
@@ -65,7 +65,7 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 async function getBalances(wallet) {
     await axios.get(apiUrl+'/addresses/'+wallet).then(response => {
         stats[wallet].balance = getBalance(response.data.coin_balance, 18)
-    }).catch(function (error) {
+    }).catch(function (e) {
         if (debug) console.log(e.toString())
     })
 
@@ -113,6 +113,7 @@ async function getTxs(wallet) {
                 params = response.data.next_page_params
             }
         }).catch(function (e) {
+            if (debug) console.log(e.toString())
             isAllTxCollected = true
         })
     }
