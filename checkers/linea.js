@@ -125,7 +125,6 @@ async function getBalances(wallet) {
         }
     }).then(response => {
         response.data.result.forEach(token => {
-            console.log(token)
             if (token.symbol === 'VOYAGE') {
                 switch (token.id) {
                     case '1':
