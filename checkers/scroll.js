@@ -45,22 +45,17 @@ const headers = [
 const contracts = [
     {
         token: 'USDC',
-        address: '0x176211869cA2b568f2A7D4EE941E073a821EE1ff',
+        address: '0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4',
         decimals: 6
     },
     {
         token: 'USDT',
-        address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
+        address: '0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df',
         decimals: 6
     },
     {
         token: 'DAI',
-        address: '0x4AF15ec2A0BD43Db75dd04E62FAA3B8EF36b00d5',
-        decimals: 18
-    },
-    {
-        token: 'BUSD',
-        address: '0x7d43AABC515C356145049227CeE54B608342c0ad',
+        address: '0xcA77eB3fEFe3725Dc33bccB54eDEFc3D9f764f97',
         decimals: 18
     }
 ]
