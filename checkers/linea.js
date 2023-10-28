@@ -142,6 +142,9 @@ async function getBalances(wallet) {
                     case '5':
                         voyageNft = 'Omega'
                         break
+                    default:
+                        voyageNft = 'Alpha'
+                        break
                 }
             }
         })
