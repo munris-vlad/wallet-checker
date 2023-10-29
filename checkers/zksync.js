@@ -219,6 +219,7 @@ let total = {
 }
 
 const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
+const filterSymbolAddress = ['0x000000000000000000000000000000000000800A', '0x493257fD37EDB34451f62EDf8D2a0C418852bA4C', '0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4', '0x4B9eb6c0b6ea15176BBF62841C6B2A8a398cb656']
 const stableSymbol = ['USDT', 'USDC', 'BUSD', 'DAI', 'ZKUSD', 'CEBUSD', 'LUSD', 'USD+', 'ibETH', 'WETH', 'ibUSDC', 'ETH']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
@@ -231,7 +232,7 @@ async function getBalances(wallet) {
 
         Object.values(balances).forEach(balance => {
             if (balance.token) {
-                if (filterSymbol.includes(balance.token.symbol)) {
+                if (filterSymbolAddress.includes(balance.token.l2Address)) {
                     stats[wallet].balances[balance.token.symbol] = getBalance(balance.balance, balance.token.decimals)
                 }
             }
