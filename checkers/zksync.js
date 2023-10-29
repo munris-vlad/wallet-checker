@@ -421,10 +421,10 @@ async function fetchWallet(wallet, index) {
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
 
     total.gas += stats[wallet].total_gas
-    total.eth += stats[wallet].balances['ETH']
-    total.usdt += stats[wallet].balances['USDT']
-    total.usdc += stats[wallet].balances['USDC']
-    total.dai += stats[wallet].balances['DAI']
+    total.eth += parseFloat(stats[wallet].balances['ETH'])
+    total.usdt += parseFloat(stats[wallet].balances['USDT'])
+    total.usdc += parseFloat(stats[wallet].balances['USDC'])
+    total.dai += parseFloat(stats[wallet].balances['DAI'])
     total.lite_eth += stats[wallet].lite_eth || 0
 
     let row
