@@ -133,7 +133,7 @@ let headers = [
     { id: 'Last tx', title: 'Last tx'},
 ]
 
-let debug = true
+let debug = false
 let p
 let csvWriter
 let stats = []
@@ -189,7 +189,9 @@ const contracts = [
 ]
 
 async function getBalances(wallet, proxy = null) {
-    let config = {}
+    let config = {
+        timeout: 5000
+    }
     if (proxy) {
         if (proxy.includes('http')) {
             config.httpsAgent = new HttpsProxyAgent(proxy)
@@ -222,12 +224,6 @@ async function getBalances(wallet, proxy = null) {
             if (debug) console.log('balances', e.toString())
         })
     }
-
-    // axios.get('https://ipinfo.io/', config).then(response => {
-    //     console.log('Test', wallet, response.data.ip, response.data.country, response.data.city)
-    // }).catch(e => {
-    //     console.log(e)
-    // })
 }
 
 async function getTxs(wallet, proxy = null) {
@@ -246,6 +242,7 @@ async function getTxs(wallet, proxy = null) {
     let isAllTransfersCollected = false
 
     let config = {
+        timeout: 5000,
         params: {
             to: wallet,
             p: 1,
@@ -254,6 +251,7 @@ async function getTxs(wallet, proxy = null) {
     }
 
     let transferConfig = {
+        timeout: 5000,
         params: {
             p: 1,
             ps: 100
