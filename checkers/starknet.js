@@ -469,7 +469,7 @@ async function fetchWallets() {
     let timeout = 11000
 
     if (proxies.length) {
-        batchSize = 1
+        batchSize = 10
         timeout = 1000
     }
 
