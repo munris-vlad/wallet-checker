@@ -9,7 +9,7 @@ import {Table} from 'console-table-printer'
 import {createObjectCsvWriter} from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import {HttpProxyAgent} from "http-proxy-agent"
+import {HttpsProxyAgent} from "https-proxy-agent"
 import {SocksProxyAgent} from "socks-proxy-agent"
 
 let ethPrice = 0
@@ -133,6 +133,7 @@ let headers = [
     { id: 'Last tx', title: 'Last tx'},
 ]
 
+let debug = true
 let p
 let csvWriter
 let stats = []
@@ -191,11 +192,11 @@ async function getBalances(wallet, proxy = null) {
     let config = {}
     if (proxy) {
         if (proxy.includes('http')) {
-            config.httpAgent = new HttpProxyAgent(proxy)
+            config.httpsAgent = new HttpsProxyAgent(proxy)
         }
 
         if (proxy.includes('socks')) {
-            config.httpAgent = new SocksProxyAgent(proxy)
+            config.httpsAgent = new SocksProxyAgent(proxy)
         }
     }
 
@@ -217,9 +218,16 @@ async function getBalances(wallet, proxy = null) {
                 })
             }
         }).catch(e => {
-            console.log(e.toString())
+            isBalancesFetched = true
+            if (debug) console.log('balances', e.toString())
         })
     }
+
+    // axios.get('https://ipinfo.io/', config).then(response => {
+    //     console.log('Test', wallet, response.data.ip, response.data.country, response.data.city)
+    // }).catch(e => {
+    //     console.log(e)
+    // })
 }
 
 async function getTxs(wallet, proxy = null) {
@@ -254,13 +262,13 @@ async function getTxs(wallet, proxy = null) {
 
     if (proxy) {
         if (proxy.includes('http')) {
-            config.httpAgent = new HttpProxyAgent(proxy)
-            transferConfig.httpAgent = new HttpProxyAgent(proxy)
+            config.httpsAgent = new HttpsProxyAgent(proxy)
+            transferConfig.httpsAgent = new HttpsProxyAgent(proxy)
         }
 
         if (proxy.includes('socks')) {
-            config.httpAgent = new SocksProxyAgent(proxy)
-            transferConfig.httpAgent = new SocksProxyAgent(proxy)
+            config.httpsAgent = new SocksProxyAgent(proxy)
+            transferConfig.httpsAgent = new SocksProxyAgent(proxy)
         }
     }
 
@@ -285,7 +293,8 @@ async function getTxs(wallet, proxy = null) {
                 config.params.p++
             }
         }).catch((e) => {
-            console.log(e.toString())
+            isAllTxCollected = true
+            if (debug) console.log('txs', e.toString())
         })
     }
 
@@ -303,7 +312,8 @@ async function getTxs(wallet, proxy = null) {
                 transferConfig.params.p++
             }
         }).catch((e) => {
-            console.log(e.toString())
+            isAllTransfersCollected = true
+            if (debug) console.log('transfers', e.toString())
         })
     }
 
@@ -371,8 +381,12 @@ async function fetchWallet(wallet, index) {
     }
 
     let proxy = null
-    if (proxies.length && proxies[index]) {
-        proxy = proxies[index]
+    if (proxies.length) {
+        if (proxies[index]) {
+            proxy = proxies[index]
+        } else {
+            proxy = proxies[0]
+        }
     }
 
     await getBalances(wallet, proxy)
@@ -454,8 +468,8 @@ async function fetchWallets() {
     let batchSize = 3
     let timeout = 11000
 
-    if (wallets.length === proxies.length) {
-        batchSize = 50
+    if (proxies.length) {
+        batchSize = 1
         timeout = 1000
     }
 
