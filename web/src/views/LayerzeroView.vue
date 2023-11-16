@@ -21,10 +21,8 @@
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
-                    <td :class="tdClass">{{ item['Source chains count'] }}</td>
-                    <!-- <td :class="tdClass">{{ item['Source chains'] }}</td> -->
-                    <td :class="tdClass">{{ item['Dest chains count'] }}</td>
-                    <!-- <td :class="tdClass">{{ item['Dest chains'] }}</td> -->
+                    <td :class="tdClass">{{ item['Source chains'] }}</td>
+                    <td :class="tdClass">{{ item['Dest chains'] }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
