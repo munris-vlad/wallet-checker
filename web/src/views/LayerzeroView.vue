@@ -21,9 +21,10 @@
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
-                    <td :class="tdClass">${{ item['Volume'] }}</td>
-                    <td :class="tdClass">{{ item['Source chains'] }}</td>
-                    <td :class="tdClass">{{ item['Destination chains'] }}</td>
+                    <td :class="tdClass">{{ item['Source chains count'] }}</td>
+                    <!-- <td :class="tdClass">{{ item['Source chains'] }}</td> -->
+                    <td :class="tdClass">{{ item['Dest chains count'] }}</td>
+                    <!-- <td :class="tdClass">{{ item['Dest chains'] }}</td> -->
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
@@ -64,9 +65,10 @@ export default {
                 'n',
                 'Wallet',
                 'TX Count',
-                'Volume',
-                'Source chains',
-                'Destination chains',
+                'Source chains count',
+                // 'Source chains',
+                'Dest chains count',
+                // 'Dest chains',
                 'Contracts',
                 'Days',
                 'Weeks',
