@@ -35,24 +35,24 @@ export function getBalance(balance, decimal) {
 }
 
 export function timestampToDate(timestamp) {
-  return new Date(parseInt(timestamp) * 1000)
+    return new Date(parseInt(timestamp) * 1000)
 }
 
 Date.prototype.getWeek = function (dowOffset) {
-/*getWeek() was developed by Nick Baicoianu at MeanFreePath: http://www.meanfreepath.com */
+    /*getWeek() was developed by Nick Baicoianu at MeanFreePath: http://www.meanfreepath.com */
 
-    dowOffset = typeof(dowOffset) == 'number' ? dowOffset : 0 //default dowOffset to zero
-    var newYear = new Date(this.getFullYear(),0,1)
+    dowOffset = typeof (dowOffset) == 'number' ? dowOffset : 0 //default dowOffset to zero
+    var newYear = new Date(this.getFullYear(), 0, 1)
     var day = newYear.getDay() - dowOffset //the day of week the year begins on
     day = (day >= 0 ? day : day + 7)
     var daynum = Math.floor((this.getTime() - newYear.getTime() -
-    (this.getTimezoneOffset()-newYear.getTimezoneOffset())*60000)/86400000) + 1
+        (this.getTimezoneOffset() - newYear.getTimezoneOffset()) * 60000) / 86400000) + 1
     var weeknum
     //if the year starts before the middle of a week
-    if(day < 4) {
-        weeknum = Math.floor((daynum+day-1)/7) + 1
-        if(weeknum > 52) {
-            let nYear = new Date(this.getFullYear() + 1,0,1)
+    if (day < 4) {
+        weeknum = Math.floor((daynum + day - 1) / 7) + 1
+        if (weeknum > 52) {
+            let nYear = new Date(this.getFullYear() + 1, 0, 1)
             let nday = nYear.getDay() - dowOffset
             nday = nday >= 0 ? nday : nday + 7
             /*if the next year starts before the middle of
@@ -61,7 +61,7 @@ Date.prototype.getWeek = function (dowOffset) {
         }
     }
     else {
-        weeknum = Math.floor((daynum+day-1)/7)
+        weeknum = Math.floor((daynum + day - 1) / 7)
     }
     return weeknum
 }
@@ -99,14 +99,14 @@ export function balance(balances, network, token) {
 
 export function balanceTotal(totalBalances, network, token) {
     return totalBalances[network] && totalBalances[network][token] ?
-        '$'+parseFloat(totalBalances[network][token].usd).toFixed(2) +
+        '$' + parseFloat(totalBalances[network][token].usd).toFixed(2) +
         ' / ' + parseFloat(totalBalances[network][token].amount).toFixed(3) +
         ' ' + totalBalances[network][token].symbol : '$0'
 }
 
 export function balanceTotalStable(totalBalances, network, token) {
     return totalBalances[network] && totalBalances[network][token] ?
-        '$'+parseFloat(totalBalances[network][token].usd).toFixed(1) : '$0'
+        '$' + parseFloat(totalBalances[network][token].usd).toFixed(1) : '$0'
 }
 
 export function balanceTopToken(balances, network, iteration = 0) {
@@ -124,7 +124,7 @@ export function balanceTopToken(balances, network, iteration = 0) {
             }
         }
 
-        return obj[Object.keys(obj)[iteration+skip]]
+        return obj[Object.keys(obj)[iteration + skip]]
     }
 
     return ''
@@ -323,4 +323,11 @@ export const evmNetwork = async () => {
 
 export function getKeyByValue(object, value) {
     return Object.keys(object).find((key) => object[key] === value)
+}
+
+export function newAbortSignal(timeoutMs) {
+    const abortController = new AbortController()
+    setTimeout(() => abortController.abort(), timeoutMs || 0)
+
+    return abortController.signal
 }

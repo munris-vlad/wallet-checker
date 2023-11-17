@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { getKeyByValue, readWallets, sleep, timestampToDate } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -109,6 +109,8 @@ async function fetchWallet(wallet, index) {
     }
 
     let txs = []
+    let isTxParsed = false
+    let retry = 0
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -116,14 +118,24 @@ async function fetchWallet(wallet, index) {
     const uniqueSource = new Set()
     const uniqueDestination = new Set()
 
-    await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
-        headers: getQueryHeaders(),
-        httpsAgent: agent
-    }).then(response => {
-        txs = response.data.result.data.messages
-    }).catch(error => {
-        console.error(error.error)
-    })
+    while (!isTxParsed) {
+        await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
+            headers: getQueryHeaders(),
+            httpsAgent: agent,
+            signal: newAbortSignal(5000)
+        }).then(response => {
+            txs = response.data.result.data.messages
+            isTxParsed = true
+        }).catch(error => {
+            console.error(error.toString())
+            retry++
+
+            if (retry >= 3) {
+                isTxParsed = true
+            }
+        })
+    }
+    
 
     if (txs.length) {
         data.tx_count = txs.length
