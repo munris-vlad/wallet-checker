@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -38,7 +38,6 @@ const headers = [
     { id: 'Last TX', title: 'Last TX' },
 ]
 
-const apiUrl = "http://65.109.29.224:3000/api/data"
 let jsonData = []
 let p
 let csvWriter
@@ -68,14 +67,16 @@ function getQueryHeaders(wallet) {
     }
 }
 
-async function fetchWallet(wallet, index) {
-
+function getProxy(index, isRandom = false) {
+    let agent
     let proxy = null
-    let agent = null
-
     if (proxies.length) {
         if (proxies[index]) {
-            proxy = proxies[index]
+            if (isRandom) {
+                proxy = proxies[random(0, proxies.length)]
+            } else {
+                proxy = proxies[index]
+            }
         } else {
             proxy = proxies[0]
         }
@@ -90,6 +91,13 @@ async function fetchWallet(wallet, index) {
             agent = new SocksProxyAgent(proxy)
         }
     }
+
+    return agent
+}
+
+async function fetchWallet(wallet, index) {
+
+    let agent = getProxy(index)
 
     let data = {
         wallet: wallet,
@@ -125,8 +133,10 @@ async function fetchWallet(wallet, index) {
             txs = response.data.result.data.messages
             isTxParsed = true
         }).catch(error => {
-            console.error(error.toString())
+            console.error(wallet, error.toString(), '| Get random proxy')
             retry++
+
+            agent = getProxy(index, true)
 
             if (retry >= 3) {
                 isTxParsed = true
