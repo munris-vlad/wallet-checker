@@ -100,6 +100,7 @@ async function fetchWallet(wallet, index) {
             signal: newAbortSignal(5000)
         }).then(response => {
             txs = response.data.result.data.messages
+            data.tx_count = response.data.result.data.count
             isTxParsed = true
         }).catch(error => {
             console.error(wallet, error.toString(), '| Get random proxy')
@@ -115,7 +116,6 @@ async function fetchWallet(wallet, index) {
     
 
     if (txs.length) {
-        data.tx_count = txs.length
 
         for (const tx of Object.values(txs)) {
             const date = new Date(timestampToDate(tx.created))
