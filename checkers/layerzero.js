@@ -1,12 +1,10 @@
 import '../utils/common.js'
-import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import moment from "moment"
-import { HttpsProxyAgent } from "https-proxy-agent"
-import { SocksProxyAgent } from "socks-proxy-agent"
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -42,7 +40,6 @@ let jsonData = []
 let p
 let csvWriter
 let wallets = readWallets('./addresses/layerzero.txt')
-let proxies = readWallets('./proxies.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -65,34 +62,6 @@ function getQueryHeaders(wallet) {
         'Referer': `https://layerzeroscan.com/address/${wallet}`,
         'Referrer-Policy': 'strict-origin-when-cross-origin'
     }
-}
-
-function getProxy(index, isRandom = false) {
-    let agent
-    let proxy = null
-    if (proxies.length) {
-        if (proxies[index]) {
-            if (isRandom) {
-                proxy = proxies[random(0, proxies.length)]
-            } else {
-                proxy = proxies[index]
-            }
-        } else {
-            proxy = proxies[0]
-        }
-    }
-
-    if (proxy) {
-        if (proxy.includes('http')) {
-            agent = new HttpsProxyAgent(proxy)
-        }
-
-        if (proxy.includes('socks')) {
-            agent = new SocksProxyAgent(proxy)
-        }
-    }
-
-    return agent
 }
 
 async function fetchWallet(wallet, index) {
@@ -213,7 +182,6 @@ async function fetchBatch(batch) {
 
 function fetchWallets() {
     wallets = readWallets('./addresses/layerzero.txt')
-    proxies = readWallets('./proxies.txt')
     iterations = wallets.length
     iteration = 1
     csvData = []

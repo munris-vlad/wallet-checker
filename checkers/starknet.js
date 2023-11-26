@@ -1,7 +1,10 @@
 import '../utils/common.js'
 import {
     getKeyByValue,
+    getProxy,
+    newAbortSignal,
     readWallets,
+    sleep,
     timestampToDate
 } from '../utils/common.js'
 import axios from "axios"
@@ -188,18 +191,10 @@ const contracts = [
     }
 ]
 
-async function getBalances(wallet, proxy = null) {
+async function getBalances(wallet, index) {
     let config = {
-        timeout: 5000
-    }
-    if (proxy) {
-        if (proxy.includes('http')) {
-            config.httpsAgent = new HttpsProxyAgent(proxy)
-        }
-
-        if (proxy.includes('socks')) {
-            config.httpsAgent = new SocksProxyAgent(proxy)
-        }
+        signal: newAbortSignal(5000),
+        httpsAgent: getProxy(index)
     }
 
     filterSymbol.forEach(symbol => {
@@ -207,6 +202,7 @@ async function getBalances(wallet, proxy = null) {
     })
 
     let isBalancesFetched = false
+    let retry = 0
     while (!isBalancesFetched) {
         await axios.get(apiUrl+'/contract/' + wallet + '/balances', config).then(async response => {
             let balances = response.data
@@ -220,13 +216,20 @@ async function getBalances(wallet, proxy = null) {
                 })
             }
         }).catch(e => {
-            isBalancesFetched = true
             if (debug) console.log('balances', e.toString())
+
+            retry++
+
+            config.agent = getProxy(index, true)
+
+            if (retry >= 3) {
+                isBalancesFetched = true
+            }
         })
     }
 }
 
-async function getTxs(wallet, proxy = null) {
+async function getTxs(wallet, index) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -240,9 +243,12 @@ async function getTxs(wallet, proxy = null) {
     let bridgeFrom = 0
     let isAllTxCollected = false
     let isAllTransfersCollected = false
+    let retry = 0
+    let retryTransfers = 0
 
     let config = {
-        timeout: 5000,
+        signal: newAbortSignal(5000),
+        httpsAgent: getProxy(index),
         params: {
             to: wallet,
             p: 1,
@@ -251,22 +257,11 @@ async function getTxs(wallet, proxy = null) {
     }
 
     let transferConfig = {
-        timeout: 5000,
+        signal: newAbortSignal(5000),
+        httpsAgent: getProxy(index),
         params: {
             p: 1,
             ps: 100
-        }
-    }
-
-    if (proxy) {
-        if (proxy.includes('http')) {
-            config.httpsAgent = new HttpsProxyAgent(proxy)
-            transferConfig.httpsAgent = new HttpsProxyAgent(proxy)
-        }
-
-        if (proxy.includes('socks')) {
-            config.httpsAgent = new SocksProxyAgent(proxy)
-            transferConfig.httpsAgent = new SocksProxyAgent(proxy)
         }
     }
 
@@ -291,8 +286,15 @@ async function getTxs(wallet, proxy = null) {
                 config.params.p++
             }
         }).catch((e) => {
-            isAllTxCollected = true
             if (debug) console.log('txs', e.toString())
+
+            retry++
+
+            config.agent = getProxy(index, true)
+
+            if (retry >= 3) {
+                isAllTxCollected = true
+            }
         })
     }
 
@@ -309,9 +311,17 @@ async function getTxs(wallet, proxy = null) {
             } else {
                 transferConfig.params.p++
             }
-        }).catch((e) => {
-            isAllTransfersCollected = true
-            if (debug) console.log('transfers', e.toString())
+        }).catch(async (e) => {
+            if (debug) console.log('transfers', wallet, e.toString())
+
+            retryTransfers++
+            await sleep(2000)
+
+            transferConfig.agent = getProxy(index, true)
+
+            if (retryTransfers >= 3) {
+                isAllTransfersCollected = true
+            }
         })
     }
 
@@ -387,8 +397,8 @@ async function fetchWallet(wallet, index) {
         }
     }
 
-    await getBalances(wallet, proxy)
-    await getTxs(wallet, proxy)
+    await getBalances(wallet, index)
+    await getTxs(wallet, index)
     progressBar.update(iteration)
 
     total.gas += stats[wallet].total_gas

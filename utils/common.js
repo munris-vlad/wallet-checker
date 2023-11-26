@@ -1,6 +1,8 @@
 import fs from "fs"
 import axios from "axios"
 import inquirer from "inquirer"
+import { HttpsProxyAgent } from "https-proxy-agent"
+import { SocksProxyAgent } from "socks-proxy-agent"
 
 export const wait = ms => new Promise(r => setTimeout(r, ms))
 export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis))
@@ -330,4 +332,34 @@ export function newAbortSignal(timeoutMs) {
     setTimeout(() => abortController.abort(), timeoutMs || 0)
 
     return abortController.signal
+}
+
+let proxies = readWallets('./proxies.txt')
+
+export function getProxy(index, isRandom = false) {
+    let agent
+    let proxy = null
+    if (proxies.length) {
+        if (proxies[index]) {
+            if (isRandom) {
+                proxy = proxies[random(0, proxies.length)]
+            } else {
+                proxy = proxies[index]
+            }
+        } else {
+            proxy = proxies[0]
+        }
+    }
+
+    if (proxy) {
+        if (proxy.includes('http')) {
+            agent = new HttpsProxyAgent(proxy)
+        }
+
+        if (proxy.includes('socks')) {
+            agent = new SocksProxyAgent(proxy)
+        }
+    }
+
+    return agent
 }
