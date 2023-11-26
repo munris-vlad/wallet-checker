@@ -157,6 +157,7 @@ const filterSymbol = ['ETH', 'USDT', 'USDC', 'DAI']
 const stables = ['USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 const apiUrl = 'https://voyager.online/api'
+const cancelTimeout = 15000
 
 const contracts = [
     {
@@ -193,7 +194,7 @@ const contracts = [
 
 async function getBalances(wallet, index) {
     let config = {
-        signal: newAbortSignal(5000),
+        signal: newAbortSignal(cancelTimeout),
         httpsAgent: getProxy(index)
     }
 
@@ -222,7 +223,7 @@ async function getBalances(wallet, index) {
 
             config.agent = getProxy(index, true)
 
-            if (retry >= 3) {
+            if (retry >= 5) {
                 isBalancesFetched = true
             }
         })
@@ -247,7 +248,7 @@ async function getTxs(wallet, index) {
     let retryTransfers = 0
 
     let config = {
-        signal: newAbortSignal(5000),
+        signal: newAbortSignal(cancelTimeout),
         httpsAgent: getProxy(index),
         params: {
             to: wallet,
@@ -257,7 +258,7 @@ async function getTxs(wallet, index) {
     }
 
     let transferConfig = {
-        signal: newAbortSignal(5000),
+        signal: newAbortSignal(cancelTimeout),
         httpsAgent: getProxy(index),
         params: {
             p: 1,
@@ -292,7 +293,7 @@ async function getTxs(wallet, index) {
 
             config.agent = getProxy(index, true)
 
-            if (retry >= 3) {
+            if (retry >= 5) {
                 isAllTxCollected = true
             }
         })
@@ -319,7 +320,7 @@ async function getTxs(wallet, index) {
 
             transferConfig.agent = getProxy(index, true)
 
-            if (retryTransfers >= 3) {
+            if (retryTransfers >= 5) {
                 isAllTransfersCollected = true
             }
         })
