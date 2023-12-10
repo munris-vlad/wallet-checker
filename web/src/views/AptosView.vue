@@ -20,6 +20,7 @@
                             </div>
                         </div>
                     </td>
+                    <td :class="tdClass">{{ item['AptosName'] }}</td>
                     <td :class="[tdClass, parseFloat(item['APT']) < 0.01 ? 'text-red-500' : '']">{{ item['APT'] }} (${{ item['APT USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
@@ -31,7 +32,6 @@
                     <td :class="tdClass">{{ formatDate(item['First tx']) }}</td>
                     <td :class="tdClass">{{ formatDate(item['Last tx']) }}</td>
                     <td :class="tdClass">{{ item['Total gas spent'] }} (${{ item['Total gas spent USDVALUE'] }})</td>
-                    <td :class="tdClass">{{ item['Aptos ONE'] }}</td>
                 </tr>
             </tbody>
         </table>
@@ -65,6 +65,7 @@ export default {
             headers: [
                 'n',
                 'Wallet',
+                'AptosName',
                 'APT',
                 'USDC',
                 'USDT',
@@ -76,7 +77,6 @@ export default {
                 'First tx',
                 'Last tx',
                 'Total gas spent',
-                'Aptos ONE'
             ]
         }
     },

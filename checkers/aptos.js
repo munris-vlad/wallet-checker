@@ -9,6 +9,7 @@ import cliProgress from 'cli-progress'
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'AptosName', alignment: 'right', color: 'cyan'},
     { name: 'APT', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
@@ -19,13 +20,13 @@ const columns = [
     { name: 'Months', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-    { name: 'Aptos ONE', alignment: 'right', color: 'cyan'},
+    { name: 'Total gas spent', alignment: 'right', color: 'cyan'}
 ]
 
 const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
+    { id: 'AptosName', title: 'AptosName'},
     { id: 'APT', title: 'APT'},
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
@@ -36,8 +37,7 @@ const headers = [
     { id: 'Months', title: 'Months'},
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
-    { id: 'Total gas spent', title: 'Total gas spent'},
-    { id: 'Aptos ONE', title: 'Aptos ONE'}
+    { id: 'Total gas spent', title: 'Total gas spent'}
 ]
 
 const apiUrl = "https://api.apscan.io"
@@ -81,18 +81,10 @@ async function getBalances(wallet) {
     }
 
     try {
-        await axios.get(apiUrl+'/tokens_by_address?address=eq.'+wallet).then(response => {
-            if (response.data.length) {
-                let tokens = response.data
-                console.log(tokens)
-
-                Object.values(tokens).forEach(token => {
-                    if (token.token_info) {
-                        if (token.token_info.name === 'Aptos ONE Mainnet Anniversary 2023') {
-                            stats[wallet].aptos_one_nft = true
-                        }
-                    }
-                })
+        await axios.get('https://www.aptosnames.com/api/mainnet/v1/name/'+wallet).then(response => {
+            // console.log(response)
+            if (response.data) {
+                stats[wallet].aptosname = response.data.name + '.apt'
             }
         }).catch()
     } catch (e) {
@@ -162,7 +154,7 @@ async function fetchWallet(wallet, index) {
 
     stats[wallet] = {
         balances: [],
-        aptos_one_nft: false
+        aptosname: false
     }
 
     await getBalances(wallet)
@@ -184,7 +176,7 @@ async function fetchWallet(wallet, index) {
         'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
         'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0,
-        'Aptos ONE': stats[wallet].aptos_one_nft ? 'Yes' : 'No'
+        'AptosName': stats[wallet].aptosname ? stats[wallet].aptosname : '-'
     }
 
     p.addRow(row)
@@ -204,7 +196,7 @@ async function fetchWallet(wallet, index) {
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
         'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0,
-        'Aptos ONE': stats[wallet].aptos_one_nft ? 'Yes' : 'No'
+        'AptosName': stats[wallet].aptosname ? stats[wallet].aptosname : '-'
     })
 
     iteration++
