@@ -21,6 +21,7 @@
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['AptosName'] }}</td>
+                    <td :class="tdClass">{{ item['GalxePoints'] }}</td>
                     <td :class="[tdClass, parseFloat(item['APT']) < 0.01 ? 'text-red-500' : '']">{{ item['APT'] }} (${{ item['APT USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
@@ -66,6 +67,7 @@ export default {
                 'n',
                 'Wallet',
                 'AptosName',
+                'GalxePoints',
                 'APT',
                 'USDC',
                 'USDT',

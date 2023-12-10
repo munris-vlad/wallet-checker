@@ -10,6 +10,7 @@ const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'AptosName', alignment: 'right', color: 'cyan'},
+    { name: 'GalxePoints', alignment: 'right', color: 'cyan'},
     { name: 'APT', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
@@ -27,6 +28,7 @@ const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
     { id: 'AptosName', title: 'AptosName'},
+    { id: 'GalxePoints', title: 'GalxePoints'},
     { id: 'APT', title: 'APT'},
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
@@ -82,7 +84,6 @@ async function getBalances(wallet) {
 
     try {
         await axios.get('https://www.aptosnames.com/api/mainnet/v1/name/'+wallet).then(response => {
-            // console.log(response)
             if (response.data) {
                 stats[wallet].aptosname = response.data.name + '.apt'
             }
@@ -90,6 +91,28 @@ async function getBalances(wallet) {
     } catch (e) {
         return e.toString()
     }
+
+    await axios.post('https://graphigo.prd.galaxy.eco/query', {
+        operationName: 'SpaceAccessQuery',
+        variables: {
+            alias: 'Aptoslabs',
+            address: wallet.toLowerCase(),
+        },
+        query: 'query SpaceAccessQuery($id: Int, $alias: String, $address: String!) {\n  space(id: $id, alias: $alias) {\n    id\n    isFollowing\n    discordGuildID\n    discordGuildInfo\n    status\n    isAdmin(address: $address)\n    unclaimedBackfillLoyaltyPoints(address: $address)\n    addressLoyaltyPoints(address: $address) {\n      id\n      points\n      rank\n      __typename\n    }\n    __typename\n  }\n}\n',
+    }, {
+        headers: {
+            'authority': 'graphigo.prd.galaxy.eco',
+            'accept': '*/*',
+            'accept-language': 'en-US,en;q=0.9',
+            'content-type': 'application/json',
+            'origin': 'https://galxe.com',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+        }
+    }).then(response => {
+        stats[wallet].galxepoints = response.data.data.space ? response.data.data.space.addressLoyaltyPoints.points : null
+    }).catch(error => {
+        console.log(error)
+    })
 }
 
 async function getTxs(wallet) {
@@ -154,7 +177,8 @@ async function fetchWallet(wallet, index) {
 
     stats[wallet] = {
         balances: [],
-        aptosname: false
+        aptosname: '-',
+        galxepoints: 0
     }
 
     await getBalances(wallet)
@@ -165,6 +189,8 @@ async function fetchWallet(wallet, index) {
     let row = {
         n: index,
         wallet: wallet,
+        'AptosName': stats[wallet].aptosname ? stats[wallet].aptosname : '-',
+        'GalxePoints': stats[wallet].galxepoints,
         'APT': stats[wallet].balances['APT'].toFixed(2) + ` ($${usdAptValue})`,
         'USDC': stats[wallet].balances['USDC'].toFixed(2),
         'USDT': stats[wallet].balances['USDT'].toFixed(2),
@@ -176,13 +202,14 @@ async function fetchWallet(wallet, index) {
         'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
         'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0,
-        'AptosName': stats[wallet].aptosname ? stats[wallet].aptosname : '-'
     }
 
     p.addRow(row)
     jsonData.push({
         n: index,
         wallet: wallet,
+        'AptosName': stats[wallet].aptosname ? stats[wallet].aptosname : '-',
+        'GalxePoints': stats[wallet].galxepoints,
         'APT': stats[wallet].balances['APT'].toFixed(2),
         'APT USDVALUE': usdAptValue,
         'USDC': stats[wallet].balances['USDC'].toFixed(2),
@@ -196,7 +223,6 @@ async function fetchWallet(wallet, index) {
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
         'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0,
-        'AptosName': stats[wallet].aptosname ? stats[wallet].aptosname : '-'
     })
 
     iteration++
