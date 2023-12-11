@@ -95,7 +95,7 @@ async function getBalances(wallet) {
     await axios.post('https://graphigo.prd.galaxy.eco/query', {
         operationName: 'SpaceAccessQuery',
         variables: {
-            alias: 'Aptoslabs',
+            alias: 'aptos',
             address: wallet.toLowerCase(),
         },
         query: 'query SpaceAccessQuery($id: Int, $alias: String, $address: String!) {\n  space(id: $id, alias: $alias) {\n    id\n    isFollowing\n    discordGuildID\n    discordGuildInfo\n    status\n    isAdmin(address: $address)\n    unclaimedBackfillLoyaltyPoints(address: $address)\n    addressLoyaltyPoints(address: $address) {\n      id\n      points\n      rank\n      __typename\n    }\n    __typename\n  }\n}\n',
