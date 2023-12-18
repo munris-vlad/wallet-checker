@@ -91,7 +91,7 @@ let headers = [
     { id: 'Last tx', title: 'Last tx' },
 ]
 
-let debug = true
+let debug = false
 let p
 let csvWriter
 let stats = []
@@ -115,7 +115,23 @@ const apiUrl = 'https://voyager.online/api'
 const cancelTimeout = 15000
 
 async function getBalances(wallet, index) {
+    let headers = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+        "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "Referer": `https://voyager.online/contract/${wallet}`,
+        "Referrer-Policy": "unsafe-url",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Version": "v1"
+    }
+
     let config = {
+        headers: headers,
         signal: newAbortSignal(cancelTimeout),
         httpsAgent: getProxy(index)
     }
@@ -139,7 +155,7 @@ async function getBalances(wallet, index) {
                 })
             }
         }).catch(e => {
-            if (debug) console.log('balances', e.toString())
+            if (debug) console.log('balances', e)
 
             retry++
 
@@ -169,7 +185,23 @@ async function getTxs(wallet, index) {
     let retry = 0
     let retryTransfers = 0
 
+    let headers = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+        "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "Referer": `https://voyager.online/contract/${wallet}`,
+        "Referrer-Policy": "unsafe-url",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Version": "v1"
+    }
+
     let config = {
+        headers: headers,
         signal: newAbortSignal(cancelTimeout),
         httpsAgent: getProxy(index),
         params: {
@@ -180,6 +212,7 @@ async function getTxs(wallet, index) {
     }
 
     let transferConfig = {
+        headers: headers,
         signal: newAbortSignal(cancelTimeout),
         httpsAgent: getProxy(index),
         params: {
@@ -209,7 +242,7 @@ async function getTxs(wallet, index) {
                 config.params.p++
             }
         }).catch((e) => {
-            if (debug) console.log('txs', e.toString())
+            if (debug) console.log('txs', e)
 
             retry++
 
