@@ -24,6 +24,7 @@
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['Voyage NFT'] }}</td>
+                    <td :class="tdClass">{{ item['PoH'] }}</td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.005 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDT'] }}</td>
@@ -70,6 +71,7 @@ export default {
                 'n',
                 'Wallet',
                 'Voyage NFT',
+                'PoH',
                 'ETH',
                 'USDC',
                 'USDT',
