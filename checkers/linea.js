@@ -1,5 +1,11 @@
 import  '../utils/common.js'
-import {sleep, readWallets, getBalance, getKeyByValue} from '../utils/common.js'
+import { sleep, 
+    readWallets, 
+    getBalance, 
+    getKeyByValue,
+    getProxy,
+    newAbortSignal,
+} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -10,6 +16,7 @@ const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'Voyage NFT', color: 'green', alignment: "right"},
+    { name: 'PoH', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
@@ -28,6 +35,7 @@ const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
     { id: 'Voyage NFT', title: 'Voyage NFT'},
+    { id: 'PoH', title: 'PoH'},
     { id: 'ETH', title: 'ETH'},
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
@@ -65,7 +73,7 @@ const contracts = [
     }
 ]
 
-let debug = true
+let debug = false
 const apiUrl = "https://explorer.linea.build/api"
 let p
 let csvWriter
@@ -83,6 +91,7 @@ let total = {
     dai: 0,
     gas: 0
 }
+const cancelTimeout = 15000
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 let ethPrice = 0
 await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
@@ -104,6 +113,8 @@ async function getBalances(wallet) {
 
     for (const contract of contracts) {
         await axios.get(apiUrl, {
+            signal: newAbortSignal(cancelTimeout),
+            httpsAgent: getProxy(0, true),
             params: {
                 module: 'account',
                 action: 'tokenbalance',
@@ -118,6 +129,8 @@ async function getBalances(wallet) {
     }
     let voyageNft = '-'
     await axios.get(apiUrl, {
+        signal: newAbortSignal(cancelTimeout),
+        httpsAgent: getProxy(0, true),
         params: {
             module: 'account',
             action: 'tokenlist',
@@ -153,6 +166,15 @@ async function getBalances(wallet) {
     })
 
     stats[wallet].voyagenft = voyageNft
+
+    await axios.get(`https://linea-xp-poh-api.linea.build/poh/${wallet}`, {
+        signal: newAbortSignal(cancelTimeout),
+        httpsAgent: getProxy(0, true),
+    }).then(response => {
+        stats[wallet].poh = response.data.poh
+        // console.log(response)
+    })
+    
 }
 
 async function getTxs(wallet) {
@@ -220,7 +242,8 @@ async function fetchWallet(wallet, index) {
     stats[wallet] = {
         txcount: 0,
         balances: [],
-        voyagenft: ''
+        voyagenft: '',
+        poh: false
     }
 
     await getBalances(wallet)
@@ -239,6 +262,7 @@ async function fetchWallet(wallet, index) {
         n: parseInt(index)+1,
         wallet: wallet,
         'Voyage NFT': stats[wallet].voyagenft,
+        'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
@@ -257,6 +281,7 @@ async function fetchWallet(wallet, index) {
         n: parseInt(index)+1,
         wallet: wallet,
         'Voyage NFT': stats[wallet].voyagenft,
+        'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
