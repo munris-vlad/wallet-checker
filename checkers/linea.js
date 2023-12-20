@@ -172,7 +172,8 @@ async function getBalances(wallet) {
         httpsAgent: getProxy(0, true),
     }).then(response => {
         stats[wallet].poh = response.data.poh
-        // console.log(response)
+    }).catch(function (error) {
+        if (debug) console.log(error)
     })
     
 }
