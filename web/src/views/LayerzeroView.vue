@@ -22,6 +22,24 @@
                     </td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
+                    <td :class="tdClass + ' text-left'">
+                        <div class="flex space-x-2 pt-3 pb-4 select-none max-w-sm">
+                            <div class="h-4 w-4 text-center" v-for="(count, source) in item['sources']" :key="source" :title="source">
+                                <img class="rounded-full mb-1" :src="`https://icons-ckg.pages.dev/lz-scan/networks/${source}.svg`" :alt="source">
+                                <span class="text-xs protocol-text">{{ count }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td :class="tdClass + ' text-left'">
+                        <strong>Total: {{ Object.keys(item['protocols']).length }}</strong>
+
+                        <div class="flex space-x-2 pt-3 pb-4 select-none max-w-sm">
+                            <div class="h-4 w-4 text-center" v-for="(count, protocol) in item['protocols']" :key="protocol" :title="protocol">
+                                <img class="rounded-full mb-1" :src="`https://icons-ckg.pages.dev/lz-scan/protocols/${protocol}.svg`" :alt="protocol">
+                                <span class="text-xs protocol-text">{{ count }}</span>
+                            </div>
+                        </div>
+                    </td>
                     <td :class="tdClass">{{ item['Dest chains'] }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
@@ -64,6 +82,8 @@ export default {
                 'Wallet',
                 'TX Count',
                 'Source chains',
+                'Source chains list',
+                'Protocols',
                 'Dest chains',
                 'Contracts',
                 'Days',

@@ -18,8 +18,9 @@
   "dependencies": {
     "@ankr.com/ankr.js": "^0.4.0",
     "@moralisweb3/common-evm-utils": "^2.22.5",
-    "axios": "^1.4.0",
+    "axios": "^1.6.2",
     "cli-progress": "^3.12.0",
+    "cloudscraper": "^4.6.0",
     "concurrently": "^8.2.1",
     "console-table-printer": "^2.11.2",
     "cors": "^2.8.5",

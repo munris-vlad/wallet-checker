@@ -187,6 +187,10 @@ export const entryPoint = async () => {
                     value: "layerzero",
                 },
                 {
+                    name: "Layerzero with source networks",
+                    value: "layerzero_extended",
+                },
+                {
                     name: "Zora",
                     value: "zora",
                 },

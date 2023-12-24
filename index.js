@@ -54,6 +54,10 @@ async function startMenu(menu) {
             await layerzeroFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()
             break
+        case "layerzero_extended":
+            await layerzeroFetchDataAndPrintTable(true).catch(error => { console.error('Произошла ошибка:', error)})
+            if (startOver) await startMenu()
+            break
         case "zora":
             await zoraFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()

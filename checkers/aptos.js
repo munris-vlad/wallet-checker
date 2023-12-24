@@ -1,49 +1,63 @@
 import '../utils/common.js'
-import {readWallets, getBalance, timestampToDate} from '../utils/common.js'
+import { readWallets, getBalance, timestampToDate, getProxy } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
+import cloudscraper from 'cloudscraper'
 
 const columns = [
-    { name: 'n', color: 'green', alignment: "right"},
-    { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'AptosName', alignment: 'right', color: 'cyan'},
-    { name: 'GalxePoints', alignment: 'right', color: 'cyan'},
-    { name: 'APT', alignment: 'right', color: 'cyan'},
-    { name: 'USDC', alignment: 'right', color: 'cyan'},
-    { name: 'USDT', alignment: 'right', color: 'cyan'},
-    { name: 'DAI', alignment: 'right', color: 'cyan'},
-    { name: 'TX Count', alignment: 'right', color: 'cyan'},
-    { name: 'Days', alignment: 'right', color: 'cyan'},
-    { name: 'Weeks', alignment: 'right', color: 'cyan'},
-    { name: 'Months', alignment: 'right', color: 'cyan'},
-    { name: 'First tx', alignment: 'right', color: 'cyan'},
-    { name: 'Last tx', alignment: 'right', color: 'cyan'},
-    { name: 'Total gas spent', alignment: 'right', color: 'cyan'}
+    { name: 'n', color: 'green', alignment: "right" },
+    { name: 'wallet', color: 'green', alignment: "right" },
+    { name: 'AptosName', alignment: 'right', color: 'cyan' },
+    { name: 'GalxePoints', alignment: 'right', color: 'cyan' },
+    { name: 'APT', alignment: 'right', color: 'cyan' },
+    { name: 'USDC', alignment: 'right', color: 'cyan' },
+    { name: 'USDT', alignment: 'right', color: 'cyan' },
+    { name: 'DAI', alignment: 'right', color: 'cyan' },
+    { name: 'TX Count', alignment: 'right', color: 'cyan' },
+    { name: 'Days', alignment: 'right', color: 'cyan' },
+    { name: 'Weeks', alignment: 'right', color: 'cyan' },
+    { name: 'Months', alignment: 'right', color: 'cyan' },
+    { name: 'First tx', alignment: 'right', color: 'cyan' },
+    { name: 'Last tx', alignment: 'right', color: 'cyan' },
 ]
 
 const headers = [
-    { id: 'n', title: '№'},
-    { id: 'wallet', title: 'wallet'},
-    { id: 'AptosName', title: 'AptosName'},
-    { id: 'GalxePoints', title: 'GalxePoints'},
-    { id: 'APT', title: 'APT'},
-    { id: 'USDC', title: 'USDC'},
-    { id: 'USDT', title: 'USDT'},
-    { id: 'DAI', title: 'DAI'},
-    { id: 'TX Count', title: 'TX Count'},
-    { id: 'Days', title: 'Days'},
-    { id: 'Weeks', title: 'Weeks'},
-    { id: 'Months', title: 'Months'},
-    { id: 'First tx', title: 'First tx'},
-    { id: 'Last tx', title: 'Last tx'},
-    { id: 'Total gas spent', title: 'Total gas spent'}
+    { id: 'n', title: '№' },
+    { id: 'wallet', title: 'wallet' },
+    { id: 'AptosName', title: 'AptosName' },
+    { id: 'GalxePoints', title: 'GalxePoints' },
+    { id: 'APT', title: 'APT' },
+    { id: 'USDC', title: 'USDC' },
+    { id: 'USDT', title: 'USDT' },
+    { id: 'DAI', title: 'DAI' },
+    { id: 'TX Count', title: 'TX Count' },
+    { id: 'Days', title: 'Days' },
+    { id: 'Weeks', title: 'Weeks' },
+    { id: 'Months', title: 'Months' },
+    { id: 'First tx', title: 'First tx' },
+    { id: 'Last tx', title: 'Last tx' },
 ]
 
-const apiUrl = "https://api.apscan.io"
+const reqheaders = {
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+    "if-none-match": "W/\"451e-hvtWIYx9P6o5M2DHchFA2Z/RoGc\"",
+    "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "cross-site",
+    "Referer": "https://tracemove.io/",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+}
 
+const apiUrl = "https://mainnet-aptos-api.nodereal.io/api"
+
+const debug = true
 let stats = []
 let jsonData = []
 let csvData = []
@@ -59,37 +73,45 @@ await axios.get('https://min-api.cryptocompare.com/data/price?fsym=APT&tsyms=USD
     aptPrice = response.data.USD
 })
 
-async function getBalances(wallet) {
+async function getBalances(wallet, index) {
     filterSymbol.forEach(symbol => {
         stats[wallet].balances[symbol] = 0
     })
 
-    try {
-        await axios.get(apiUrl+'/accounts?address=eq.'+wallet).then(response => {
-            if (response.data.length) {
-                let balances = response.data[0].all_balances
+    let config = {
+        method: 'GET',
+        url: apiUrl + `/account/${wallet}/coins`,
+        timeout: 5000,
+        headers: reqheaders
+    }
 
-                Object.values(balances).forEach(balance => {
-                    if (balance.coin_info) {
-                        if (filterSymbol.includes(balance.coin_info.symbol)) {
-                            stats[wallet].balances[balance.coin_info.symbol] = getBalance(balance.balance, balance.coin_info.decimals)
-                        }
+    let isBalancesCollected = false
+
+    while (!isBalancesCollected) {
+        try {
+            await cloudscraper(config).then(async response => {
+                const data = JSON.parse(response)
+                Object.values(data.data).forEach(balance => {
+                    if (filterSymbol.includes(balance.symbol)) {
+                        stats[wallet].balances[balance.symbol] = balance.amount
                     }
                 })
-            }
-        }).catch()
-    } catch (e) {
-        return e.toString()
+                isBalancesCollected = true
+            }).catch()
+        } catch (e) {
+            console.log(e)
+            if (debug) console.log(e.toString())
+        }
     }
 
     try {
-        await axios.get('https://www.aptosnames.com/api/mainnet/v1/name/'+wallet).then(response => {
+        await axios.get('https://www.aptosnames.com/api/mainnet/v1/name/' + wallet).then(response => {
             if (response.data) {
                 stats[wallet].aptosname = response.data.name + '.apt'
             }
         }).catch()
     } catch (e) {
-        return e.toString()
+        if (debug) console.log(e.toString())
     }
 
     await axios.post('https://graphigo.prd.galaxy.eco/query', {
@@ -111,51 +133,48 @@ async function getBalances(wallet) {
     }).then(response => {
         stats[wallet].galxepoints = response.data.data.space ? response.data.data.space.addressLoyaltyPoints.points : null
     }).catch(error => {
-        console.log(error)
+        if (debug) console.log(error.toString())
     })
 }
 
-async function getTxs(wallet) {
+async function getTxs(wallet, index) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
 
     let totalGasUsed = 0
     let txs = []
-    let startRange = 0, endRange = 50
     let isAllTxCollected = false
+
+    let config = {
+        method: 'GET',
+        url: apiUrl + `/account/${wallet}/sendTx?page=0&pageSize=1000`,
+        timeout: 5000,
+        headers: reqheaders
+    }
 
     while (!isAllTxCollected) {
         try {
-            await axios.get(apiUrl + '/user_transactions?sender=eq.' + wallet, {
-                headers: {
-                    range: `${startRange}-${endRange}`
-                }
-            }).then(response => {
-                let items = response.data
-                if (items.length) {
-                    Object.values(items).forEach(tx => {
-                        txs.push(tx)
-                    })
-                    startRange = startRange + 50
-                    endRange = endRange + 50
-                } else {
-                    isAllTxCollected = true
-                }
+            await cloudscraper(config).then(async response => {
+                const data = JSON.parse(response)
+                Object.values(data.data).forEach(tx => {
+                    txs.push(tx)
+                })
+                isAllTxCollected = true
             }).catch()
         } catch (e) {
-            return e.toString()
+            console.log(e)
+            if (debug) console.log(e.toString())
         }
     }
 
     stats[wallet].txcount = txs.length
 
     Object.values(txs).forEach(tx => {
-        const date = new Date(timestampToDate(tx.time_microseconds / 1000000))
+        const date = new Date(timestampToDate(tx.timestamp))
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        totalGasUsed += parseInt(tx.gas_used) / Math.pow(10, 6)
     })
 
     const numUniqueDays = uniqueDays.size
@@ -163,12 +182,11 @@ async function getTxs(wallet) {
     const numUniqueMonths = uniqueMonths.size
 
     if (txs.length) {
-        stats[wallet].first_tx_date = new Date(timestampToDate(txs[txs.length - 1].time_microseconds / 1000000))
-        stats[wallet].last_tx_date = new Date(timestampToDate(txs[0].time_microseconds / 1000000))
+        stats[wallet].first_tx_date = new Date(timestampToDate(txs[txs.length - 1].timestamp))
+        stats[wallet].last_tx_date = new Date(timestampToDate(txs[0].timestamp))
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
-        stats[wallet].total_gas = totalGasUsed
     }
 }
 
@@ -181,11 +199,10 @@ async function fetchWallet(wallet, index) {
         galxepoints: 0
     }
 
-    await getBalances(wallet)
-    await getTxs(wallet)
+    await getBalances(wallet, index)
+    await getTxs(wallet, index)
     progressBar.update(iteration)
-    let usdAptValue = (stats[wallet].balances['APT']*aptPrice).toFixed(2)
-    let usdGasValue = (stats[wallet].total_gas*aptPrice).toFixed(2)
+    let usdAptValue = (stats[wallet].balances['APT'] * aptPrice).toFixed(2)
     let row = {
         n: index,
         wallet: wallet,
@@ -201,7 +218,6 @@ async function fetchWallet(wallet, index) {
         'Months': stats[wallet].unique_months,
         'First tx': moment(stats[wallet].first_tx_date).format("DD.MM.YY"),
         'Last tx': moment(stats[wallet].last_tx_date).format("DD.MM.YY"),
-        'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0,
     }
 
     p.addRow(row)
@@ -222,7 +238,6 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
-        'Total gas spent USDVALUE': stats[wallet].total_gas ? usdGasValue : 0,
     })
 
     iteration++
@@ -234,18 +249,18 @@ function fetchWallets() {
     iteration = 1
     csvData = []
     jsonData = []
-    
+
     csvWriter = createObjectCsvWriter({
         path: './results/aptos.csv',
         header: headers
     })
-    
+
     p = new Table({
         columns: columns,
         sort: (row1, row2) => +row1.n - +row2.n
     })
 
-    const walletPromises = wallets.map((account, index) => fetchWallet(account, index+1))
+    const walletPromises = wallets.map((account, index) => fetchWallet(account, index + 1))
     return Promise.all(walletPromises)
 }
 

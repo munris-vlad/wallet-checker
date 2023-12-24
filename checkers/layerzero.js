@@ -10,9 +10,7 @@ const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
-    // { name: 'Source chains count', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
-    // { name: 'Dest chains count', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
     { name: 'Contracts', alignment: 'right', color: 'cyan' },
     { name: 'Days', alignment: 'right', color: 'cyan' },
@@ -36,6 +34,39 @@ const headers = [
     { id: 'Last TX', title: 'Last TX' },
 ]
 
+const sourceNetworks = [
+    'ethereum',
+    'bsc',
+    'polygon',
+    'base',
+    'optimism',
+    'arbitrum',
+    'avalanche',
+    'zksync',
+    'fantom',
+    'coredao',
+    'gnosis',
+    'moonriver',
+    'klaytn',
+    'celo',
+    'moonbeam',
+    'dfk'
+]
+
+const protocolsList = [
+    'stargate',
+    'aptos-bridge',
+    'btc.b',
+    'coredao',
+    'harmony',
+    'testnet-bridge',
+    'merkly',
+    'zerius',
+    'l2pass',
+    'l2telegraph',
+]
+
+let debug = false
 let jsonData = []
 let p
 let csvWriter
@@ -64,7 +95,7 @@ function getQueryHeaders(wallet) {
     }
 }
 
-async function fetchWallet(wallet, index) {
+async function fetchWallet(wallet, index, isExtended) {
 
     let agent = getProxy(index)
 
@@ -92,6 +123,9 @@ async function fetchWallet(wallet, index) {
     const uniqueContracts = new Set()
     const uniqueSource = new Set()
     const uniqueDestination = new Set()
+    const sources = {}
+    const destinations = {}
+    const protocols = {}
 
     while (!isTxParsed) {
         await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
@@ -103,7 +137,7 @@ async function fetchWallet(wallet, index) {
             data.tx_count = response.data.result.data.count
             isTxParsed = true
         }).catch(error => {
-            console.error(wallet, error.toString(), '| Get random proxy')
+            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
             agent = getProxy(index, true)
@@ -114,7 +148,6 @@ async function fetchWallet(wallet, index) {
         })
     }
     
-
     if (txs.length) {
 
         for (const tx of Object.values(txs)) {
@@ -125,14 +158,32 @@ async function fetchWallet(wallet, index) {
             uniqueSource.add(tx.srcChainKey)
             uniqueDestination.add(tx.dstChainKey)
             uniqueContracts.add(tx.dstUaAddress)
+            
+            if (tx.srcUaProtocol) {
+                if (!protocols[tx.srcUaProtocol.id]) {
+                    protocols[tx.srcUaProtocol.id] = 1
+                } else {
+                    protocols[tx.srcUaProtocol.id]++
+                }
+            }
+
+            if (!sources[tx.srcChainKey]) {
+                sources[tx.srcChainKey] = 1
+            } else {
+                sources[tx.srcChainKey]++
+            }
+
+            if (!destinations[tx.dstChainKey]) {
+                destinations[tx.dstChainKey] = 1
+            } else {
+                destinations[tx.dstChainKey]++
+            }
         }
 
         data.first_tx = new Date(timestampToDate(txs[txs.length - 1].created))
         data.last_tx = new Date(timestampToDate(txs[0].created))
         data.source_chain_count = uniqueSource.size
-        data.source_chain = Array.from(uniqueSource).join(', ')
         data.dest_chain_count = uniqueDestination.size
-        data.dest_chain = Array.from(uniqueDestination).join(', ')
         data.contracts = uniqueContracts.size
         data.days = uniqueDays.size
         data.weeks = uniqueWeeks.size
@@ -140,47 +191,66 @@ async function fetchWallet(wallet, index) {
     }
 
     progressBar.update(iteration)
-
-    p.addRow({
+    
+    let row = {
         n: parseInt(index) + 1,
         Wallet: wallet,
         'TX Count': data.tx_count,
         'Source chains': data.source_chain_count,
-        // 'Source chains': data.source_chain,
         'Dest chains': data.dest_chain_count,
-        // 'Dest chains': data.dest_chain,
         'Contracts': data.contracts,
         'Days': data.days,
         'Weeks': data.weeks,
         'Months': data.months,
         'First TX': data.first_tx ? moment((data.first_tx)).format("DD.MM.YY") : '-',
         'Last TX': data.last_tx ? moment((data.last_tx)).format("DD.MM.YY") : '-',
-    })
+    }
 
-    jsonData.push({
+    let jsonRow = {
         n: parseInt(index) + 1,
         Wallet: wallet,
         'TX Count': data.tx_count,
         'Source chains': data.source_chain_count,
-        // 'Source chains': data.source_chain,
         'Dest chains': data.dest_chain_count,
-        // 'Dest chains': data.dest_chain,
         'Contracts': data.contracts,
         'Days': data.days,
         'Weeks': data.weeks,
         'Months': data.months,
         'First TX': data.first_tx,
         'Last TX': data.last_tx,
-    })
+    }
+
+    if (isExtended) {
+        sourceNetworks.forEach((source) => {
+            row[source] = 0
+        })
+        Object.entries(sources).forEach(([source, count]) => {
+            row[source] = count
+        })
+
+        protocolsList.forEach((protocol) => {
+            row[protocol] = 0
+        })
+        Object.entries(protocols).forEach(([protocol, count]) => {
+            row[protocol] = count
+        })
+    }
+
+    jsonRow['sources'] = sources
+    jsonRow['destinations'] = destinations
+    jsonRow['protocols'] = protocols
+
+    p.addRow(row)
+    jsonData.push(jsonRow)
 
     iteration++
 }
 
-async function fetchBatch(batch) {
-    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
+async function fetchBatch(batch, isExtended) {
+    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account), isExtended)))
 }
 
-function fetchWallets() {
+function fetchWallets(isExtended) {
     wallets = readWallets('./addresses/layerzero.txt')
     iterations = wallets.length
     iteration = 1
@@ -190,11 +260,6 @@ function fetchWallets() {
     csvWriter = createObjectCsvWriter({
         path: './results/layerzero.csv',
         header: headers
-    })
-
-    p = new Table({
-        columns: columns,
-        sort: (row1, row2) => +row1.n - +row2.n
     })
 
     const batchSize = 50
@@ -208,12 +273,17 @@ function fetchWallets() {
 
         const promise = new Promise((resolve) => {
             setTimeout(() => {
-                resolve(fetchBatch(batch))
+                resolve(fetchBatch(batch, isExtended))
             }, i * 5000)
         })
 
         walletPromises.push(promise)
     }
+
+    p = new Table({
+        columns: columns,
+        sort: (row1, row2) => +row1.n - +row2.n
+    })
 
     return Promise.all(walletPromises)
 }
@@ -226,9 +296,21 @@ async function saveToCsv() {
     csvWriter.writeRecords(csvData).then().catch()
 }
 
-export async function layerzeroFetchDataAndPrintTable() {
+export async function layerzeroFetchDataAndPrintTable(isExtended = false) {
     progressBar.start(iterations, 0)
-    await fetchWallets()
+    if (isExtended) {
+        if (isExtended) {
+            sourceNetworks.forEach((source) => {
+                headers.push({ id: source, title: source })
+                columns.push({ name: source, alignment: 'right', color: 'cyan' })
+            })
+            protocolsList.forEach((protocol) => {
+                headers.push({ id: protocol, title: protocol })
+                columns.push({ name: protocol, alignment: 'right', color: 'cyan' })
+            })
+        }
+    }
+    await fetchWallets(isExtended)
     progressBar.stop()
 
     p.printTable()
