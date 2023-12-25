@@ -160,7 +160,6 @@ async function fetchWallet(wallet, index, isExtended) {
             uniqueContracts.add(tx.dstUaAddress)
             
             if (tx.srcUaProtocol) {
-                console.log(tx.srcUaProtocol.id)
                 if (!protocols[tx.srcUaProtocol.id]) {
                     protocols[tx.srcUaProtocol.id] = 1
                 } else {
@@ -230,10 +229,18 @@ async function fetchWallet(wallet, index, isExtended) {
         })
 
         protocolsList.forEach((protocol) => {
-            row[protocol] = 0
+            if (protocol === 'harmony') {
+                row[protocol+'-bridge'] = 0
+            } else {
+                row[protocol] = 0
+            }
         })
         Object.entries(protocols).forEach(([protocol, count]) => {
-            row[protocol] = count
+            if (protocol === 'harmony') {
+                row[protocol+'-bridge'] = count
+            } else {
+                row[protocol] = count
+            }
         })
     }
 
@@ -306,8 +313,13 @@ export async function layerzeroFetchDataAndPrintTable(isExtended = false) {
                 columns.push({ name: source, alignment: 'right', color: 'cyan' })
             })
             protocolsList.forEach((protocol) => {
-                headers.push({ id: protocol, title: protocol })
-                columns.push({ name: protocol, alignment: 'right', color: 'cyan' })
+                if (protocol === 'harmony') {
+                    headers.push({ id: protocol+'-bridge', title: protocol+'-bridge' })
+                    columns.push({ name: protocol+'-bridge', alignment: 'right', color: 'cyan' })
+                } else {
+                    headers.push({ id: protocol, title: protocol })
+                    columns.push({ name: protocol, alignment: 'right', color: 'cyan' })
+                }
             })
         }
     }
