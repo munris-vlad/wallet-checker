@@ -46,9 +46,10 @@ const sourceNetworks = [
     'fantom',
     'coredao',
     'gnosis',
-    'moonriver',
     'klaytn',
+    'harmony',
     'celo',
+    'moonriver',
     'moonbeam',
     'dfk'
 ]
@@ -149,7 +150,6 @@ async function fetchWallet(wallet, index, isExtended) {
     }
     
     if (txs.length) {
-
         for (const tx of Object.values(txs)) {
             const date = new Date(timestampToDate(tx.created))
             uniqueDays.add(date.toDateString())
@@ -160,6 +160,7 @@ async function fetchWallet(wallet, index, isExtended) {
             uniqueContracts.add(tx.dstUaAddress)
             
             if (tx.srcUaProtocol) {
+                console.log(tx.srcUaProtocol.id)
                 if (!protocols[tx.srcUaProtocol.id]) {
                     protocols[tx.srcUaProtocol.id] = 1
                 } else {
