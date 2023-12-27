@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -244,9 +244,9 @@ async function fetchWallet(wallet, index, isExtended) {
         })
     }
 
-    jsonRow['sources'] = sources
+    jsonRow['sources'] = sortObjectByKey(sources)
     jsonRow['destinations'] = destinations
-    jsonRow['protocols'] = protocols
+    jsonRow['protocols'] = sortObjectByKey(protocols)
 
     p.addRow(row)
     jsonData.push(jsonRow)

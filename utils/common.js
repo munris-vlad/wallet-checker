@@ -367,3 +367,8 @@ export function getProxy(index, isRandom = false) {
 
     return agent
 }
+
+export function sortObjectByKey(obj) {
+    const sortedEntries = Object.entries(obj).sort((a, b) => a[0].localeCompare(b[0]))
+    return Object.fromEntries(sortedEntries)
+}
