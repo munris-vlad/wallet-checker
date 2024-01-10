@@ -17,7 +17,6 @@
 
 ### Чекер сетей:
 * ZkSync
-* Starknet
 * Layerzero
 * Zora
 * Aptos

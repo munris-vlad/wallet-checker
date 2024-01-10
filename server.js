@@ -4,7 +4,6 @@ import express from 'express'
 import path from 'path'
 import cors from 'cors'
 import {zkSyncData} from "./checkers/zksync.js"
-import {starknetData} from "./checkers/starknet.js"
 import {zoraData} from "./checkers/zora.js"
 import {baseData} from "./checkers/base.js"
 import {aptosData} from "./checkers/aptos.js"
@@ -32,7 +31,6 @@ app.get('*', (req, res) => {
 })
 
 apiRoutes.get('/stats', async (req, res) => {
-    const starknetWallets = readWallets('./addresses/starknet.txt')
     const zksyncWallets = readWallets('./addresses/zksync.txt')
     const layerzeroWallets = readWallets('./addresses/layerzero.txt')
     const zoraWallets = readWallets('./addresses/zora.txt')
@@ -42,7 +40,6 @@ apiRoutes.get('/stats', async (req, res) => {
     const scrollWallets = readWallets('./addresses/scroll.txt')
     const evmWallets = readWallets('./addresses/evm.txt')
     res.json({
-        'starknet_wallets': starknetWallets,
         'zksync_wallets': zksyncWallets,
         'layerzero_wallets': layerzeroWallets,
         'zora_wallets': zoraWallets,
@@ -56,11 +53,6 @@ apiRoutes.get('/stats', async (req, res) => {
 
 apiRoutes.get('/zksync', async (req, res) => {
     const responseData = await zkSyncData()
-    res.json(responseData)
-})
-
-apiRoutes.get('/starknet', async (req, res) => {
-    const responseData = await starknetData()
     res.json(responseData)
 })
 

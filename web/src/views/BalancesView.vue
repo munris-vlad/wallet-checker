@@ -11,9 +11,15 @@
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Optimism'}" @click="loadNetwork('Optimism')">Optimism</button>
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Polygon'}" @click="loadNetwork('Polygon')">Polygon</button>
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'BSC'}" @click="loadNetwork('BSC')">BNB</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'opBNB'}" @click="loadNetwork('opBNB')">opBNB</button>
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Avalanche'}" @click="loadNetwork('Avalanche')">Avalanche</button>
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Base'}" @click="loadNetwork('Base')">Base</button>
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Core'}" @click="loadNetwork('Core')">Core</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Celo'}" @click="loadNetwork('Celo')">Celo</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Klaytn'}" @click="loadNetwork('Klaytn')">Klaytn</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Fantom'}" @click="loadNetwork('Fantom')">Fantom</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonbeam'}" @click="loadNetwork('Moonbeam')">Moonbeam</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonriver'}" @click="loadNetwork('Moonriver')">Moonriver</button>
             </div>
         </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700" v-if="isDataLoaded && !isError">
@@ -49,6 +55,9 @@
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'BSC'">
                                 <a target="_blank" :href="'https://bscscan.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/bsc-scan.png'" alt=""></a>
                             </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'opBNB'">
+                                <a target="_blank" :href="'https://opbnb.bscscan.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/bsc-scan.png'" alt=""></a>
+                            </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Avalanche'">
                                 <a target="_blank" :href="'https://avascan.info/blockchain/c/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/ava-scan.png'" alt=""></a>
                             </div>
@@ -58,8 +67,24 @@
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Base'">
                                 <a target="_blank" :href="'https://basescan.org/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/base-scan.png'" alt=""></a>
                             </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Celo'">
+                                <a target="_blank" :href="'https://explorer.celo.org/mainnet/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/celo-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Klaytn'">
+                                <a target="_blank" :href="'https://klaytnscope.com/account/'+item['wallet']"><img class="rounded-full mb-1" :src="'/klaytn-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Fantom'">
+                                <a target="_blank" :href="'https://ftmscan.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/ftm-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Moonbeam'">
+                                <a target="_blank" :href="'https://moonbeam.moonscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/moonbeam-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Moonriver'">
+                                <a target="_blank" :href="'https://moonriver.moonscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/moonriver-scan.png'" alt=""></a>
+                            </div>
                         </div>
                     </td>
+                    <td :class="tdClass">{{ item['Tx count'] }}</td>
                     <td v-if="activeNetwork !== 'all'" :class="[tdClass, parseFloat(item['Native']) < 0.005 ? 'text-red-500' : '']">{{ item['Native'] }} {{ item['Native_name'] }}</td>
                     <td :class="tdClass">${{ item['NativeUSD'] }}</td>
                     <td :class="tdClass">${{ item['USDT'] }}</td>
@@ -85,7 +110,7 @@ import {thClass, tdClass} from "@/utils/tableClass"
 export default {
     data() {
         return {
-            activeNetwork: 'all',
+            activeNetwork: 'ETH',
             isDataLoaded: false,
             isError: false,
             error: '',
@@ -97,6 +122,7 @@ export default {
             headersAll: [
                 'n',
                 'Wallet',
+                'Tx count',
                 'NativeUSD',
                 'USDT',
                 'USDC',
@@ -105,6 +131,7 @@ export default {
             headers: [
                 'n',
                 'Wallet',
+                'Tx count',
                 'Native',
                 'NativeUSD',
                 'USDT',
@@ -128,7 +155,7 @@ export default {
     },
     methods: {
         loadData() {
-            this.$axios.get('/api/balances?network=all').then((response) => {
+            this.$axios.get('/api/balances?network=ETH').then((response) => {
                 this.data = response.data.sort((a, b) => a.n - b.n)
                 this.isDataLoaded = true
             }).catch((error) => {

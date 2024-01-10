@@ -80,11 +80,29 @@ export function getNativeToken(network) {
         case 'BSC':
             token = 'BNB'
             break
+        case 'opBNB':
+            token = 'BNB'
+            break
         case 'Avalanche':
             token = 'AVAX'
             break
         case 'Core':
             token = 'CORE'
+            break
+        case 'Celo':
+            token = 'CELO'
+            break
+        case 'Klaytn':
+            token = 'KLAY'
+            break
+        case 'Fantom':
+            token = 'FTM'
+            break
+        case 'Moonbeam':
+            token = 'GLMR'
+            break
+        case 'Moonriver':
+            token = 'MOVR'
             break
     }
 
@@ -179,10 +197,6 @@ export const entryPoint = async () => {
                     value: "zksync",
                 },
                 {
-                    name: "Starknet",
-                    value: "starknet",
-                },
-                {
                     name: "Layerzero",
                     value: "layerzero",
                 },
@@ -215,17 +229,9 @@ export const entryPoint = async () => {
                     value: "evm",
                 },
                 {
-                    name: "Балансы",
+                    name: "Balances",
                     value: "balances",
-                },
-                // {
-                //     name: "Фильтр балансов",
-                //     value: "filter",
-                // },
-                // {
-                //     name: "Фильтр NFT",
-                //     value: "nft",
-                // },
+                }
             ],
             default: "web",
             loop: false,
@@ -268,6 +274,10 @@ export const chooiceNetwork = async () => {
                     value: "BSC",
                 },
                 {
+                    name: "opBNB",
+                    value: "opBNB",
+                },
+                {
                     name: "Avalanche",
                     value: "Avalanche",
                 },
@@ -279,6 +289,26 @@ export const chooiceNetwork = async () => {
                 {
                     name: "Core",
                     value: "Core",
+                },
+                {
+                    name: "Celo",
+                    value: "Celo",
+                },
+                {
+                    name: "Klaytn",
+                    value: "Klaytn",
+                },
+                {
+                    name: "Fantom",
+                    value: "Fantom",
+                },
+                {
+                    name: "Moonbeam",
+                    value: "Moonbeam",
+                },
+                {
+                    name: "Moonriver",
+                    value: "Moonriver",
                 }
             ],
             default: "web",

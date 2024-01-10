@@ -3,10 +3,12 @@ import {getNativeToken, readWallets} from "../utils/common.js"
 import axios from "axios"
 import {Table} from "console-table-printer"
 import {createObjectCsvWriter} from "csv-writer"
+import { rpcs } from "../rpc.js"
 
 let columns = [
     { name: 'n', alignment: 'left', color: 'green'},
     { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'Tx count', color: 'green', alignment: "right"},
     { name: 'NativeUSD', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
@@ -16,6 +18,7 @@ let columns = [
 let headers = [
     { id: 'n', title: 'n'},
     { id: 'wallet', title: 'wallet'},
+    { id: 'Tx count', title: 'Tx count'},
     { id: 'NativeUSD', title: 'NativeUSD'},
     { id: 'USDT', title: 'USDT'},
     { id: 'USDC', title: 'USDC'},
@@ -25,7 +28,7 @@ let headers = [
 const priceApi = 'https://min-api.cryptocompare.com/data/price'
 const networks = {
     'ETH': {
-        provider: new ethers.providers.JsonRpcProvider('https://eth.llamarpc.com'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['ETH']),
         'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
         'USDT': {
             address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
@@ -41,7 +44,7 @@ const networks = {
         }
     },
     'Arbitrum': {
-        provider: new ethers.providers.JsonRpcProvider('https://arbitrum.llamarpc.com'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Arbitrum']),
         'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
         'USDT': {
             address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
@@ -61,7 +64,7 @@ const networks = {
         }
     },
     'Optimism': {
-        provider: new ethers.providers.JsonRpcProvider('https://optimism.llamarpc.com'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Optimism']),
         'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
         'USDT': {
             address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
@@ -77,7 +80,7 @@ const networks = {
         }
     },
     'Polygon': {
-        provider: new ethers.providers.JsonRpcProvider('https://polygon.llamarpc.com'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Polygon']),
         'USDT': {
             address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
             decimals: 6
@@ -93,7 +96,7 @@ const networks = {
         'nativePrice': await axios.get(priceApi+'?fsym=MATIC&tsyms=USD').then(r => { return r.data.USD})
     },
     'BSC': {
-        provider: new ethers.providers.JsonRpcProvider('https://binance.llamarpc.com'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['BSC']),
         'USDT': {
             address: '0x55d398326f99059ff775485246999027b3197955',
             decimals: 18
@@ -109,7 +112,7 @@ const networks = {
         'nativePrice': await axios.get(priceApi+'?fsym=BNB&tsyms=USD').then(r => { return r.data.USD})
     },
     'Avalanche': {
-        provider: new ethers.providers.JsonRpcProvider('https://avax.meowrpc.com'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Avalanche']),
         'USDT': {
             address: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
             decimals: 6
@@ -129,7 +132,7 @@ const networks = {
         'nativePrice': await axios.get(priceApi+'?fsym=AVAX&tsyms=USD').then(r => { return r.data.USD})
     },
     'Base': {
-        provider: new ethers.providers.JsonRpcProvider('https://base.meowrpc.com'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Base']),
         'USDT': {
             address: '0x50c5725949a6f0c72e6c4a641f24049a917db0cb',
             decimals: 18
@@ -141,7 +144,7 @@ const networks = {
         'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD})
     },
     'Core': {
-        provider: new ethers.providers.JsonRpcProvider('https://rpc.coredao.org'),
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Core']),
         'USDT': {
             address: '0x900101d06a7426441ae63e9ab3b9b0f63be145f1',
             decimals: 6
@@ -151,9 +154,73 @@ const networks = {
             decimals: 6
         },
         'nativePrice': await axios.get(priceApi+'?fsym=CORE&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'opBNB': {
+        provider: new ethers.providers.JsonRpcProvider(rpcs['opBNB']),
+        'USDT': {
+            address: '0x9e5aac1ba1a2e6aed6b32689dfcf62a509ca96f3',
+            decimals: 6
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=BNB&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'Celo': {
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Celo']),
+        'USDT': {
+            address: '0xb020D981420744F6b0FedD22bB67cd37Ce18a1d5',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0xef4229c8c3250c675f21bcefa42f58efbff6002a',
+            decimals: 6
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=CELO&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'Klaytn': {
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Klaytn']),
+        'USDT': {
+            address: '0xcee8faf64bb97a73bb51e115aa89c17ffa8dd167',
+            decimals: 6
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=KLAY&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'Fantom': {
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Fantom']),
+        'USDT': {
+            address: '0x049d68029688eabf473097a2fc38ef61633a3c7a',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0x818ec0a7fe18ff94269904fced6ae3dae6d6dc0b',
+            decimals: 6
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=FTM&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'Moonbeam': {
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Moonbeam']),
+        'USDT': {
+            address: '0xefaeee334f0fd1712f9a8cc375f427d9cdd40d73',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0x818ec0a7fe18ff94269904fced6ae3dae6d6dc0b',
+            decimals: 6
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=GLMR&tsyms=USD').then(r => { return r.data.USD})
+    },
+    'Moonriver': {
+        provider: new ethers.providers.JsonRpcProvider(rpcs['Moonriver']),
+        'USDT': {
+            address: '0xe936caa7f6d9f5c9e907111fcaf7c351c184cda7',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0xe3f5a90f9cb311505cd691a46596599aa1a0ad7d',
+            decimals: 6
+        },
+        'nativePrice': await axios.get(priceApi+'?fsym=MOVR&tsyms=USD').then(r => { return r.data.USD})
     }
 }
-
+let debug = true
 let wallets = readWallets('./addresses/evm.txt')
 let walletsData = []
 let csvData = []
@@ -163,15 +230,25 @@ let isJson = false
 
 async function fetchWallet(wallet, index, network) {
     let nativeBalance = 0
+    let txCount = 0
 
     try {
         const nativeBalanceWei = await networks[network].provider.getBalance(wallet)
         nativeBalance = parseInt(nativeBalanceWei)  / Math.pow(10, 18)
-    } catch (e) {}
+    } catch (e) {
+        if (debug) console.log(e.toString())
+    }
+
+    try {
+        txCount = await networks[network].provider.getTransactionCount(wallet)
+    } catch (e) {
+        if (debug) console.log(e.toString())
+    }
 
     let walletData = {
         n: index,
         wallet: wallet,
+        'Tx count': txCount,
         Native: nativeBalance.toFixed(3),
         NativeUSD: nativeBalance > 0 ? (nativeBalance * networks[network].nativePrice).toFixed(2) : 0
     }
@@ -193,7 +270,9 @@ async function fetchWallet(wallet, index, network) {
 
         walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
         delete walletData['USDC.e']
-    } catch (e) {}
+    } catch (e) {
+        if (debug) console.log(e.toString())
+    }
 
     walletsData.push(walletData)
 }
@@ -203,6 +282,7 @@ async function fetchWalletAllNetwork(wallet, index) {
     let walletData = {
         n: index,
         wallet: wallet,
+        'Tx count': 0,
         NativeUSD: 0,
         USDC: 0,
         'USDC.e': 0,
@@ -267,6 +347,7 @@ async function collectData(network) {
     await fetchWallets(network)
 
     let totalRow = {
+        Native: 0,
         NativeUSD: 0,
         USDT: 0,
         USDC: 0,
@@ -292,7 +373,7 @@ async function collectData(network) {
     }
 
     if (network != 'all') {
-        totalRow.Native = 0
+        // totalRow.Native = 0
         totalRow.Native = totalRow.Native  + ' ' + getNativeToken(network)
     }
 
