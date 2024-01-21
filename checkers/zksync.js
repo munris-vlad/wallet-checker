@@ -2,7 +2,8 @@ import '../utils/common.js'
 import {
     sleep,
     readWallets,
-    getBalance, getKeyByValue
+    getBalance, getKeyByValue,
+    newAbortSignal
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -180,6 +181,11 @@ let contracts = [
         name: 'omnisea',
         url: 'https://omnisea.xyz/'
     },
+    {
+        address: '0x7dA50bD0fb3C2E868069d9271A2aeb7eD943c2D6',
+        name: 'zerius',
+        url: 'http://zerius.io/'
+    }
 ]
 
 const args = process.argv.slice(2)
@@ -227,7 +233,9 @@ async function getBalances(wallet) {
     filterSymbol.forEach(symbol => {
         stats[wallet].balances[symbol] = 0
     })
-    await axios.get(apiUrl+'/address/'+wallet).then(response => {
+    await axios.get(apiUrl+'/address/'+wallet, {
+        signal: newAbortSignal(5000)
+    }).then(response => {
         let balances = response.data.balances
 
         Object.values(balances).forEach(balance => {
@@ -266,6 +274,7 @@ async function getTxs(wallet) {
 
     while (!isAllTxCollected) {
         await axios.get(apiUrl + '/transactions', {
+            signal: newAbortSignal(5000),
             params: {
                 address: wallet,
                 limit: 100,
@@ -316,6 +325,7 @@ async function getTxs(wallet) {
 
     while (!isAllTransfersCollected) {
         await axios.get(apiUrl + '/address/' + wallet + '/transfers', {
+            signal: newAbortSignal(5000),
             params: {
                 limit: 100,
                 page: pageTransfers
