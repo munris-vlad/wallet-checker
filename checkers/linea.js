@@ -15,6 +15,7 @@ import cliProgress from 'cli-progress'
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'Linea XP', color: 'green', alignment: "right"},
     { name: 'Voyage NFT', color: 'green', alignment: "right"},
     { name: 'PoH', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
@@ -34,6 +35,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
+    { id: 'Linea XP', title: 'Linea XP'},
     { id: 'Voyage NFT', title: 'Voyage NFT'},
     { id: 'PoH', title: 'PoH'},
     { id: 'ETH', title: 'ETH'},
@@ -51,6 +53,11 @@ const headers = [
 ]
 
 const contracts = [
+    {
+        token: 'Linea XP',
+        address: '0xd83af4fbD77f3AB65C3B1Dc4B38D7e67AEcf599A',
+        decimals: 18    
+    },
     {
         token: 'USDC',
         address: '0x176211869cA2b568f2A7D4EE941E073a821EE1ff',
@@ -262,6 +269,7 @@ async function fetchWallet(wallet, index) {
     p.addRow({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Linea XP': stats[wallet].balances['Linea XP'],
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
@@ -281,6 +289,7 @@ async function fetchWallet(wallet, index) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Linea XP': stats[wallet].balances['Linea XP'],
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
