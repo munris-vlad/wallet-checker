@@ -96,7 +96,8 @@ let total = {
     usdc: 0,
     usdt: 0,
     dai: 0,
-    gas: 0
+    gas: 0,
+    xp: 0
 }
 const cancelTimeout = 15000
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
@@ -256,8 +257,10 @@ async function fetchWallet(wallet, index) {
 
     await getBalances(wallet)
     await getTxs(wallet)
+    
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
+    total.xp += stats[wallet].balances['Linea XP'] ? parseFloat(stats[wallet].balances['Linea XP']) : 0
     total.eth += parseFloat(stats[wallet].balances['ETH'])
     total.usdt += parseFloat(stats[wallet].balances['USDT'])
     total.usdc += parseFloat(stats[wallet].balances['USDC'])
@@ -326,7 +329,8 @@ async function fetchWallets() {
         usdc: 0,
         usdt: 0,
         dai: 0,
-        gas: 0
+        gas: 0,
+        xp: 0
     }
 
     csvWriter = createObjectCsvWriter({
@@ -372,6 +376,7 @@ async function addTotalRow() {
     p.addRow({})
     p.addRow({
         wallet: 'Total',
+        'Linea XP': total.xp,
         'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
         'USDC': total.usdc.toFixed(2),
         'USDT': total.usdt.toFixed(2),
@@ -396,6 +401,7 @@ export async function lineaData() {
 
     jsonData.push({
         wallet: 'Total',
+        'Linea XP': total.xp,
         'ETH': total.eth.toFixed(4),
         'ETH USDVALUE': (total.eth*ethPrice).toFixed(2),
         'USDC': total.usdc.toFixed(2),
