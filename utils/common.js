@@ -205,6 +205,10 @@ export const entryPoint = async () => {
                     value: "layerzero_extended",
                 },
                 {
+                    name: "Wormhole",
+                    value: "wormhole",
+                },
+                {
                     name: "Zora",
                     value: "zora",
                 },

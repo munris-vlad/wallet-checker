@@ -12,6 +12,7 @@ import ScrollView from "@/views/ScrollView"
 import BalancesView from "@/views/BalancesView"
 import EvmView from "@/views/EvmView"
 import LayerzeroView from "@/views/LayerzeroView"
+import WormholeView from "@/views/WormholeView"
 import BaseView from "@/views/BaseView"
 
 const app = createApp(App)
@@ -25,6 +26,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     let data = response.data
     app.config.globalProperties.$zk_count = data.zksync_wallets.length
     app.config.globalProperties.$layerzero_count = data.layerzero_wallets.length
+    app.config.globalProperties.$wormhole_count = data.wormhole_wallets.length
     app.config.globalProperties.$zora_count = data.zora_wallets.length
     app.config.globalProperties.$base_count = data.base_wallets.length
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
@@ -50,6 +52,11 @@ const routes = [
         path: '/layerzero',
         name: 'Layerzero',
         component: LayerzeroView,
+    },
+    {
+        path: '/wormhole',
+        name: 'Wormhole',
+        component: WormholeView,
     },
     {
         path: '/zora',

@@ -11,6 +11,7 @@ import {nftFetchDataAndPrintTable} from "./checkers/nft.js"
 import {exec} from "child_process"
 import {layerzeroFetchDataAndPrintTable} from "./checkers/layerzero.js"
 import { baseFetchDataAndPrintTable } from "./checkers/base.js"
+import { wormholeFetchDataAndPrintTable } from "./checkers/wormhole.js"
 
 function startExpressServer() {
     const expressServer = exec('node server.js', (error, stdout, stderr) => {
@@ -43,6 +44,10 @@ async function startMenu(menu) {
             break
         case "zksync":
             await zkSyncFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+            if (startOver) await startMenu()
+            break
+        case "wormhole":
+            await wormholeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()
             break
         case "layerzero":

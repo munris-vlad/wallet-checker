@@ -4,12 +4,12 @@
             <h1 class="text-3xl">Wallet checker by Munris</h1>
 
             <div class="pt-5 pb-5">
-                To work with the zkSync/Layerzero/Zora/Aptos/Linea checker, you need to add addresses to the addresses folder in the respective files.<br>
+                To work with the zkSync/Layerzero/Wormhole/Zora/Aptos/Linea checker, you need to add addresses to the addresses folder in the respective files.<br>
                 To work with the EVM checker, rename .env.example to .env and fill in the MORALIS_API_KEY.
             </div>
 
             <div class="pt-5 pb-5">
-                Для работы чекера zkSync/Layerzero/Zora/Aptos/Linea нужно добавить адреса в папке addresses в соответствующие файлы.<br>
+                Для работы чекера zkSync/Layerzero/Wormhole/Zora/Aptos/Linea нужно добавить адреса в папке addresses в соответствующие файлы.<br>
                 Для работы EVM чекера, переименовываем .env.example в .env и заполняем MORALIS_API_KEY
             </div>
 
@@ -18,6 +18,7 @@
             <ul class="pt-5">
                 <li class="pt-2">ZkSync: {{ data.zksync_wallets.length }}</li>
                 <li class="pt-2">Layerzero: {{ data.layerzero_wallets.length }}</li>
+                <li class="pt-2">Wormhole: {{ data.wormhole_wallets.length }}</li>
                 <li class="pt-2">Zora: {{ data.zora_wallets.length }}</li>
                 <li class="pt-2">Aptos: {{ data.aptos_wallets.length }}</li>
                 <li class="pt-2">Linea: {{ data.linea_wallets.length }}</li>
