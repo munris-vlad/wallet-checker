@@ -144,7 +144,7 @@ async function fetchWallet(wallet, index, isExtended) {
     if (txs.length) {
         for (const tx of Object.values(txs)) {
             if (tx.extra.erc20) {
-                let amount = parseInt(tx.extra.erc20.amount) / Math.pow(10, 16)
+                let amount = parseInt(tx.extra.erc20.amount) / Math.pow(10, 18)
                 volume += parseFloat(amount*prices[tx.extra.erc20.symbol])
             }
             const date = new Date(timestampToDate(tx.sendTimestamp))
