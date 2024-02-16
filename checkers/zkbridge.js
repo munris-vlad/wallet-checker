@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey, getTokenPrice } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -10,6 +10,8 @@ const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
+    { name: 'GalxePoints', alignment: 'right', color: 'cyan' },
+    { name: 'Volume', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
     { name: 'Days', alignment: 'right', color: 'cyan' },
@@ -23,6 +25,8 @@ const headers = [
     { id: 'n', title: '№' },
     { id: 'Wallet', title: 'Wallet' },
     { id: 'TX Count', title: 'TX Count' },
+    { id: 'GalxePoints', title: 'GalxePoints' },
+    { id: 'Volume', title: 'Volume' },
     { id: 'Source chains', title: 'Source chains' },
     { id: 'Dest chains', title: 'Dest chains' },
     { id: 'Days', title: 'Days' },
@@ -41,6 +45,7 @@ let iterations = wallets.length
 let iteration = 1
 let csvData = []
 let jsonData = []
+let totalPoints = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 function getQueryHeaders() {
@@ -58,6 +63,11 @@ function getQueryHeaders() {
     }
 }
 
+let prices = {
+    'ETH': await getTokenPrice('ETH'),
+    'BNB': await getTokenPrice('BNB'),
+    'USDT': await getTokenPrice('USDT'),
+}
 
 async function fetchWallet(wallet, index, isExtended) {
 
@@ -65,7 +75,9 @@ async function fetchWallet(wallet, index, isExtended) {
 
     let data = {
         wallet: wallet,
+        galxepoints: 0,
         tx_count: 0,
+        volume: 0,
         source_chain_count: 0,
         dest_chain_count: 0,
         days: 0,
@@ -78,11 +90,35 @@ async function fetchWallet(wallet, index, isExtended) {
     let txs = []
     let isTxParsed = false
     let retry = 0
+    let volume = 0
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
     const uniqueSource = new Set()
     const uniqueDestination = new Set()
+
+    await axios.post('https://graphigo.prd.galaxy.eco/query', {
+        operationName: 'SpaceAccessQuery',
+        variables: {
+            alias: 'polyhedra',
+            address: wallet.toLowerCase(),
+        },
+        query: 'query SpaceAccessQuery($id: Int, $alias: String, $address: String!) {\n  space(id: $id, alias: $alias) {\n    id\n    isFollowing\n    discordGuildID\n    discordGuildInfo\n    status\n    isAdmin(address: $address)\n    unclaimedBackfillLoyaltyPoints(address: $address)\n    addressLoyaltyPoints(address: $address) {\n      id\n      points\n      rank\n      __typename\n    }\n    __typename\n  }\n}\n',
+    }, {
+        httpsAgent: agent,
+        headers: {
+            'authority': 'graphigo.prd.galaxy.eco',
+            'accept': '*/*',
+            'accept-language': 'en-US,en;q=0.9',
+            'content-type': 'application/json',
+            'origin': 'https://galxe.com',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+        }
+    }).then(response => {
+       data.galxepoints = response.data.data.space ? response.data.data.space.addressLoyaltyPoints.points : 0
+    }).catch(error => {
+        if (debug) console.log(error.toString())
+    })
 
     while (!isTxParsed) {
         await axios.get(`https://zkbridgescan.io/api/scan?txOrAddress=${wallet}&pageStart=0&pageSize=1000`, {
@@ -107,6 +143,10 @@ async function fetchWallet(wallet, index, isExtended) {
     
     if (txs.length) {
         for (const tx of Object.values(txs)) {
+            if (tx.extra.erc20) {
+                let amount = parseInt(tx.extra.erc20.amount) / Math.pow(10, 16)
+                volume += parseFloat(amount*prices[tx.extra.erc20.symbol])
+            }
             const date = new Date(timestampToDate(tx.sendTimestamp))
             uniqueDays.add(date.toDateString())
             uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
@@ -122,6 +162,7 @@ async function fetchWallet(wallet, index, isExtended) {
         data.days = uniqueDays.size
         data.weeks = uniqueWeeks.size
         data.months = uniqueMonths.size
+        data.volume = parseInt(volume)
     }
 
     progressBar.update(iteration)
@@ -130,6 +171,8 @@ async function fetchWallet(wallet, index, isExtended) {
         n: parseInt(index) + 1,
         Wallet: wallet,
         'TX Count': data.tx_count,
+        'GalxePoints': data.galxepoints,
+        'Volume': data.volume,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Days': data.days,
@@ -143,6 +186,8 @@ async function fetchWallet(wallet, index, isExtended) {
         n: parseInt(index) + 1,
         Wallet: wallet,
         'TX Count': data.tx_count,
+        'GalxePoints': data.galxepoints,
+        'Volume': data.volume,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Days': data.days,
@@ -155,6 +200,7 @@ async function fetchWallet(wallet, index, isExtended) {
     })
 
     p.addRow(row)
+    totalPoints += data.galxepoints
 
     iteration++
 }
@@ -212,6 +258,17 @@ export async function zkbridgeFetchDataAndPrintTable(isExtended = false) {
     progressBar.start(iterations, 0)
 
     await fetchWallets(isExtended)
+
+    p.addRow({
+        Wallet: 'Total',
+        'GalxePoints': totalPoints,
+    })
+
+    jsonData.push({
+        Wallet: 'Total',
+        'GalxePoints': totalPoints,
+    })
+
     progressBar.stop()
 
     p.printTable()

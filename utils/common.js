@@ -181,6 +181,15 @@ export async function getEthPriceForDate(date) {
     }
 }
 
+export async function getTokenPrice(token) {
+    let price = 0
+    await axios.get(`https://min-api.cryptocompare.com/data/price?fsym=${token}&tsyms=USD`).then(response => {
+        price = response.data.USD
+    })
+
+    return price
+}
+
 export const entryPoint = async () => {
     const questions = [
         {

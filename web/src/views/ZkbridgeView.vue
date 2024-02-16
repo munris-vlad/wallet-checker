@@ -21,6 +21,8 @@
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
+                    <td :class="tdClass">{{ item['GalxePoints'] }}</td>
+                    <td :class="tdClass">${{ item['Volume'] }}</td>
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
                     <td :class="tdClass + ' text-left'">
                         <div class="flex space-x-2 pt-3 pb-4 select-none max-w-sm">
@@ -166,6 +168,8 @@ export default {
                 'n',
                 'Wallet',
                 'TX Count',
+                'GalxePoints',
+                'Volume',
                 'Source chains',
                 'Source list',
                 'Dest chains',
