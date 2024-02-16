@@ -34,31 +34,32 @@ const headers = [
 
 
 let debug = false
-let jsonData = []
 let p
 let csvWriter
-let wallets = readWallets('./addresses/wormhole.txt')
+let wallets = readWallets('./addresses/zkbridge.txt')
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
+let jsonData = []
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 function getQueryHeaders() {
     return {
         "accept": "application/json, text/plain, */*",
         "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
-        "sec-ch-ua": "\"Not A(Brand\";v=\"99\", \"Google Chrome\";v=\"121\", \"Chromium\";v=\"121\"",
+        "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": "\"Windows\"",
         "sec-fetch-dest": "empty",
         "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-        "Referer": "https://wormholescan.io/",
+        "sec-fetch-site": "cross-site",
+        "Referer": "https://zkbridgescan.com/",
         "Referrer-Policy": "strict-origin-when-cross-origin"
     }
 }
 
-async function fetchWallet(wallet, index) {
+
+async function fetchWallet(wallet, index, isExtended) {
 
     let agent = getProxy(index)
 
@@ -84,12 +85,13 @@ async function fetchWallet(wallet, index) {
     const uniqueDestination = new Set()
 
     while (!isTxParsed) {
-        await axios.get(`https://api.wormholescan.io/api/v1/transactions?address=${wallet}&page=0&pageSize=500&sortOrder=DESC`, {
+        await axios.get(`https://zkbridgescan.io/api/scan?txOrAddress=${wallet}&pageStart=0&pageSize=1000`, {
             headers: getQueryHeaders(),
             httpsAgent: agent,
             signal: newAbortSignal(5000)
         }).then(response => {
-            txs = response.data.transactions
+            txs = response.data.data
+            data.tx_count = response.data.total
             isTxParsed = true
         }).catch(error => {
             if (debug) console.error(wallet, error.toString(), '| Get random proxy')
@@ -104,20 +106,17 @@ async function fetchWallet(wallet, index) {
     }
     
     if (txs.length) {
-        data.tx_count = txs.length
         for (const tx of Object.values(txs)) {
-            const date = new Date(tx.timestamp)
+            const date = new Date(timestampToDate(tx.sendTimestamp))
             uniqueDays.add(date.toDateString())
             uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
             uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-            uniqueSource.add(tx.emitterChain)
-            if (tx.payload) {
-                uniqueDestination.add(tx.payload.targetChainId)
-            }
+            uniqueSource.add(tx.senderChainId)
+            uniqueDestination.add(tx.receiverChainId)
         }
 
-        data.first_tx = new Date(txs[txs.length - 1].timestamp)
-        data.last_tx = new Date(txs[0].timestamp)
+        data.first_tx = new Date(timestampToDate(txs[txs.length - 1].sendTimestamp))
+        data.last_tx = new Date(timestampToDate(txs[0].sendTimestamp))
         data.source_chain_count = uniqueSource.size
         data.dest_chain_count = uniqueDestination.size
         data.days = uniqueDays.size
@@ -136,11 +135,11 @@ async function fetchWallet(wallet, index) {
         'Days': data.days,
         'Weeks': data.weeks,
         'Months': data.months,
-        'First TX': data.first_tx ? moment((data.first_tx)).format("DD.MM.YY") : '-',
-        'Last TX': data.last_tx ? moment((data.last_tx)).format("DD.MM.YY") : '-',
+        'First TX': data.tx_count ? moment((data.first_tx)).format("DD.MM.YY") : '-',
+        'Last TX': data.tx_count ? moment((data.last_tx)).format("DD.MM.YY") : '-',
     }
 
-    let jsonRow = {
+    jsonData.push({
         n: parseInt(index) + 1,
         Wallet: wallet,
         'TX Count': data.tx_count,
@@ -149,29 +148,29 @@ async function fetchWallet(wallet, index) {
         'Days': data.days,
         'Weeks': data.weeks,
         'Months': data.months,
-        'First TX': data.first_tx,
-        'Last TX': data.last_tx,
-    }
+        'sources': Array.from(uniqueSource),
+        'dests': Array.from(uniqueDestination),
+        'First TX': data.tx_count ? data.first_tx : '—',
+        'Last TX': data.tx_count ? data.last_tx : '—',
+    })
 
     p.addRow(row)
-    jsonData.push(jsonRow)
 
     iteration++
 }
 
-async function fetchBatch(batch) {
-    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
+async function fetchBatch(batch, isExtended) {
+    await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account), isExtended)))
 }
 
-function fetchWallets() {
-    wallets = readWallets('./addresses/wormhole.txt')
+function fetchWallets(isExtended) {
+    wallets = readWallets('./addresses/zkbridge.txt')
     iterations = wallets.length
     iteration = 1
     csvData = []
-    jsonData = []
 
     csvWriter = createObjectCsvWriter({
-        path: './results/wormhole.csv',
+        path: './results/zkbridge.csv',
         header: headers
     })
 
@@ -186,7 +185,7 @@ function fetchWallets() {
 
         const promise = new Promise((resolve) => {
             setTimeout(() => {
-                resolve(fetchBatch(batch))
+                resolve(fetchBatch(batch, isExtended))
             }, i * 5000)
         })
 
@@ -209,9 +208,10 @@ async function saveToCsv() {
     csvWriter.writeRecords(csvData).then().catch()
 }
 
-export async function wormholeFetchDataAndPrintTable() {
+export async function zkbridgeFetchDataAndPrintTable(isExtended = false) {
     progressBar.start(iterations, 0)
-    await fetchWallets()
+
+    await fetchWallets(isExtended)
     progressBar.stop()
 
     p.printTable()
@@ -219,7 +219,7 @@ export async function wormholeFetchDataAndPrintTable() {
     await saveToCsv()
 }
 
-export async function wormholeData() {
+export async function zkbridgeData() {
     await fetchWallets()
     await saveToCsv()
 

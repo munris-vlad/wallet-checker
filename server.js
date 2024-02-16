@@ -14,6 +14,7 @@ import {evmData} from "./checkers/evm.js"
 import {readWallets} from "./utils/common.js"
 import {layerzeroData} from "./checkers/layerzero.js"
 import { wormholeData } from './checkers/wormhole.js'
+import { zkbridgeData } from './checkers/zkbridge.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -35,6 +36,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const zksyncWallets = readWallets('./addresses/zksync.txt')
     const layerzeroWallets = readWallets('./addresses/layerzero.txt')
     const wormholeWallets = readWallets('./addresses/wormhole.txt')
+    const zkbridgeWallets = readWallets('./addresses/zkbridge.txt')
     const zoraWallets = readWallets('./addresses/zora.txt')
     const baseWallets = readWallets('./addresses/base.txt')
     const aptosWallets = readWallets('./addresses/aptos.txt')
@@ -44,6 +46,7 @@ apiRoutes.get('/stats', async (req, res) => {
     res.json({
         'zksync_wallets': zksyncWallets,
         'layerzero_wallets': layerzeroWallets,
+        'zkbridge_wallets': zkbridgeWallets,
         'wormhole_wallets': wormholeWallets,
         'zora_wallets': zoraWallets,
         'base_wallets': baseWallets,
@@ -66,6 +69,11 @@ apiRoutes.get('/wormhole', async (req, res) => {
 
 apiRoutes.get('/layerzero', async (req, res) => {
     const responseData = await layerzeroData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/zkbridge', async (req, res) => {
+    const responseData = await zkbridgeData()
     res.json(responseData)
 })
 

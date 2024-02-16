@@ -12,6 +12,7 @@ import {exec} from "child_process"
 import {layerzeroFetchDataAndPrintTable} from "./checkers/layerzero.js"
 import { baseFetchDataAndPrintTable } from "./checkers/base.js"
 import { wormholeFetchDataAndPrintTable } from "./checkers/wormhole.js"
+import { zkbridgeFetchDataAndPrintTable } from "./checkers/zkbridge.js"
 
 function startExpressServer() {
     const expressServer = exec('node server.js', (error, stdout, stderr) => {
@@ -48,6 +49,10 @@ async function startMenu(menu) {
             break
         case "wormhole":
             await wormholeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+            if (startOver) await startMenu()
+            break
+        case "zkbridge":
+            await zkbridgeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()
             break
         case "layerzero":

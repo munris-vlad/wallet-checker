@@ -18,6 +18,9 @@
                             <div class="h-4 w-4">
                                 <a target="_blank" :href="'https://debank.com/profile/'+item['Wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
                             </div>
+                            <div class="h-4 w-4">
+                                <a target="_blank" :href="`https://wormholescan.io/#/txs?address=${item['Wallet']}&network=MAINNET`"><img class="rounded-full mb-1" :src="'/wormhole.png'" alt=""></a>
+                            </div>
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
