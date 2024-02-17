@@ -214,6 +214,7 @@ function fetchWallets(isExtended) {
     iterations = wallets.length
     iteration = 1
     csvData = []
+    jsonData = []
 
     csvWriter = createObjectCsvWriter({
         path: './results/zkbridge.csv',
