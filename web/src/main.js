@@ -15,6 +15,7 @@ import LayerzeroView from "@/views/LayerzeroView"
 import WormholeView from "@/views/WormholeView"
 import BaseView from "@/views/BaseView"
 import ZkbridgeView from "@/views/ZkbridgeView"
+import HyperlaneView from "@/views/HyperlaneView"
 
 const app = createApp(App)
 
@@ -29,6 +30,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$layerzero_count = data.layerzero_wallets.length
     app.config.globalProperties.$wormhole_count = data.wormhole_wallets.length
     app.config.globalProperties.$zkbridge_count = data.zkbridge_wallets.length
+    app.config.globalProperties.$hyperlane_count = data.hyperlane_wallets.length
     app.config.globalProperties.$zora_count = data.zora_wallets.length
     app.config.globalProperties.$base_count = data.base_wallets.length
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
@@ -64,6 +66,11 @@ const routes = [
         path: '/zkbridge',
         name: 'Zkbridge',
         component: ZkbridgeView,
+    },
+    {
+        path: '/hyperlane',
+        name: 'Hyperlane',
+        component: HyperlaneView,
     },
     {
         path: '/zora',

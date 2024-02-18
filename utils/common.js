@@ -214,6 +214,10 @@ export const entryPoint = async () => {
                     value: "layerzero_extended",
                 },
                 {
+                    name: "Hyperlane",
+                    value: "hyperlane",
+                },
+                {
                     name: "ZkBridge",
                     value: "zkbridge",
                 },

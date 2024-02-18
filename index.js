@@ -8,11 +8,12 @@ import {balancesFetchDataAndPrintTable} from "./checkers/balances.js"
 import {evmFetchDataAndPrintTable} from "./checkers/evm.js"
 import {filterFetchDataAndPrintTable} from "./checkers/filter.js"
 import {nftFetchDataAndPrintTable} from "./checkers/nft.js"
-import {exec} from "child_process"
 import {layerzeroFetchDataAndPrintTable} from "./checkers/layerzero.js"
 import { baseFetchDataAndPrintTable } from "./checkers/base.js"
 import { wormholeFetchDataAndPrintTable } from "./checkers/wormhole.js"
 import { zkbridgeFetchDataAndPrintTable } from "./checkers/zkbridge.js"
+import { hyperlaneFetchDataAndPrintTable } from "./checkers/hyperlane.js"
+import {exec} from "child_process"
 
 function startExpressServer() {
     const expressServer = exec('node server.js', (error, stdout, stderr) => {
@@ -53,6 +54,10 @@ async function startMenu(menu) {
             break
         case "zkbridge":
             await zkbridgeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
+            if (startOver) await startMenu()
+            break
+        case "hyperlane":
+            await hyperlaneFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error)})
             if (startOver) await startMenu()
             break
         case "layerzero":
