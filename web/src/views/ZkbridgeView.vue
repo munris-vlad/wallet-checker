@@ -20,8 +20,11 @@
                             </div>
                         </div>
                     </td>
-                    <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['GalxePoints'] }}</td>
+                    <td :class="tdClass">{{ item['TX Count'] }}</td>
+                    <td :class="tdClass">{{ item['Msg tx count'] }}</td>
+                    <td :class="tdClass">{{ item['NFT tx count'] }}</td>
+                    <td :class="tdClass">{{ item['Token tx count'] }}</td>
                     <td :class="tdClass">${{ item['Volume'] }}</td>
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
                     <td :class="tdClass + ' text-left'">
@@ -33,7 +36,7 @@
                     </td>
                     <td :class="tdClass">{{ item['Dest chains'] }}</td>
                     <td :class="tdClass + ' text-left'">
-                        <div class="flex space-x-2 pt-3 pb-4 select-none max-w-sm">
+                        <div class="grid grid-flow-row auto-rows-max gap-2 pt-3 pb-4 select-none max-w-sm justify-center items-center">
                             <div class="h-4 w-4 text-center" v-for="source in item['dests']" :key="source" :title="names[source]">
                                 <img class="rounded-full mb-1" :src="chains[source]" :alt="source">
                             </div>
@@ -167,8 +170,11 @@ export default {
             headers: [
                 'n',
                 'Wallet',
-                'TX Count',
                 'GalxePoints',
+                'TX Count',
+                'Msg tx count',
+                'NFT tx count',
+                'Token tx count',
                 'Volume',
                 'Source chains',
                 'Source list',
@@ -222,4 +228,12 @@ export default {
 </script>
 
 <style>
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    max-width: 180px;
+}
 </style>

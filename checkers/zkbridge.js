@@ -9,8 +9,11 @@ import moment from "moment"
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
-    { name: 'TX Count', alignment: 'right', color: 'cyan' },
     { name: 'GalxePoints', alignment: 'right', color: 'cyan' },
+    { name: 'TX Count', alignment: 'right', color: 'cyan' },
+    { name: 'Msg tx count', alignment: 'right', color: 'cyan' },
+    { name: 'NFT tx count', alignment: 'right', color: 'cyan' },
+    { name: 'Token tx count', alignment: 'right', color: 'cyan' },
     { name: 'Volume', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
@@ -24,8 +27,11 @@ const columns = [
 const headers = [
     { id: 'n', title: '№' },
     { id: 'Wallet', title: 'Wallet' },
-    { id: 'TX Count', title: 'TX Count' },
     { id: 'GalxePoints', title: 'GalxePoints' },
+    { id: 'TX Count', title: 'TX Count' },
+    { id: 'Msg tx count', title: 'Msg tx count' },
+    { id: 'NFT tx count', title: 'NFT tx count' },
+    { id: 'Token tx count', title: 'Token tx count' },
     { id: 'Volume', title: 'Volume' },
     { id: 'Source chains', title: 'Source chains' },
     { id: 'Dest chains', title: 'Dest chains' },
@@ -77,6 +83,9 @@ async function fetchWallet(wallet, index, isExtended) {
         wallet: wallet,
         galxepoints: 0,
         tx_count: 0,
+        msg_count: 0,
+        nft_count: 0,
+        token_count: 0,
         volume: 0,
         source_chain_count: 0,
         dest_chain_count: 0,
@@ -157,6 +166,9 @@ async function fetchWallet(wallet, index, isExtended) {
 
         data.first_tx = new Date(timestampToDate(txs[txs.length - 1].sendTimestamp))
         data.last_tx = new Date(timestampToDate(txs[0].sendTimestamp))
+        data.msg_count = txs.filter(tx => tx.txType === 'Msg').length
+        data.nft_count = txs.filter(tx => tx.txType === 'Nft').length
+        data.token_count = txs.filter(tx => tx.txType === 'Erc20Lightning').length
         data.source_chain_count = uniqueSource.size
         data.dest_chain_count = uniqueDestination.size
         data.days = uniqueDays.size
@@ -170,8 +182,11 @@ async function fetchWallet(wallet, index, isExtended) {
     let row = {
         n: parseInt(index) + 1,
         Wallet: wallet,
-        'TX Count': data.tx_count,
         'GalxePoints': data.galxepoints,
+        'TX Count': data.tx_count,
+        'Msg tx count': data.msg_count,
+        'NFT tx count': data.nft_count,
+        'Token tx count': data.token_count,
         'Volume': data.volume,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
@@ -185,8 +200,11 @@ async function fetchWallet(wallet, index, isExtended) {
     jsonData.push({
         n: parseInt(index) + 1,
         Wallet: wallet,
-        'TX Count': data.tx_count,
         'GalxePoints': data.galxepoints,
+        'TX Count': data.tx_count,
+        'Msg tx count': data.msg_count,
+        'NFT tx count': data.nft_count,
+        'Token tx count': data.token_count,
         'Volume': data.volume,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
