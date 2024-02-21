@@ -3,7 +3,8 @@ import {
     sleep,
     readWallets,
     getBalance, getKeyByValue,
-    newAbortSignal
+    newAbortSignal,
+    getTokenPrice
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -202,10 +203,7 @@ if (!args.includes('no-lite')) {
 
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
 
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
+let ethPrice = await getTokenPrice('ETH')
 
 let p
 let csvWriter

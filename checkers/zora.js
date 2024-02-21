@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import {readWallets, getBalance, getProxy} from '../utils/common.js'
+import {readWallets, getBalance, getProxy, getTokenPrice} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -52,10 +52,7 @@ let csvData = []
 let totalEth = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
+let ethPrice = await getTokenPrice('ETH')
 
 async function getBalances(wallet) {
     await axios.get(apiUrl+'/addresses/'+wallet, {

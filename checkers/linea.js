@@ -5,6 +5,7 @@ import { sleep,
     getKeyByValue,
     getProxy,
     newAbortSignal,
+    getTokenPrice,
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -101,10 +102,7 @@ let total = {
 }
 const cancelTimeout = 15000
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-let ethPrice = 0
-await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD').then(response => {
-    ethPrice = response.data.USD
-})
+let ethPrice = await getTokenPrice('ETH')
 
 async function getBalances(wallet) {
     await axios.get(apiUrl, {
