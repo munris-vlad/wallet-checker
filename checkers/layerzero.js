@@ -65,6 +65,7 @@ const protocolsList = [
     'zerius',
     'l2pass',
     'l2telegraph',
+    'whale',
 ]
 
 let debug = false
