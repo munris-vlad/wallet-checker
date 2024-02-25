@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import {createRouter, createWebHashHistory} from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import axios from 'axios'
 import './assets/tailwind.css'
 import ZksyncView from "@/views/ZksyncView"
@@ -20,8 +20,8 @@ import HyperlaneView from "@/views/HyperlaneView"
 const app = createApp(App)
 
 app.config.globalProperties.$axios = axios.create({
-  baseURL: 'http://'+window.location.host,
-  // baseURL: 'http://localhost:3000',
+    baseURL: 'http://' + window.location.host,
+    // baseURL: 'http://localhost:3000',
 })
 
 await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
@@ -46,72 +46,90 @@ const routes = [
         path: '/',
         name: 'Home',
         component: HomeView,
+        meta: { title: 'Wallet checker' }
     },
     {
         path: '/zksync',
         name: 'ZkSync',
         component: ZksyncView,
+        meta: { title: 'ZkSync' }
     },
     {
         path: '/layerzero',
         name: 'Layerzero',
         component: LayerzeroView,
+        meta: { title: 'Layerzero' }
     },
     {
         path: '/wormhole',
         name: 'Wormhole',
         component: WormholeView,
+        meta: { title: 'Wormhole' }
     },
     {
         path: '/zkbridge',
         name: 'Zkbridge',
         component: ZkbridgeView,
+        meta: { title: 'Zkbridge' }
     },
     {
         path: '/hyperlane',
         name: 'Hyperlane',
         component: HyperlaneView,
+        meta: { title: 'Hyperlane' }
     },
     {
         path: '/zora',
         name: 'Zora',
         component: ZoraView,
+        meta: { title: 'Zora' }
     },
     {
         path: '/base',
         name: 'Base',
         component: BaseView,
+        meta: { title: 'Base' }
     },
     {
         path: '/scroll',
         name: 'Scroll',
         component: ScrollView,
+        meta: { title: 'Scroll' }
     },
     {
         path: '/aptos',
         name: 'Aptos',
         component: AptosView,
+        meta: { title: 'Aptos' }
     },
     {
         path: '/linea',
         name: 'Linea',
         component: LineaView,
+        meta: { title: 'Linea' }
     },
     {
         path: '/balances',
         name: 'Balances',
         component: BalancesView,
+        meta: { title: 'Balances' }
     },
     {
         path: '/evm',
         name: 'EVM',
         component: EvmView,
+        meta: { title: 'EVM' }
     },
 ]
 
 const router = new createRouter({
     routes: routes,
     history: createWebHashHistory(),
+})
+
+router.beforeEach((to, from, next) => {
+    document.title = to.meta.title
+    next()
 })
 
 app.use(router)
