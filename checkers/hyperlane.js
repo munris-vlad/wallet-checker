@@ -176,7 +176,7 @@ function fetchWallets() {
         header: headers
     })
 
-    const batchSize = 15
+    const batchSize = 5
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
