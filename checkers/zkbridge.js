@@ -239,7 +239,7 @@ function fetchWallets(isExtended) {
         header: headers
     })
 
-    const batchSize = 50
+    const batchSize = 30
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 

@@ -150,9 +150,11 @@ async function getTxs(wallet) {
 
         totalGasUsed += parseInt(tx.gasPrice) * parseInt(tx.gasUsed) / Math.pow(10, 18)
 
-        if (tx.from.toLowerCase() === wallet.toLowerCase()) {
-            uniqueContracts.add(tx.to)
-            stats[wallet].txcount++
+        if (tx.from) {
+            if (tx.from.toLowerCase() === wallet.toLowerCase()) {
+                uniqueContracts.add(tx.to)
+                stats[wallet].txcount++
+            }
         }
 
         if (tx.to === '') {
