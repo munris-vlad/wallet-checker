@@ -18,9 +18,14 @@
 ### Чекер сетей:
 * ZkSync
 * Layerzero
+* Wormhole
+* Zkbridge
+* Hyperlane
 * Zora
+* Base
 * Aptos
 * Linea
+* Scroll
 
 Покажет в консоли и сохранит в csv файл следующую инфу:
 * Баланс в эфире/стейблах
