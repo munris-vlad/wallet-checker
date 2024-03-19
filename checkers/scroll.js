@@ -1,5 +1,5 @@
 import  '../utils/common.js'
-import {sleep, readWallets, getBalance, getKeyByValue, getTokenPrice} from '../utils/common.js'
+import { sleep, readWallets, getBalance, getKeyByValue, getTokenPrice, getProxy } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -61,7 +61,7 @@ const contracts = [
 ]
 
 let debug = true
-const apiUrl = "https://blockscout.scroll.io/api"
+const apiUrl = "https://api.scrollscan.com/api"
 let p
 let csvWriter
 let stats = []
@@ -81,36 +81,58 @@ let total = {
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 let ethPrice = await getTokenPrice('ETH')
 
-async function getBalances(wallet) {
-    await axios.get(apiUrl, {
-        params: {
-            module: 'account',
-            action: 'balance',
-            address: wallet
-        }
-    }).then(response => {
-        stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
-    }).catch(function (error) {
-        if (debug) console.log(error)
-    })
-
-    for (const contract of contracts) {
+async function getBalances(wallet, index) {
+    let agent = getProxy(index)
+    let isBalanceCollected = false
+    
+    while (!isBalanceCollected) {
         await axios.get(apiUrl, {
             params: {
                 module: 'account',
-                action: 'tokenbalance',
-                contractaddress: contract.address,
+                action: 'balance',
                 address: wallet
-            }
+            },
+            httpsAgent: agent,
         }).then(response => {
-            stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
+            if (!response.data.result.includes('Max rate limit reached')) {
+                stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
+                isBalanceCollected = true
+            } else {
+                agent = getProxy(index)
+            }
         }).catch(function (error) {
             if (debug) console.log(error)
         })
     }
+
+    for (const contract of contracts) {
+        let isContractBalanceCollected = false
+
+        while (!isContractBalanceCollected) {
+            await axios.get(apiUrl, {
+                params: {
+                    module: 'account',
+                    action: 'tokenbalance',
+                    contractaddress: contract.address,
+                    address: wallet
+                },
+                httpsAgent: agent,
+            }).then(response => {
+                if (!response.data.result.includes('Max rate limit reached')) {
+                    stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
+                    isContractBalanceCollected = true
+                } else {
+                    agent = getProxy(index)
+                }
+            }).catch(function (error) {
+                if (debug) console.log(error)
+            })
+        }
+    }
 }
 
-async function getTxs(wallet) {
+async function getTxs(wallet, index) {
+    let agent = getProxy(index)
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -126,14 +148,19 @@ async function getTxs(wallet) {
                 action: 'txlist',
                 offset: 1000,
                 address: wallet
-            }
+            },
+            httpsAgent: agent,
         }).then(response => {
-            let items = response.data.result
-            isAllTxCollected = true
+            if (!response.data.result.includes('Max rate limit reached')) {
+                let items = response.data.result
+                isAllTxCollected = true
 
-            Object.values(items).forEach(tx => {
-                txs.push(tx)
-            })
+                Object.values(items).forEach(tx => {
+                    txs.push(tx)
+                })
+            } else {
+                agent = getProxy(index)
+            }
         }).catch(function (error) {
             if (debug) console.log(error)
         })
@@ -185,8 +212,8 @@ async function fetchWallet(wallet, index) {
         contractdeployed: 'No'
     }
 
-    await getBalances(wallet)
-    await getTxs(wallet)
+    await getBalances(wallet, index)
+    await getTxs(wallet, index)
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
     total.eth += parseFloat(stats[wallet].balances['ETH'])
