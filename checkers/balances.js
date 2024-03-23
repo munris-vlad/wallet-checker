@@ -1,35 +1,35 @@
-import ethers from "ethers"
-import {getNativeToken, readWallets} from "../utils/common.js"
+import { ethers } from "ethers"
+import { FetchRequest } from "ethers"
+import { getNativeToken, random, readWallets, getKeyByValue, getProxy } from "../utils/common.js"
 import axios from "axios"
-import {Table} from "console-table-printer"
-import {createObjectCsvWriter} from "csv-writer"
+import { Table } from "console-table-printer"
+import { createObjectCsvWriter } from "csv-writer"
 import { rpcs } from "../rpc.js"
 
 let columns = [
-    { name: 'n', alignment: 'left', color: 'green'},
-    { name: 'wallet', color: 'green', alignment: "right"},
-    { name: 'Tx count', color: 'green', alignment: "right"},
-    { name: 'NativeUSD', alignment: 'right', color: 'cyan'},
-    { name: 'USDT', alignment: 'right', color: 'cyan'},
-    { name: 'USDC', alignment: 'right', color: 'cyan'},
-    { name: 'DAI', alignment: 'right', color: 'cyan'},
+    { name: 'n', alignment: 'left', color: 'green' },
+    { name: 'wallet', color: 'green', alignment: "right" },
+    { name: 'Tx count', color: 'green', alignment: "right" },
+    { name: 'NativeUSD', alignment: 'right', color: 'cyan' },
+    { name: 'USDT', alignment: 'right', color: 'cyan' },
+    { name: 'USDC', alignment: 'right', color: 'cyan' },
+    { name: 'DAI', alignment: 'right', color: 'cyan' },
 ]
 
 let headers = [
-    { id: 'n', title: 'n'},
-    { id: 'wallet', title: 'wallet'},
-    { id: 'Tx count', title: 'Tx count'},
-    { id: 'NativeUSD', title: 'NativeUSD'},
-    { id: 'USDT', title: 'USDT'},
-    { id: 'USDC', title: 'USDC'},
-    { id: 'DAI', title: 'DAI'},
+    { id: 'n', title: 'n' },
+    { id: 'wallet', title: 'wallet' },
+    { id: 'Tx count', title: 'Tx count' },
+    { id: 'NativeUSD', title: 'NativeUSD' },
+    { id: 'USDT', title: 'USDT' },
+    { id: 'USDC', title: 'USDC' },
+    { id: 'DAI', title: 'DAI' },
 ]
 
 const priceApi = 'https://min-api.cryptocompare.com/data/price'
 const networks = {
     'ETH': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['ETH']),
-        'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
+        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD }),
         'USDT': {
             address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
             decimals: 6
@@ -44,8 +44,7 @@ const networks = {
         }
     },
     'Arbitrum': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Arbitrum']),
-        'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
+        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD }),
         'USDT': {
             address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
             decimals: 6
@@ -64,8 +63,7 @@ const networks = {
         }
     },
     'Optimism': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Optimism']),
-        'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD}),
+        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD }),
         'USDT': {
             address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
             decimals: 6
@@ -80,7 +78,6 @@ const networks = {
         }
     },
     'Polygon': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Polygon']),
         'USDT': {
             address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
             decimals: 6
@@ -93,10 +90,9 @@ const networks = {
             address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
             decimals: 18
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=MATIC&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=MATIC&tsyms=USD').then(r => { return r.data.USD })
     },
     'BSC': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['BSC']),
         'USDT': {
             address: '0x55d398326f99059ff775485246999027b3197955',
             decimals: 18
@@ -109,10 +105,9 @@ const networks = {
             address: '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3',
             decimals: 18
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=BNB&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=BNB&tsyms=USD').then(r => { return r.data.USD })
     },
     'Avalanche': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Avalanche']),
         'USDT': {
             address: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
             decimals: 6
@@ -129,10 +124,9 @@ const networks = {
             address: '0xd586E7F844cEa2F87f50152665BCbc2C279D8d70',
             decimals: 18
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=AVAX&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=AVAX&tsyms=USD').then(r => { return r.data.USD })
     },
     'Base': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Base']),
         'USDT': {
             address: '0x50c5725949a6f0c72e6c4a641f24049a917db0cb',
             decimals: 18
@@ -141,10 +135,9 @@ const networks = {
             address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=ETH&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD })
     },
     'Core': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Core']),
         'USDT': {
             address: '0x900101d06a7426441ae63e9ab3b9b0f63be145f1',
             decimals: 6
@@ -153,18 +146,16 @@ const networks = {
             address: '0xa4151b2b3e269645181dccf2d426ce75fcbdeca9',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=CORE&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=CORE&tsyms=USD').then(r => { return r.data.USD })
     },
     'opBNB': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['opBNB']),
         'USDT': {
             address: '0x9e5aac1ba1a2e6aed6b32689dfcf62a509ca96f3',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=BNB&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=BNB&tsyms=USD').then(r => { return r.data.USD })
     },
     'Celo': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Celo']),
         'USDT': {
             address: '0xb020D981420744F6b0FedD22bB67cd37Ce18a1d5',
             decimals: 6
@@ -173,18 +164,16 @@ const networks = {
             address: '0xef4229c8c3250c675f21bcefa42f58efbff6002a',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=CELO&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=CELO&tsyms=USD').then(r => { return r.data.USD })
     },
     'Klaytn': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Klaytn']),
         'USDT': {
             address: '0xcee8faf64bb97a73bb51e115aa89c17ffa8dd167',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=KLAY&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=KLAY&tsyms=USD').then(r => { return r.data.USD })
     },
     'Fantom': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Fantom']),
         'USDT': {
             address: '0x049d68029688eabf473097a2fc38ef61633a3c7a',
             decimals: 6
@@ -193,10 +182,9 @@ const networks = {
             address: '0x818ec0a7fe18ff94269904fced6ae3dae6d6dc0b',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=FTM&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=FTM&tsyms=USD').then(r => { return r.data.USD })
     },
     'Moonbeam': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Moonbeam']),
         'USDT': {
             address: '0xefaeee334f0fd1712f9a8cc375f427d9cdd40d73',
             decimals: 6
@@ -205,10 +193,9 @@ const networks = {
             address: '0x818ec0a7fe18ff94269904fced6ae3dae6d6dc0b',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=GLMR&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=GLMR&tsyms=USD').then(r => { return r.data.USD })
     },
     'Moonriver': {
-        provider: new ethers.providers.JsonRpcProvider(rpcs['Moonriver']),
         'USDT': {
             address: '0xe936caa7f6d9f5c9e907111fcaf7c351c184cda7',
             decimals: 6
@@ -217,10 +204,11 @@ const networks = {
             address: '0xe3f5a90f9cb311505cd691a46596599aa1a0ad7d',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi+'?fsym=MOVR&tsyms=USD').then(r => { return r.data.USD})
+        'nativePrice': await axios.get(priceApi + '?fsym=MOVR&tsyms=USD').then(r => { return r.data.USD })
     }
 }
-let debug = true
+
+let debug = false
 let wallets = readWallets('./addresses/evm.txt')
 let walletsData = []
 let csvData = []
@@ -228,21 +216,60 @@ let stables = ['USDT', 'USDC', 'USDC.e', 'DAI']
 let p
 let isJson = false
 
+function getProvider(network) {
+    let agent = getProxy()
+    let rpc = rpcs[network][random(0, rpcs[network].length - 1)]
+
+    const fetchReq = new FetchRequest(rpc)
+    fetchReq.getUrlFunc = FetchRequest.createGetUrlFunc({ agent })
+    const provider = new ethers.JsonRpcProvider(fetchReq)
+
+    return provider
+}
+
 async function fetchWallet(wallet, index, network) {
     let nativeBalance = 0
     let txCount = 0
+    let provider = getProvider(network)
 
-    try {
-        const nativeBalanceWei = await networks[network].provider.getBalance(wallet)
-        nativeBalance = parseInt(nativeBalanceWei)  / Math.pow(10, 18)
-    } catch (e) {
-        if (debug) console.log(e.toString())
+    let nativeDone = false
+    let txCountDone = false
+    let stableDone = false
+
+    let nativeRetry = 0
+    let txCountRetry = 0
+    let stableRetry = 0
+
+    while (!nativeDone) {
+        try {
+            const nativeBalanceWei = await provider.getBalance(wallet)
+            nativeBalance = parseInt(nativeBalanceWei) / Math.pow(10, 18)
+            nativeDone = true
+        } catch (e) {
+            if (debug) console.log(e.toString())
+            provider = getProvider(network)
+            nativeRetry++
+
+            if (nativeRetry > 3) {
+                nativeDone = true
+            }
+        }
     }
 
-    try {
-        txCount = await networks[network].provider.getTransactionCount(wallet)
-    } catch (e) {
-        if (debug) console.log(e.toString())
+    while (!txCountDone) {
+        try {
+            txCount = await provider.getTransactionCount(wallet)
+            txCountDone = true
+        } catch (e) {
+            if (debug) console.log(e.toString())
+            provider = getProvider(network)
+
+            txCountRetry++
+
+            if (txCountRetry > 3) {
+                txCountDone = true
+            }
+        }
     }
 
     let walletData = {
@@ -258,20 +285,30 @@ async function fetchWallet(wallet, index, network) {
     walletData['USDT'] = 0
     walletData['DAI'] = 0
 
-    try {
-        for (const stable of stables) {
-            if (networks[network][stable]) {
-                let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], networks[network].provider)
-                let balance = await tokenContract.balanceOf(wallet)
-                walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
-                walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
+    while (!stableDone) {
+        try {
+            for (const stable of stables) {
+                if (networks[network][stable]) {
+                    let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], provider)
+                    let balance = await tokenContract.balanceOf(wallet)
+                    walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
+                    walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
+                }
+            }
+
+            walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
+            delete walletData['USDC.e']
+            stableDone = true
+        } catch (e) {
+            if (debug) console.log(e.toString())
+            provider = getProvider(network)
+
+            stableRetry++
+
+            if (stableRetry > 3) {
+                stableDone = true
             }
         }
-
-        walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
-        delete walletData['USDC.e']
-    } catch (e) {
-        if (debug) console.log(e.toString())
     }
 
     walletsData.push(walletData)
@@ -291,10 +328,13 @@ async function fetchWalletAllNetwork(wallet, index) {
     }
 
     for (const [networkName, network] of Object.entries(networks)) {
+        let rpc = rpcs[networkName][random(0, rpcs[networkName].length - 1)]
+        let provider = new ethers.providers.JsonRpcProvider(rpc)
+
         try {
-            const nativeBalanceWei = await network.provider.getBalance(wallet)
-            nativeBalance = parseInt(nativeBalanceWei)  / Math.pow(10, 18)
-        } catch (e) {}
+            const nativeBalanceWei = await provider.getBalance(wallet)
+            nativeBalance = parseInt(nativeBalanceWei) / Math.pow(10, 18)
+        } catch (e) { }
 
         walletData.NativeUSD = parseFloat(walletData.NativeUSD) + parseFloat(nativeBalance > 0 ? (nativeBalance * network.nativePrice).toFixed(2) : 0)
 
@@ -302,14 +342,14 @@ async function fetchWalletAllNetwork(wallet, index) {
             for (const stable of stables) {
                 if (network[stable]) {
                     let stableData
-                    let tokenContract = new ethers.Contract(network[stable].address, ['function balanceOf(address) view returns (uint256)'], network.provider)
+                    let tokenContract = new ethers.Contract(network[stable].address, ['function balanceOf(address) view returns (uint256)'], provider)
                     let balance = await tokenContract.balanceOf(wallet)
                     stableData = parseInt(balance) / Math.pow(10, network[stable].decimals)
                     stableData = parseFloat(stableData) > 0 ? stableData.toFixed(2) : 0
                     walletData[stable] = (parseFloat(walletData[stable]) + parseFloat(stableData)).toFixed(2)
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     }
     walletData.NativeUSD = parseFloat(walletData.NativeUSD.toFixed(2))
     walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
@@ -319,18 +359,39 @@ async function fetchWalletAllNetwork(wallet, index) {
     walletsData.push(walletData)
 }
 
+async function fetchBatch(batch, network) {
+    await Promise.all(batch.map((account) => fetchWallet(account, getKeyByValue(wallets, account), network)))
+}
+
 async function fetchWallets(network) {
     walletsData = []
     csvData = []
     wallets = readWallets('./addresses/evm.txt')
-    let walletPromises
+    let walletPromises = []
 
     if (network === 'all') {
-        walletPromises = wallets.map((account, index) => fetchWalletAllNetwork(account, index+1))
+        walletPromises = wallets.map((account, index) => fetchWalletAllNetwork(account, index + 1))
     } else {
-        columns.push({ name: 'Native', alignment: 'right', color: 'cyan'})
-        headers.push({ id: 'Native', title: 'Native'})
-        walletPromises = wallets.map((account, index) => fetchWallet(account, index+1, network))
+        columns.push({ name: 'Native', alignment: 'right', color: 'cyan' })
+        headers.push({ id: 'Native', title: 'Native' })
+        // walletPromises = wallets.map((account, index) => fetchWallet(account, index+1, network))
+
+        const batchSize = 100
+        const batchCount = Math.ceil(wallets.length / batchSize)
+
+        for (let i = 0; i < batchCount; i++) {
+            const startIndex = i * batchSize
+            const endIndex = (i + 1) * batchSize
+            const batch = wallets.slice(startIndex, endIndex)
+
+            const promise = new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(fetchBatch(batch, network))
+                }, i * 5000)
+            })
+
+            walletPromises.push(promise)
+        }
     }
 
     p = new Table({
@@ -374,10 +435,10 @@ async function collectData(network) {
 
     if (network != 'all') {
         // totalRow.Native = 0
-        totalRow.Native = totalRow.Native  + ' ' + getNativeToken(network)
+        totalRow.Native = totalRow.Native + ' ' + getNativeToken(network)
     }
 
-    totalRow.n = wallets.length+1
+    totalRow.n = wallets.length + 1
     totalRow.wallet = 'Total'
 
     walletsData.push(totalRow)

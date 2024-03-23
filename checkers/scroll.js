@@ -195,8 +195,8 @@ async function getTxs(wallet, index) {
     const numUniqueContracts = uniqueContracts.size
 
     if (txs.length) {
-        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].timeStamp*1000)
-        stats[wallet].last_tx_date = new Date(txs[0].timeStamp*1000)
+        stats[wallet].first_tx_date = new Date(txs[0].timeStamp*1000)
+        stats[wallet].last_tx_date = new Date(txs[txs.length - 1].timeStamp*1000)
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
