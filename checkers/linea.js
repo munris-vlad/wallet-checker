@@ -24,6 +24,7 @@ const columns = [
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Volume', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
@@ -44,6 +45,7 @@ const headers = [
     { id: 'USDT', title: 'USDT'},
     { id: 'DAI', title: 'DAI'},
     { id: 'TX Count', title: 'TX Count'},
+    { id: 'Volume', title: 'Volume'},
     { id: 'Contracts', title: 'Contracts'},
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
@@ -81,7 +83,7 @@ const contracts = [
     }
 ]
 
-let debug = false
+let debug = true
 const apiUrl = "https://explorer.linea.build/api"
 let p
 let csvWriter
@@ -100,88 +102,131 @@ let total = {
     gas: 0,
     xp: 0
 }
+let stables = ['USDT', 'USDC', 'DAI']
 const cancelTimeout = 15000
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 let ethPrice = await getTokenPrice('ETH')
 
 async function getBalances(wallet) {
-    await axios.get(apiUrl, {
-        params: {
-            module: 'account',
-            action: 'balance',
-            address: wallet
-        }
-    }).then(response => {
-        stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
-    }).catch(function (error) {
-        if (debug) console.log(error)
-    })
+    let ethBalanceDone
+    let ethBalanceRetry = 0
 
-    for (const contract of contracts) {
+    let tokenBalanceDone
+    let tokenBalanceRetry = 0
+    
+    let nftDone
+    let nftRetry = 0
+
+    let pohDone
+    let pohRetry = 0
+
+    while (!ethBalanceDone) {
+        await axios.get(apiUrl, {
+            params: {
+                module: 'account',
+                action: 'balance',
+                address: wallet
+            }
+        }).then(response => {
+            stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
+            ethBalanceDone = true
+        }).catch(function (error) {
+            if (debug) console.log(error)
+            ethBalanceRetry++
+            if (ethBalanceRetry > 3) {
+                ethBalanceDone = true
+            }
+        })
+    }
+    
+    while (!tokenBalanceDone) {
+        for (const contract of contracts) {
+            await axios.get(apiUrl, {
+                signal: newAbortSignal(cancelTimeout),
+                httpsAgent: getProxy(0, true),
+                params: {
+                    module: 'account',
+                    action: 'tokenbalance',
+                    contractaddress: contract.address,
+                    address: wallet
+                }
+            }).then(response => {
+                stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
+                tokenBalanceDone = true
+            }).catch(function (error) {
+                if (debug) console.log(error)
+
+                tokenBalanceRetry++
+                if (tokenBalanceRetry > 3) {
+                    tokenBalanceDone = true
+                }
+            })
+        }
+    }
+
+    let voyageNft = '-'
+    while (!nftDone) {
         await axios.get(apiUrl, {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
             params: {
                 module: 'account',
-                action: 'tokenbalance',
-                contractaddress: contract.address,
+                action: 'tokenlist',
                 address: wallet
             }
         }).then(response => {
-            stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
+            response.data.result.forEach(token => {
+                if (token.symbol === 'VOYAGE') {
+                    switch (token.id) {
+                        case '1':
+                            voyageNft = 'Alpha'
+                            break
+                        case '2':
+                            voyageNft = 'Beta'
+                            break
+                        case '3':
+                            voyageNft = 'Gamma'
+                            break
+                        case '4':
+                            voyageNft = 'Delta'
+                            break
+                        case '5':
+                            voyageNft = 'Omega'
+                            break
+                        default:
+                            voyageNft = 'Alpha'
+                            break
+                    }
+                }
+            })
+            nftDone = true
         }).catch(function (error) {
             if (debug) console.log(error)
-        })
-    }
-    let voyageNft = '-'
-    await axios.get(apiUrl, {
-        signal: newAbortSignal(cancelTimeout),
-        httpsAgent: getProxy(0, true),
-        params: {
-            module: 'account',
-            action: 'tokenlist',
-            address: wallet
-        }
-    }).then(response => {
-        response.data.result.forEach(token => {
-            if (token.symbol === 'VOYAGE') {
-                switch (token.id) {
-                    case '1':
-                        voyageNft = 'Alpha'
-                        break
-                    case '2':
-                        voyageNft = 'Beta'
-                        break
-                    case '3':
-                        voyageNft = 'Gamma'
-                        break
-                    case '4':
-                        voyageNft = 'Delta'
-                        break
-                    case '5':
-                        voyageNft = 'Omega'
-                        break
-                    default:
-                        voyageNft = 'Alpha'
-                        break
-                }
+            nftRetry++
+            if (nftRetry > 3) {
+                nftDone = true
             }
         })
-    }).catch(function (error) {
-        if (debug) console.log(error)
-    })
+    }
 
     stats[wallet].voyagenft = voyageNft
 
-    await axios.get(`https://linea-xp-poh-api.linea.build/poh/${wallet}`, {
-        signal: newAbortSignal(cancelTimeout),
-        httpsAgent: getProxy(0, true),
-    }).then(response => {
-        stats[wallet].poh = response.data.poh
-    }).catch(function (error) {
-        if (debug) console.log(error)
-    })
-    
+    while (!pohDone) {
+        await axios.get(`https://linea-xp-poh-api.linea.build/poh/${wallet}`, {
+            signal: newAbortSignal(cancelTimeout),
+            httpsAgent: getProxy(0, true),
+        }).then(response => {
+            stats[wallet].poh = response.data.poh
+            pohDone = true
+        }).catch(function (error) {
+            if (debug) console.log(error)
+
+            pohRetry++
+            if (pohRetry > 3) {
+                pohDone = true
+            }
+        })
+    }
 }
 
 async function getTxs(wallet) {
@@ -227,7 +272,32 @@ async function getTxs(wallet) {
             uniqueContracts.add(tx.to)
             stats[wallet].txcount++
         }
+        stats[wallet].volume += parseFloat((parseInt(tx.value) / Math.pow(10, 18)) * ethPrice, 0)
     })
+
+    let isAllTxTokensCollected
+    while (!isAllTxTokensCollected) {
+        await axios.get(apiUrl, {
+            params: {
+                module: 'account',
+                action: 'tokentx',
+                offset: 1000,
+                address: wallet
+            },
+            httpsAgent: getProxy(0, true),
+        }).then(response => {
+            let items = response.data.result
+            isAllTxTokensCollected = true
+
+            Object.values(items).forEach(transfer => {
+                if (stables.includes(transfer.tokenSymbol)) {
+                    stats[wallet].volume += parseFloat((parseInt(transfer.value) / Math.pow(10, transfer.tokenDecimal)), 0)
+                }
+            })
+        }).catch(function (error) {
+            if (debug) console.log(error)
+        })
+    }
 
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
@@ -248,6 +318,7 @@ async function getTxs(wallet) {
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
         txcount: 0,
+        volume: 0,
         balances: [],
         voyagenft: '',
         poh: false
@@ -278,6 +349,7 @@ async function fetchWallet(wallet, index) {
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
         'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
         'TX Count': stats[wallet].txcount,
+        'Volume': `$`+parseInt(stats[wallet].volume),
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
@@ -299,6 +371,7 @@ async function fetchWallet(wallet, index) {
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
         'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
         'TX Count': stats[wallet].txcount,
+        'Volume': parseInt(stats[wallet].volume),
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,

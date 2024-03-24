@@ -23,16 +23,17 @@
                             </div>
                         </div>
                     </td>
+                    <td :class="tdClass">{{ item['Origins NFT'] }}</td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.005 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDT'] }}</td>
                     <td :class="tdClass">{{ item['DAI'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
+                    <td :class="tdClass">{{ item['Volume'] > 0 ? '$'+item['Volume'] : '' }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
                     <td :class="tdClass">{{ item['Months'] }}</td>
-                    <td :class="tdClass">{{ item['Contract deployed'] }}</td>
                     <td :class="tdClass">{{ formatDate(item['First tx']) }}</td>
                     <td :class="tdClass">{{ formatDate(item['Last tx']) }}</td>
                     <td :class="tdClass">{{ item['Total gas spent'] }} (${{ item['Total gas spent USDVALUE'] }})</td>
@@ -69,16 +70,17 @@ export default {
             headers: [
                 'n',
                 'Wallet',
+                'Origins NFT',
                 'ETH',
                 'USDC',
                 'USDT',
                 'DAI',
                 'TX Count',
+                'Volume',
                 'Contracts',
                 'Days',
                 'Weeks',
                 'Months',
-                'Contract deployed',
                 'First tx',
                 'Last tx',
                 'Total gas spent'

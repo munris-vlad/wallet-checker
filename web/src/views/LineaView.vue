@@ -31,6 +31,7 @@
                     <td :class="tdClass">{{ item['USDT'] }}</td>
                     <td :class="tdClass">{{ item['DAI'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
+                    <td :class="tdClass">{{ item['Volume'] > 0 ? '$'+item['Volume'] : '' }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
@@ -79,6 +80,7 @@ export default {
                 'USDT',
                 'DAI',
                 'TX Count',
+                'Volume',
                 'Contracts',
                 'Days',
                 'Weeks',

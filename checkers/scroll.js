@@ -9,6 +9,7 @@ import cliProgress from 'cli-progress'
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'Origins NFT', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
@@ -19,7 +20,6 @@ const columns = [
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
     { name: 'Months', alignment: 'right', color: 'cyan'},
-    { name: 'Contract deployed', alignment: 'right', color: 'cyan'},
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
@@ -28,6 +28,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
+    { id: 'Origins NFT', title: 'Origins NFT'},
     { id: 'ETH', title: 'ETH'},
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
@@ -38,13 +39,17 @@ const headers = [
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
     { id: 'Months', title: 'Months'},
-    { id: 'Contract deployed', title: 'Contract deployed'},
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
     { id: 'Total gas spent', title: 'Total gas spent'}
 ]
 
 const contracts = [
+    {
+        token: 'Origins NFT',
+        address: '0x74670A3998d9d6622E32D0847fF5977c37E0eC91',
+        decimals: 0
+    },
     {
         token: 'USDC',
         address: '0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4',
@@ -179,16 +184,12 @@ async function getTxs(wallet, index) {
             uniqueContracts.add(tx.to)
 
             totalGasUsed += parseInt(tx.gasPrice) * parseInt(tx.gasUsed) / Math.pow(10, 18)
-            // console.log(tx)
+
             if (tx.from) {
                 if (tx.from.toLowerCase() === wallet.toLowerCase()) {
                     uniqueContracts.add(tx.to)
                     stats[wallet].txcount++
                 }
-            }
-
-            if (tx.to === '') {
-                stats[wallet].contractdeployed = 'Yes'
             }
 
             if (!tx.functionName.includes('transfer') && !tx.functionName.includes('approve')) {
@@ -264,6 +265,7 @@ async function fetchWallet(wallet, index) {
     p.addRow({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? 'Yes' : 'No',
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
@@ -274,7 +276,6 @@ async function fetchWallet(wallet, index) {
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
-        'Contract deployed': stats[wallet].contractdeployed,
         'First tx': stats[wallet].txcount ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '-',
         'Last tx': stats[wallet].txcount ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '-',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4)  + ` ($${usdGasValue})` : 0
@@ -283,6 +284,7 @@ async function fetchWallet(wallet, index) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? 'Yes' : 'No',
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -294,7 +296,6 @@ async function fetchWallet(wallet, index) {
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
-        'Contract deployed': stats[wallet].contractdeployed,
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
