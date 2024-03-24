@@ -67,7 +67,7 @@ const contracts = [
     }
 ]
 
-let debug = true
+let debug = false
 const apiUrl = "https://api.scrollscan.com/api"
 let p
 let csvWriter
@@ -93,47 +93,51 @@ async function getBalances(wallet, index) {
     let isBalanceCollected = false
     
     while (!isBalanceCollected) {
-        await axios.get(apiUrl, {
-            params: {
-                module: 'account',
-                action: 'balance',
-                address: wallet
-            },
-            httpsAgent: agent,
-        }).then(response => {
-            if (!response.data.result.includes('Max rate limit reached')) {
-                stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
-                isBalanceCollected = true
-            } else {
-                agent = getProxy(index)
-            }
-        }).catch(function (error) {
+        try {
+            await axios.get(apiUrl, {
+                params: {
+                    module: 'account',
+                    action: 'balance',
+                    address: wallet
+                },
+                httpsAgent: agent,
+            }).then(response => {
+                if (!response.data.result.includes('Max rate limit reached')) {
+                    stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
+                    isBalanceCollected = true
+                } else {
+                    agent = getProxy(index)
+                }
+            })
+        } catch (error) {
             if (debug) console.log(error)
-        })
+        }
     }
 
     for (const contract of contracts) {
         let isContractBalanceCollected = false
 
         while (!isContractBalanceCollected) {
-            await axios.get(apiUrl, {
-                params: {
-                    module: 'account',
-                    action: 'tokenbalance',
-                    contractaddress: contract.address,
-                    address: wallet
-                },
-                httpsAgent: agent,
-            }).then(response => {
-                if (!response.data.result.includes('Max rate limit reached')) {
-                    stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
-                    isContractBalanceCollected = true
-                } else {
-                    agent = getProxy(index)
-                }
-            }).catch(function (error) {
+            try {
+                await axios.get(apiUrl, {
+                    params: {
+                        module: 'account',
+                        action: 'tokenbalance',
+                        contractaddress: contract.address,
+                        address: wallet
+                    },
+                    httpsAgent: agent,
+                }).then(response => {
+                    if (!response.data.result.includes('Max rate limit reached')) {
+                        stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
+                        isContractBalanceCollected = true
+                    } else {
+                        agent = getProxy(index)
+                    }
+                })
+            } catch (error) {
                 if (debug) console.log(error)
-            })
+            }
         }
     }
 }
@@ -149,28 +153,30 @@ async function getTxs(wallet, index) {
     let isAllTxCollected = false
 
     while (!isAllTxCollected) {
-        await axios.get(apiUrl, {
-            params: {
-                module: 'account',
-                action: 'txlist',
-                offset: 1000,
-                address: wallet
-            },
-            httpsAgent: agent,
-        }).then(response => {
-            if (!response.data.result.includes('Max rate limit reached')) {
-                let items = response.data.result
-                isAllTxCollected = true
+        try {
+            await axios.get(apiUrl, {
+                params: {
+                    module: 'account',
+                    action: 'txlist',
+                    offset: 1000,
+                    address: wallet
+                },
+                httpsAgent: agent,
+            }).then(response => {
+                if (!response.data.result.includes('Max rate limit reached')) {
+                    let items = response.data.result
+                    isAllTxCollected = true
 
-                Object.values(items).forEach(tx => {
-                    txs.push(tx)
-                })
-            } else {
-                agent = getProxy(index)
-            }
-        }).catch(function (error) {
+                    Object.values(items).forEach(tx => {
+                        txs.push(tx)
+                    })
+                } else {
+                    agent = getProxy(index)
+                }
+            })
+        } catch (error) {
             if (debug) console.log(error)
-        })
+        }
     }
 
     let totalGasUsed = 0
@@ -200,30 +206,32 @@ async function getTxs(wallet, index) {
 
     let isAllTxTokensCollected
     while (!isAllTxTokensCollected) {
-        await axios.get(apiUrl, {
-            params: {
-                module: 'account',
-                action: 'tokentx',
-                offset: 1000,
-                address: wallet
-            },
-            httpsAgent: agent,
-        }).then(response => {
-            if (!response.data.result.includes('Max rate limit reached')) {
-                let items = response.data.result
-                isAllTxTokensCollected = true
+        try {
+            await axios.get(apiUrl, {
+                params: {
+                    module: 'account',
+                    action: 'tokentx',
+                    offset: 1000,
+                    address: wallet
+                },
+                httpsAgent: agent,
+            }).then(response => {
+                if (!response.data.result.includes('Max rate limit reached')) {
+                    let items = response.data.result
+                    isAllTxTokensCollected = true
 
-                Object.values(items).forEach(transfer => {
-                    if (stables.includes(transfer.tokenSymbol)) {
-                        stats[wallet].volume += parseFloat((parseInt(transfer.value) / Math.pow(10, transfer.tokenDecimal)), 0)
-                    }
-                })
-            } else {
-                agent = getProxy(index)
-            }
-        }).catch(function (error) {
+                    Object.values(items).forEach(transfer => {
+                        if (stables.includes(transfer.tokenSymbol)) {
+                            stats[wallet].volume += parseFloat((parseInt(transfer.value) / Math.pow(10, transfer.tokenDecimal)), 0)
+                        }
+                    })
+                } else {
+                    agent = getProxy(index)
+                }
+            })
+        } catch (error) {
             if (debug) console.log(error)
-        })
+        }
     }
 
     const numUniqueDays = uniqueDays.size
