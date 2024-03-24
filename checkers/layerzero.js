@@ -16,8 +16,8 @@ const columns = [
     { name: 'Days', alignment: 'right', color: 'cyan' },
     { name: 'Weeks', alignment: 'right', color: 'cyan' },
     { name: 'Months', alignment: 'right', color: 'cyan' },
-    { name: 'First TX', alignment: 'right', color: 'cyan' },
-    { name: 'Last TX', alignment: 'right', color: 'cyan' },
+    { name: 'First tx', alignment: 'right', color: 'cyan' },
+    { name: 'Last tx', alignment: 'right', color: 'cyan' },
 ]
 
 const headers = [
@@ -30,8 +30,8 @@ const headers = [
     { id: 'Days', title: 'Days' },
     { id: 'Weeks', title: 'Weeks' },
     { id: 'Months', title: 'Months' },
-    { id: 'First TX', title: 'First TX' },
-    { id: 'Last TX', title: 'Last TX' },
+    { id: 'First tx', title: 'First tx' },
+    { id: 'Last tx', title: 'Last tx' },
 ]
 
 const sourceNetworks = [
@@ -203,8 +203,8 @@ async function fetchWallet(wallet, index, isExtended) {
         'Days': data.days,
         'Weeks': data.weeks,
         'Months': data.months,
-        'First TX': data.first_tx ? moment((data.first_tx)).format("DD.MM.YY") : '-',
-        'Last TX': data.last_tx ? moment((data.last_tx)).format("DD.MM.YY") : '-',
+        'First tx': data.first_tx ? moment((data.first_tx)).format("DD.MM.YY") : '-',
+        'Last tx': data.last_tx ? moment((data.last_tx)).format("DD.MM.YY") : '-',
     }
 
     let jsonRow = {
@@ -217,8 +217,8 @@ async function fetchWallet(wallet, index, isExtended) {
         'Days': data.days,
         'Weeks': data.weeks,
         'Months': data.months,
-        'First TX': data.first_tx,
-        'Last TX': data.last_tx,
+        'First tx': data.first_tx,
+        'Last tx': data.last_tx,
     }
 
     if (isExtended) {
