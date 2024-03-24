@@ -14,6 +14,7 @@ const columns = [
     { name: 'USDT', alignment: 'right', color: 'cyan'},
     { name: 'DAI', alignment: 'right', color: 'cyan'},
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
+    { name: 'Volume', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
@@ -32,6 +33,7 @@ const headers = [
     { id: 'USDT', title: 'USDT'},
     { id: 'DAI', title: 'DAI'},
     { id: 'TX Count', title: 'TX Count'},
+    { id: 'Volume', title: 'Volume'},
     { id: 'Contracts', title: 'Contracts'},
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
@@ -65,7 +67,6 @@ const apiUrl = "https://api.scrollscan.com/api"
 let p
 let csvWriter
 let stats = []
-let isJson = false
 let wallets = readWallets('./addresses/scroll.txt')
 let iterations = wallets.length
 let iteration = 1
@@ -78,6 +79,7 @@ let total = {
     dai: 0,
     gas: 0
 }
+let stables = ['USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 let ethPrice = await getTokenPrice('ETH')
 
@@ -169,25 +171,59 @@ async function getTxs(wallet, index) {
     let totalGasUsed = 0
 
     Object.values(txs).forEach(tx => {
-        const date = new Date(tx.timeStamp*1000)
-        uniqueDays.add(date.toDateString())
-        uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-        uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        uniqueContracts.add(tx.to)
+        if (tx.isError === '0') {
+            const date = new Date(tx.timeStamp*1000)
+            uniqueDays.add(date.toDateString())
+            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+            uniqueContracts.add(tx.to)
 
-        totalGasUsed += parseInt(tx.gasPrice) * parseInt(tx.gasUsed) / Math.pow(10, 18)
+            totalGasUsed += parseInt(tx.gasPrice) * parseInt(tx.gasUsed) / Math.pow(10, 18)
+            // console.log(tx)
+            if (tx.from) {
+                if (tx.from.toLowerCase() === wallet.toLowerCase()) {
+                    uniqueContracts.add(tx.to)
+                    stats[wallet].txcount++
+                }
+            }
 
-        if (tx.from) {
-            if (tx.from.toLowerCase() === wallet.toLowerCase()) {
-                uniqueContracts.add(tx.to)
-                stats[wallet].txcount++
+            if (tx.to === '') {
+                stats[wallet].contractdeployed = 'Yes'
+            }
+
+            if (!tx.functionName.includes('transfer') && !tx.functionName.includes('approve')) {
+                stats[wallet].volume += parseFloat((parseInt(tx.value) / Math.pow(10, 18)) * ethPrice, 0)
             }
         }
-
-        if (tx.to === '') {
-            stats[wallet].contractdeployed = 'Yes'
-        }
     })
+
+    let isAllTxTokensCollected
+    while (!isAllTxTokensCollected) {
+        await axios.get(apiUrl, {
+            params: {
+                module: 'account',
+                action: 'tokentx',
+                offset: 1000,
+                address: wallet
+            },
+            httpsAgent: agent,
+        }).then(response => {
+            if (!response.data.result.includes('Max rate limit reached')) {
+                let items = response.data.result
+                isAllTxTokensCollected = true
+
+                Object.values(items).forEach(transfer => {
+                    if (stables.includes(transfer.tokenSymbol)) {
+                        stats[wallet].volume += parseFloat((parseInt(transfer.value) / Math.pow(10, transfer.tokenDecimal)), 0)
+                    }
+                })
+            } else {
+                agent = getProxy(index)
+            }
+        }).catch(function (error) {
+            if (debug) console.log(error)
+        })
+    }
 
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
@@ -208,6 +244,7 @@ async function getTxs(wallet, index) {
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
         txcount: 0,
+        volume: 0,
         balances: [],
         contractdeployed: 'No'
     }
@@ -232,6 +269,7 @@ async function fetchWallet(wallet, index) {
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
         'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
         'TX Count': stats[wallet].txcount,
+        'Volume': `$`+parseInt(stats[wallet].volume),
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
@@ -251,6 +289,7 @@ async function fetchWallet(wallet, index) {
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
         'DAI': parseFloat(stats[wallet].balances['DAI']).toFixed(2),
         'TX Count': stats[wallet].txcount,
+        'Volume': parseInt(stats[wallet].volume),
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
