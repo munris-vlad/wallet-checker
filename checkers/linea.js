@@ -330,10 +330,10 @@ async function fetchWallet(wallet, index) {
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
     total.xp += stats[wallet].balances['Linea XP'] ? parseFloat(stats[wallet].balances['Linea XP']) : 0
-    total.eth += parseFloat(stats[wallet].balances['ETH'])
-    total.usdt += parseFloat(stats[wallet].balances['USDT'])
-    total.usdc += parseFloat(stats[wallet].balances['USDC'])
-    total.dai += parseFloat(stats[wallet].balances['DAI'])
+    total.eth += stats[wallet].balances['ETH'] ? parseFloat(stats[wallet].balances['ETH']) : 0
+    total.usdt += stats[wallet].balances['USDT'] ? parseFloat(stats[wallet].balances['USDT']) : 0
+    total.usdc += stats[wallet].balances['USDC'] ? parseFloat(stats[wallet].balances['USDC']) : 0
+    total.dai += stats[wallet].balances['DAI'] ? parseFloat(stats[wallet].balances['DAI']) : 0
 
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
@@ -426,7 +426,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 1200)
+            }, i * 7000)
         })
 
         walletPromises.push(promise)
