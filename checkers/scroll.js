@@ -1,5 +1,5 @@
 import  '../utils/common.js'
-import { sleep, readWallets, getBalance, getKeyByValue, getTokenPrice, getProxy } from '../utils/common.js'
+import { sleep, readWallets, getBalance, getKeyByValue, getTokenPrice, newAbortSignal, getProxy } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -101,6 +101,7 @@ async function getBalances(wallet, index) {
                     address: wallet
                 },
                 httpsAgent: agent,
+                signal: newAbortSignal(5000)
             }).then(response => {
                 if (!response.data.result.includes('Max rate limit reached')) {
                     stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
@@ -127,6 +128,7 @@ async function getBalances(wallet, index) {
                         address: wallet
                     },
                     httpsAgent: agent,
+                    signal: newAbortSignal(5000)
                 }).then(response => {
                     if (!response.data.result.includes('Max rate limit reached')) {
                         stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
@@ -162,6 +164,7 @@ async function getTxs(wallet, index) {
                     address: wallet
                 },
                 httpsAgent: agent,
+                signal: newAbortSignal(5000)
             }).then(response => {
                 if (!response.data.result.includes('Max rate limit reached')) {
                     let items = response.data.result
@@ -215,6 +218,7 @@ async function getTxs(wallet, index) {
                     address: wallet
                 },
                 httpsAgent: agent,
+                signal: newAbortSignal(5000)
             }).then(response => {
                 if (!response.data.result.includes('Max rate limit reached')) {
                     let items = response.data.result
