@@ -4,7 +4,7 @@ import {
     readWallets,
     getBalance, getKeyByValue,
     newAbortSignal,
-    getTokenPrice
+    getTokenPrice, saveData
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -511,7 +511,7 @@ function fetchWallets() {
         path: './results/zksync.csv',
         header: headers
     })
-    
+
     p = new Table({
         columns: columns,
         sort: (row1, row2) => +row1.n - +row2.n
@@ -543,6 +543,7 @@ async function fetchBatch(batch) {
 }
 
 async function saveToCsv() {
+    await saveData('zksync', columns, jsonData)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })

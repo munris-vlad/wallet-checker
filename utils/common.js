@@ -4,6 +4,8 @@ import inquirer from "inquirer"
 import { HttpsProxyAgent } from "https-proxy-agent"
 import { SocksProxyAgent } from "socks-proxy-agent"
 
+import {syncDbWallets, syncDbChecker} from "./dbtool.js"
+
 export const wait = ms => new Promise(r => setTimeout(r, ms))
 export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis))
 
@@ -16,13 +18,36 @@ export function random(min, max) {
 export function readWallets(filePath) {
     try {
         const fileContent = fs.readFileSync(filePath, 'utf-8')
-        const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line !== '')
+        let lines = fileContent.split('\n').map(line => line.trim()).filter(line => line !== '')
+        if (filePath.includes('addresses')) {
+            lines = syncDbWallets(lines, filePath)
+        }
         return lines
     } catch (error) {
         console.error('Error reading the file:', error.message)
         return []
     }
 }
+
+export async function saveToDb(network, columns, jsonData) {
+    try{
+        await syncDbChecker(network, columns, jsonData);
+    }catch (error) {
+        console.error('Error sync checker to db:', error.message)
+    }
+}
+
+export async function saveData(network, columns, jsonData, csvData, csvWriter, p) {
+    if(p && csvData && csvWriter){
+        p.table.rows.map((row) => {
+            csvData.push(row.text)
+        })
+        csvData.sort((a, b) => a.n - b.n)
+        csvWriter.writeRecords(csvData).then().catch()
+    }
+    await saveToDb(network, columns, jsonData)
+}
+
 
 export function writeLineToFile(filePath, line) {
     try {
@@ -185,7 +210,7 @@ export async function getTokenPrice(token) {
     let price = 0
     let isFetched = false
     let retry = 0
-    
+
     while (!isFetched) {
         const agent = getProxy()
         await axios.get(`https://min-api.cryptocompare.com/data/price?fsym=${token}&tsyms=USD`, {

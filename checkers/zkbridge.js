@@ -1,5 +1,16 @@
 import '../utils/common.js'
-import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey, getTokenPrice } from '../utils/common.js'
+import {
+    getKeyByValue,
+    newAbortSignal,
+    readWallets,
+    sleep,
+    timestampToDate,
+    random,
+    getProxy,
+    sortObjectByKey,
+    getTokenPrice,
+    saveData
+} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -149,7 +160,7 @@ async function fetchWallet(wallet, index, isExtended) {
             }
         })
     }
-    
+
     if (txs.length) {
         for (const tx of Object.values(txs)) {
             if (tx.extra.erc20) {
@@ -178,7 +189,7 @@ async function fetchWallet(wallet, index, isExtended) {
     }
 
     progressBar.update(iteration)
-    
+
     let row = {
         n: parseInt(index) + 1,
         Wallet: wallet,
@@ -266,6 +277,7 @@ function fetchWallets(isExtended) {
 }
 
 async function saveToCsv() {
+    await saveData('zkbridge', columns, jsonData)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })

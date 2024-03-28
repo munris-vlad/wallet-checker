@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { readWallets, getBalance, timestampToDate, getProxy, getTokenPrice } from '../utils/common.js'
+import {readWallets, getBalance, timestampToDate, getProxy, getTokenPrice, saveData} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -262,6 +262,8 @@ function fetchWallets() {
 }
 
 async function saveToCsv() {
+    await saveData('aptos', columns, jsonData)
+
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })

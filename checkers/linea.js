@@ -1,11 +1,12 @@
 import  '../utils/common.js'
-import { sleep, 
-    readWallets, 
-    getBalance, 
+import {
+    sleep,
+    readWallets,
+    getBalance,
     getKeyByValue,
     getProxy,
     newAbortSignal,
-    getTokenPrice,
+    getTokenPrice, saveData,
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -59,7 +60,7 @@ const contracts = [
     {
         token: 'Linea XP',
         address: '0xd83af4fbD77f3AB65C3B1Dc4B38D7e67AEcf599A',
-        decimals: 18    
+        decimals: 18
     },
     {
         token: 'USDC',
@@ -113,7 +114,7 @@ async function getBalances(wallet) {
 
     let tokenBalanceDone
     let tokenBalanceRetry = 0
-    
+
     let nftDone
     let nftRetry = 0
 
@@ -138,7 +139,7 @@ async function getBalances(wallet) {
             }
         })
     }
-    
+
     while (!tokenBalanceDone) {
         for (const contract of contracts) {
             await axios.get(apiUrl, {
@@ -326,7 +327,7 @@ async function fetchWallet(wallet, index) {
 
     await getBalances(wallet)
     await getTxs(wallet)
-    
+
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
     total.xp += stats[wallet].balances['Linea XP'] ? parseFloat(stats[wallet].balances['Linea XP']) : 0
@@ -408,7 +409,7 @@ async function fetchWallets() {
         path: './results/linea.csv',
         header: headers
     })
-    
+
     p = new Table({
         columns: columns,
         sort: (row1, row2) => +row1.n - +row2.n
@@ -436,6 +437,7 @@ async function fetchWallets() {
 }
 
 async function saveToCsv() {
+    await saveData('linea', columns, jsonData)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
