@@ -21,7 +21,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const app = express()
-const port = 80
+const port = 8088
 const apiRoutes = express.Router()
 
 app.use(cors())
@@ -123,5 +123,5 @@ apiRoutes.get('/evm', async (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Чекер запущен: http://localhost`)
+  console.log(`Чекер запущен: http://localhost:${port}`)
 })

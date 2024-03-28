@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import {readWallets, getBalance, getProxy, getTokenPrice} from '../utils/common.js'
+import {readWallets, getBalance, getProxy, getTokenPrice, saveData} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -199,7 +199,7 @@ function fetchWallets() {
         path: './results/zora.csv',
         header: headers
     })
-    
+
     p = new Table({
         columns: columns,
         sort: (row1, row2) => +row1.n - +row2.n
@@ -210,6 +210,7 @@ function fetchWallets() {
 }
 
 async function saveToCsv() {
+    await saveData('zora', columns, jsonData)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })

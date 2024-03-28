@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import {readWallets, getBalance, getKeyByValue, getTokenPrice} from '../utils/common.js'
+import {readWallets, getBalance, getKeyByValue, getTokenPrice, saveData} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -123,7 +123,7 @@ async function getTxs(wallet) {
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-        
+
         if (tx.to) {
             uniqueContracts.add(tx.to.hash)
         }
@@ -213,7 +213,7 @@ function fetchWallets() {
         path: './results/base.csv',
         header: headers
     })
-    
+
     p = new Table({
         columns: columns,
         sort: (row1, row2) => +row1.n - +row2.n
@@ -250,6 +250,7 @@ function fetchWallets() {
 }
 
 async function saveToCsv() {
+    await saveData('base', columns, jsonData)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
