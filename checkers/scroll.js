@@ -1,5 +1,5 @@
 import  '../utils/common.js'
-import { sleep, readWallets, getBalance, getKeyByValue, getTokenPrice, getProxy } from '../utils/common.js'
+import {sleep, readWallets, getBalance, getKeyByValue, getTokenPrice, getProxy, saveData} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -91,7 +91,7 @@ let ethPrice = await getTokenPrice('ETH')
 async function getBalances(wallet, index) {
     let agent = getProxy(index)
     let isBalanceCollected = false
-    
+
     while (!isBalanceCollected) {
         try {
             await axios.get(apiUrl, {
@@ -335,7 +335,7 @@ async function fetchWallets() {
         path: './results/scroll.csv',
         header: headers
     })
-    
+
     p = new Table({
         columns: columns,
         sort: (row1, row2) => +row1.n - +row2.n
@@ -363,6 +363,7 @@ async function fetchWallets() {
 }
 
 async function saveToCsv() {
+    await saveData('scroll', columns, jsonData)
     p.table.rows.map((row) => {
         csvData.push(row.text)
     })
