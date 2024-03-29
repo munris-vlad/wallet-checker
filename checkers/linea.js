@@ -6,6 +6,7 @@ import { sleep,
     getProxy,
     newAbortSignal,
     getTokenPrice,
+    timestampToDate
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -83,12 +84,11 @@ const contracts = [
     }
 ]
 
-let debug = true
-const apiUrl = "https://explorer.linea.build/api"
+let debug = false
+const apiUrl = "https://api.w3w.ai/linea/v1/explorer/address"
 let p
 let csvWriter
 let stats = []
-let isJson = false
 let wallets = readWallets('./addresses/linea.txt')
 let iterations = wallets.length
 let iteration = 1
@@ -113,22 +113,18 @@ async function getBalances(wallet) {
 
     let tokenBalanceDone
     let tokenBalanceRetry = 0
-    
-    let nftDone
-    let nftRetry = 0
 
     let pohDone
     let pohRetry = 0
 
+    let voyageNft = ''
+
     while (!ethBalanceDone) {
-        await axios.get(apiUrl, {
-            params: {
-                module: 'account',
-                action: 'balance',
-                address: wallet
-            }
-        }).then(response => {
-            stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
+        await axios.get(`${apiUrl}/${wallet}/profile`, {
+            signal: newAbortSignal(cancelTimeout),
+            httpsAgent: getProxy(0, true),
+        }).then(async response => {
+            stats[wallet].balances['ETH'] = parseFloat(response.data.balance)
             ethBalanceDone = true
         }).catch(function (error) {
             if (debug) console.log(error)
@@ -138,73 +134,51 @@ async function getBalances(wallet) {
             }
         })
     }
+
+    stats[wallet].balances['Linea XP'] = 0
+    stats[wallet].balances['USDC'] = 0
+    stats[wallet].balances['USDT'] = 0
+    stats[wallet].balances['DAI'] = 0
     
     while (!tokenBalanceDone) {
-        for (const contract of contracts) {
-            await axios.get(apiUrl, {
-                signal: newAbortSignal(cancelTimeout),
-                httpsAgent: getProxy(0, true),
-                params: {
-                    module: 'account',
-                    action: 'tokenbalance',
-                    contractaddress: contract.address,
-                    address: wallet
-                }
-            }).then(response => {
-                stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
-                tokenBalanceDone = true
-            }).catch(function (error) {
-                if (debug) console.log(error)
-
-                tokenBalanceRetry++
-                if (tokenBalanceRetry > 3) {
-                    tokenBalanceDone = true
-                }
-            })
-        }
-    }
-
-    let voyageNft = '-'
-    while (!nftDone) {
-        await axios.get(apiUrl, {
+        await axios.get(`https://api.w3w.ai/linea/v2/explorer/address/${wallet}/token_holdings`, {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
-            params: {
-                module: 'account',
-                action: 'tokenlist',
-                address: wallet
-            }
-        }).then(response => {
-            response.data.result.forEach(token => {
-                if (token.symbol === 'VOYAGE') {
-                    switch (token.id) {
-                        case '1':
+        }).then(async response => {
+            const tokens = response.data.data
+            for (const token of tokens) {
+                if (token.token_symbol === 'VOYAGE') {
+                    switch (token.token_id) {
+                        case 1:
                             voyageNft = 'Alpha'
                             break
-                        case '2':
+                        case 2:
                             voyageNft = 'Beta'
                             break
-                        case '3':
+                        case 3:
                             voyageNft = 'Gamma'
                             break
-                        case '4':
+                        case 4:
                             voyageNft = 'Delta'
                             break
-                        case '5':
+                        case 5:
                             voyageNft = 'Omega'
                             break
                         default:
                             voyageNft = 'Alpha'
                             break
                     }
+                } else {
+                    stats[wallet].balances[token.token_symbol] = token.balance
                 }
-            })
-            nftDone = true
+            }
+            tokenBalanceDone = true
         }).catch(function (error) {
             if (debug) console.log(error)
-            nftRetry++
-            if (nftRetry > 3) {
-                nftDone = true
+
+            tokenBalanceRetry++
+            if (tokenBalanceRetry > 3) {
+                tokenBalanceDone = true
             }
         })
     }
@@ -239,15 +213,12 @@ async function getTxs(wallet) {
     let isAllTxCollected = false
 
     while (!isAllTxCollected) {
-        await axios.get(apiUrl, {
-            params: {
-                module: 'account',
-                action: 'txlist',
-                offset: 1000,
-                address: wallet
-            }
-        }).then(response => {
-            let items = response.data.result
+        await axios.get(`${apiUrl}/${wallet}/transactions`, {
+            signal: newAbortSignal(cancelTimeout),
+            httpsAgent: getProxy(0, true),
+        }).then(async response => {
+            let items = response.data.data
+            stats[wallet].txcount = response.data.total
             isAllTxCollected = true
 
             Object.values(items).forEach(tx => {
@@ -261,37 +232,32 @@ async function getTxs(wallet) {
     let totalGasUsed = 0
 
     Object.values(txs).forEach(tx => {
-        const date = new Date(tx.timeStamp*1000)
+        const date = new Date(tx.block_timestamp)
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+        
+        totalGasUsed += parseFloat(tx.total_transaction_fee)
 
-        totalGasUsed += parseInt(tx.gasPrice) * parseInt(tx.gasUsed) / Math.pow(10, 18)
-
-        if (tx.from.toLowerCase() === wallet.toLowerCase()) {
-            uniqueContracts.add(tx.to)
-            stats[wallet].txcount++
+        if (tx.from_address.toLowerCase() === wallet.toLowerCase()) {
+            uniqueContracts.add(tx.to_address)
         }
-        stats[wallet].volume += parseFloat((parseInt(tx.value) / Math.pow(10, 18)) * ethPrice, 0)
+
+        stats[wallet].volume += parseFloat(tx.value) * ethPrice
     })
 
     let isAllTxTokensCollected
     while (!isAllTxTokensCollected) {
-        await axios.get(apiUrl, {
-            params: {
-                module: 'account',
-                action: 'tokentx',
-                offset: 1000,
-                address: wallet
-            },
+        await axios.get(`${apiUrl}/${wallet}/token_transfers?type=tokentxns`, {
+            signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
-        }).then(response => {
-            let items = response.data.result
+        }).then(async response => {
+            let items = response.data.data
             isAllTxTokensCollected = true
 
             Object.values(items).forEach(transfer => {
-                if (stables.includes(transfer.tokenSymbol)) {
-                    stats[wallet].volume += parseFloat((parseInt(transfer.value) / Math.pow(10, transfer.tokenDecimal)), 0)
+                if (stables.includes(transfer.token_symbol)) {
+                    stats[wallet].volume += parseFloat(transfer.value)
                 }
             })
         }).catch(function (error) {
@@ -305,8 +271,8 @@ async function getTxs(wallet) {
     const numUniqueContracts = uniqueContracts.size
 
     if (txs.length) {
-        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].timeStamp*1000)
-        stats[wallet].last_tx_date = new Date(txs[0].timeStamp*1000)
+        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].block_timestamp)
+        stats[wallet].last_tx_date = new Date(txs[0].block_timestamp)
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
@@ -329,7 +295,7 @@ async function fetchWallet(wallet, index) {
     
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
-    total.xp += stats[wallet].balances['Linea XP'] ? parseFloat(stats[wallet].balances['Linea XP']) : 0
+    total.xp += stats[wallet].balances['LXP'] ? parseFloat(stats[wallet].balances['LXP']) : 0
     total.eth += stats[wallet].balances['ETH'] ? parseFloat(stats[wallet].balances['ETH']) : 0
     total.usdt += stats[wallet].balances['USDT'] ? parseFloat(stats[wallet].balances['USDT']) : 0
     total.usdc += stats[wallet].balances['USDC'] ? parseFloat(stats[wallet].balances['USDC']) : 0
@@ -341,7 +307,7 @@ async function fetchWallet(wallet, index) {
     p.addRow({
         n: parseInt(index)+1,
         wallet: wallet,
-        'Linea XP': stats[wallet].balances['Linea XP'],
+        'Linea XP': stats[wallet].balances['LXP'],
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
@@ -362,7 +328,7 @@ async function fetchWallet(wallet, index) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
-        'Linea XP': stats[wallet].balances['Linea XP'],
+        'Linea XP': stats[wallet].balances['LXP'],
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
@@ -414,7 +380,7 @@ async function fetchWallets() {
         sort: (row1, row2) => +row1.n - +row2.n
     })
 
-    const batchSize = 7
+    const batchSize = 10
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -426,7 +392,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 7000)
+            }, i * 2000)
         })
 
         walletPromises.push(promise)
