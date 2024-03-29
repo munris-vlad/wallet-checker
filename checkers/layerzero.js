@@ -9,6 +9,7 @@ import moment from "moment"
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
+    { name: 'Clusters', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
@@ -23,6 +24,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№' },
     { id: 'Wallet', title: 'Wallet' },
+    { id: 'Clusters', title: 'Clusters' },
     { id: 'TX Count', title: 'TX Count' },
     { id: 'Source chains', title: 'Source chains' },
     { id: 'Dest chains', title: 'Dest chains' },
@@ -103,6 +105,7 @@ async function fetchWallet(wallet, index, isExtended) {
 
     let data = {
         wallet: wallet,
+        clusters: '',
         tx_count: 0,
         source_chain_count: 0,
         source_chain: '',
@@ -118,7 +121,9 @@ async function fetchWallet(wallet, index, isExtended) {
 
     let txs = []
     let isTxParsed = false
+    let isClustersParsed = false
     let retry = 0
+    let retryClusters = 0
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -146,6 +151,26 @@ async function fetchWallet(wallet, index, isExtended) {
 
             if (retry >= 3) {
                 isTxParsed = true
+            }
+        })
+    }
+
+    while (!isClustersParsed) {
+        await axios.post(`https://api.clusters.xyz/v0.1/name/addresses`, [wallet], {
+            headers: getQueryHeaders(),
+            httpsAgent: agent,
+            signal: newAbortSignal(5000)
+        }).then(response => {
+            data.clusters = response.data[0].name ? response.data[0].name.replace('/main', '') : ''
+            isClustersParsed = true
+        }).catch(error => {
+            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            retryClusters++
+
+            agent = getProxy(index, true)
+
+            if (retryClusters >= 3) {
+                isClustersParsed = true
             }
         })
     }
@@ -196,6 +221,7 @@ async function fetchWallet(wallet, index, isExtended) {
     let row = {
         n: parseInt(index) + 1,
         Wallet: wallet,
+        Clusters: data.clusters,
         'TX Count': data.tx_count,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
@@ -210,6 +236,7 @@ async function fetchWallet(wallet, index, isExtended) {
     let jsonRow = {
         n: parseInt(index) + 1,
         Wallet: wallet,
+        Clusters: data.clusters,
         'TX Count': data.tx_count,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,

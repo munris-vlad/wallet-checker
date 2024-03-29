@@ -23,6 +23,7 @@
                             </div>
                         </div>
                     </td>
+                    <td :class="tdClass">{{ item['Clusters'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
                     <td :class="tdClass + ' text-left'">
@@ -83,6 +84,7 @@ export default {
             headers: [
                 'n',
                 'Wallet',
+                'Clusters',
                 'TX Count',
                 'Source chains',
                 'Source chains list',
