@@ -57,7 +57,7 @@ const reqheaders = {
 
 const apiUrl = "https://mainnet-aptos-api.nodereal.io/api"
 
-const debug = true
+const debug = false
 let stats = []
 let jsonData = []
 let csvData = []
@@ -83,6 +83,7 @@ async function getBalances(wallet, index) {
     }
 
     let isBalancesCollected = false
+    let retry = 0
 
     while (!isBalancesCollected) {
         try {
@@ -94,10 +95,14 @@ async function getBalances(wallet, index) {
                     }
                 })
                 isBalancesCollected = true
-            }).catch()
+            })
         } catch (e) {
-            console.log(e)
             if (debug) console.log(e.toString())
+            retry++
+
+            if (retry > 3) {
+                isBalancesCollected = true
+            }
         }
     }
 
@@ -106,7 +111,7 @@ async function getBalances(wallet, index) {
             if (response.data) {
                 stats[wallet].aptosname = response.data.name + '.apt'
             }
-        }).catch()
+        })
     } catch (e) {
         if (debug) console.log(e.toString())
     }
@@ -142,6 +147,7 @@ async function getTxs(wallet, index) {
     let totalGasUsed = 0
     let txs = []
     let isAllTxCollected = false
+    let retry = 0
 
     let config = {
         method: 'GET',
@@ -158,10 +164,14 @@ async function getTxs(wallet, index) {
                     txs.push(tx)
                 })
                 isAllTxCollected = true
-            }).catch()
+            })
         } catch (e) {
-            console.log(e)
             if (debug) console.log(e.toString())
+            retry++
+
+            if (retry > 3) {
+                isAllTxCollected = true
+            }
         }
     }
 
