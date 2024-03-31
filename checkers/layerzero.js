@@ -11,6 +11,7 @@ const columns = [
     { name: 'Wallet', color: 'green', alignment: "right" },
     { name: 'Clusters', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
+    { name: 'Volume', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
     { name: 'Contracts', alignment: 'right', color: 'cyan' },
@@ -26,6 +27,7 @@ const headers = [
     { id: 'Wallet', title: 'Wallet' },
     { id: 'Clusters', title: 'Clusters' },
     { id: 'TX Count', title: 'TX Count' },
+    { id: 'Volume', title: 'Volume' },
     { id: 'Source chains', title: 'Source chains' },
     { id: 'Dest chains', title: 'Dest chains' },
     { id: 'Contracts', title: 'Contracts' },
@@ -107,6 +109,7 @@ async function fetchWallet(wallet, index, isExtended) {
         wallet: wallet,
         clusters: '',
         tx_count: 0,
+        volume: 0,
         source_chain_count: 0,
         source_chain: '',
         dest_chain_count: 0,
@@ -122,8 +125,11 @@ async function fetchWallet(wallet, index, isExtended) {
     let txs = []
     let isTxParsed = false
     let isClustersParsed = false
+    let isCopilotParsed = false
     let retry = 0
     let retryClusters = 0
+    let retryCopilot = 0
+
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -171,6 +177,30 @@ async function fetchWallet(wallet, index, isExtended) {
 
             if (retryClusters >= 3) {
                 isClustersParsed = true
+            }
+        })
+    }
+
+    while (!isCopilotParsed) {
+        await axios.post(`https://nftcopilot.com/p-api/layer-zero-rank/check`, {
+            address: wallet,
+            c: 'check',
+            addresses: [wallet]
+        }, {
+            headers: getQueryHeaders(),
+            httpsAgent: agent,
+            signal: newAbortSignal(5000)
+        }).then(response => {
+            data.volume = parseInt(response.data[0].volume)
+            isCopilotParsed = true
+        }).catch(error => {
+            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            retryCopilot++
+
+            agent = getProxy(index, true)
+
+            if (retryCopilot >= 3) {
+                isCopilotParsed = true
             }
         })
     }
@@ -223,6 +253,7 @@ async function fetchWallet(wallet, index, isExtended) {
         Wallet: wallet,
         Clusters: data.clusters,
         'TX Count': data.tx_count,
+        'Volume': '$'+data.volume,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Contracts': data.contracts,
@@ -238,6 +269,7 @@ async function fetchWallet(wallet, index, isExtended) {
         Wallet: wallet,
         Clusters: data.clusters,
         'TX Count': data.tx_count,
+        'Volume': data.volume,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Contracts': data.contracts,
