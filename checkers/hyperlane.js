@@ -73,7 +73,7 @@ async function fetchWallet(wallet, index) {
             variables: {
                 search: "\\x"+wallet.toLowerCase().slice(2),
             },
-            query: 'query ($search: bytea, $originChains: [bigint!], $destinationChains: [bigint!], $startTime: timestamp, $endTime: timestamp) {\n  message_view(\n    where: {_and: [{_or: [{msg_id: {_eq: $search}}, {sender: {_eq: $search}}, {recipient: {_eq: $search}}, {origin_tx_hash: {_eq: $search}}, {origin_tx_sender: {_eq: $search}}]}]}\n    order_by: {send_occurred_at: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n}',
+            query: "query ($search: bytea, $originChains: [bigint!], $destinationChains: [bigint!], $startTime: timestamp, $endTime: timestamp) {\n  q0: message_view(\n    where: {_and: [{sender: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n  q1: message_view(\n    where: {_and: [{recipient: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n  q2: message_view(\n    where: {_and: [{origin_tx_sender: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n  q3: message_view(\n    where: {_and: [{destination_tx_sender: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n}"
         }, {
             httpsAgent: agent,
             headers: {
@@ -90,9 +90,11 @@ async function fetchWallet(wallet, index) {
                 "Referrer-Policy": "strict-origin-when-cross-origin"
             }
         }).then(response => {
-            txs = response.data.data.message_view
+            if (response.data.data) {
+                txs = Object.values(response.data.data).reduce((acc, currentArray) => acc.concat(currentArray), [])
+            }
             isTxParsed = true
-        }).catch(error => {
+        }).catch(async error => {
             if (debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
@@ -101,9 +103,10 @@ async function fetchWallet(wallet, index) {
             if (retry >= 3) {
                 isTxParsed = true
             }
+            await sleep(10000)
         })
     }
-    
+
     if (txs.length) {
         for (const tx of Object.values(txs)) {
             const date = new Date(tx.send_occurred_at)
@@ -176,7 +179,7 @@ function fetchWallets() {
         header: headers
     })
 
-    const batchSize = 5
+    const batchSize = 25
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
