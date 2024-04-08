@@ -165,16 +165,16 @@ async function fetchWallet(wallet, index, isExtended) {
         await axios.post(`https://api.clusters.xyz/v0.1/name/addresses`, [wallet], {
             headers: getQueryHeaders(),
             httpsAgent: agent,
-            signal: newAbortSignal(5000)
+            signal: newAbortSignal(15000)
         }).then(response => {
             data.clusters = response.data[0].name ? response.data[0].name.replace('/main', '') : ''
             isClustersParsed = true
-        }).catch(error => {
+        }).catch(async error => {
             if (debug) console.error(wallet, error.toString(), '| Get random proxy')
             retryClusters++
 
             agent = getProxy(index, true)
-
+            await sleep(2000)
             if (retryClusters >= 3) {
                 isClustersParsed = true
             }
