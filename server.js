@@ -16,6 +16,7 @@ import {layerzeroData} from "./checkers/layerzero.js"
 import { wormholeData } from './checkers/wormhole.js'
 import { zkbridgeData } from './checkers/zkbridge.js'
 import { hyperlaneData } from './checkers/hyperlane.js'
+import { clustersData } from './checkers/clusters.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -44,6 +45,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const aptosWallets = readWallets('./addresses/aptos.txt')
     const lineaWallets = readWallets('./addresses/linea.txt')
     const scrollWallets = readWallets('./addresses/scroll.txt')
+    const clustersWallets = readWallets('./addresses/clusters.txt')
     const evmWallets = readWallets('./addresses/evm.txt')
     res.json({
         'zksync_wallets': zksyncWallets,
@@ -56,6 +58,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
         'scroll_wallets': scrollWallets,
+        'clusters_wallets': clustersWallets,
         'evm_wallets': evmWallets,
     })
 })
@@ -119,6 +122,11 @@ apiRoutes.get('/balances', async (req, res) => {
 apiRoutes.get('/evm', async (req, res) => {
     const network = req.query.network ? req.query.network : 'eth'
     const responseData = await evmData(network)
+    res.json(responseData)
+})
+
+apiRoutes.get('/clusters', async (req, res) => {
+    const responseData = await clustersData()
     res.json(responseData)
 })
 

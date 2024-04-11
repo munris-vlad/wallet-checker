@@ -15,6 +15,7 @@
                 <router-link v-if="scroll_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/scroll"><img class="rounded-full w-6 h-6 mr-2" :src="'/scroll-scan.png'" alt=""> Scroll</router-link>
                 <router-link v-if="evm_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/balances"><img class="rounded-full w-6 h-6 mr-2" :src="'/coin.png'" alt=""> Balance</router-link>
                 <router-link v-if="evm_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/evm"><img class="rounded-full w-6 h-6 mr-2" :src="'/eth.png'" alt=""> EVM</router-link>
+                <router-link v-if="clusters_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/clusters"><img class="rounded-full w-6 h-6 mr-2" :src="'/clusters.jfif'" alt=""> Clusters</router-link>
             </nav>
         </header>
         <router-view/>
@@ -35,6 +36,7 @@ export default {
             aptos_count: this.$aptos_count,
             linea_count: this.$linea_count,
             scroll_count: this.$scroll_count,
+            clusters_count: this.$clusters_count,
             evm_count: this.$evm_count,
         }
     },

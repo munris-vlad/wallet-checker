@@ -16,6 +16,7 @@ import WormholeView from "@/views/WormholeView"
 import BaseView from "@/views/BaseView"
 import ZkbridgeView from "@/views/ZkbridgeView"
 import HyperlaneView from "@/views/HyperlaneView"
+import ClustersView from './views/ClustersView.vue'
 
 const app = createApp(App)
 
@@ -37,6 +38,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$linea_count = data.linea_wallets.length
     app.config.globalProperties.$scroll_count = data.scroll_wallets.length
     app.config.globalProperties.$evm_count = data.evm_wallets.length
+    app.config.globalProperties.$clusters_count = data.clusters_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -119,6 +121,12 @@ const routes = [
         name: 'EVM',
         component: EvmView,
         meta: { title: 'EVM' }
+    },
+    {
+        path: '/clusters',
+        name: 'Clusters',
+        component: ClustersView,
+        meta: { title: 'Clusters' }
     },
 ]
 

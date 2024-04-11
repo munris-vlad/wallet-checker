@@ -40,6 +40,21 @@ export function timestampToDate(timestamp) {
     return new Date(parseInt(timestamp) * 1000)
 }
 
+export function compareVersions(version1, version2) {
+    const parts1 = version1.split('.').map(Number)
+    const parts2 = version2.split('.').map(Number)
+
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+        const part1 = parts1[i] || 0
+        const part2 = parts2[i] || 0
+
+        if (part1 < part2) return -1
+        if (part1 > part2) return 1 
+    }
+
+    return 0
+}
+
 Date.prototype.getWeek = function (dowOffset) {
     /*getWeek() was developed by Nick Baicoianu at MeanFreePath: http://www.meanfreepath.com */
 
@@ -185,7 +200,7 @@ export async function getTokenPrice(token) {
     let price = 0
     let isFetched = false
     let retry = 0
-    
+
     while (!isFetched) {
         const agent = getProxy()
         await axios.get(`https://min-api.cryptocompare.com/data/price?fsym=${token}&tsyms=USD`, {
