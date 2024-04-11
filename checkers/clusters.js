@@ -122,7 +122,9 @@ async function fetchClusters() {
                 signal: newAbortSignal(15000)
             }).then(response => {
                 let cluster = response.data[0].name ? response.data[0].name.replace('/main', '') : ''
-                file.write(`${cluster}:${layerzeroWallet}\n`)
+                if (cluster.length) {
+                    file.write(`${cluster}:${layerzeroWallet}\n`)
+                }
                 isClustersParsed = true
             }).catch(async error => {
                 if (debug) console.error(layerzeroWallet, error.toString(), '| Get random proxy')
