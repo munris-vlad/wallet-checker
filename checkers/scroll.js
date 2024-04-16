@@ -91,6 +91,7 @@ let ethPrice = await getTokenPrice('ETH')
 async function getBalances(wallet, index) {
     let agent = getProxy(index)
     let isBalanceCollected = false
+    let retry = 0
     
     while (!isBalanceCollected) {
         try {
@@ -101,7 +102,7 @@ async function getBalances(wallet, index) {
                     address: wallet
                 },
                 httpsAgent: agent,
-                signal: newAbortSignal(5000)
+                signal: newAbortSignal(15000)
             }).then(response => {
                 if (!response.data.result.includes('Max rate limit reached')) {
                     stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
@@ -112,11 +113,17 @@ async function getBalances(wallet, index) {
             })
         } catch (error) {
             if (debug) console.log(error)
+            retry++
+
+            if (retry > 3) {
+                isBalanceCollected = true
+            }
         }
     }
 
     for (const contract of contracts) {
         let isContractBalanceCollected = false
+        let retry = 0
 
         while (!isContractBalanceCollected) {
             try {
@@ -128,7 +135,7 @@ async function getBalances(wallet, index) {
                         address: wallet
                     },
                     httpsAgent: agent,
-                    signal: newAbortSignal(5000)
+                    signal: newAbortSignal(15000)
                 }).then(response => {
                     if (!response.data.result.includes('Max rate limit reached')) {
                         stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
@@ -139,6 +146,11 @@ async function getBalances(wallet, index) {
                 })
             } catch (error) {
                 if (debug) console.log(error)
+                retry++
+
+                if (retry > 3) {
+                    isContractBalanceCollected = true
+                }
             }
         }
     }
@@ -153,6 +165,7 @@ async function getTxs(wallet, index) {
 
     let txs = []
     let isAllTxCollected = false
+    let retry = 0
 
     while (!isAllTxCollected) {
         try {
@@ -164,7 +177,7 @@ async function getTxs(wallet, index) {
                     address: wallet
                 },
                 httpsAgent: agent,
-                signal: newAbortSignal(5000)
+                signal: newAbortSignal(15000)
             }).then(response => {
                 if (!response.data.result.includes('Max rate limit reached')) {
                     let items = response.data.result
@@ -179,6 +192,12 @@ async function getTxs(wallet, index) {
             })
         } catch (error) {
             if (debug) console.log(error)
+
+            retry++
+
+            if (retry > 3) {
+                isAllTxCollected = true
+            }
         }
     }
 
@@ -208,6 +227,7 @@ async function getTxs(wallet, index) {
     })
 
     let isAllTxTokensCollected
+    retry = 0
     while (!isAllTxTokensCollected) {
         try {
             await axios.get(apiUrl, {
@@ -218,7 +238,7 @@ async function getTxs(wallet, index) {
                     address: wallet
                 },
                 httpsAgent: agent,
-                signal: newAbortSignal(5000)
+                signal: newAbortSignal(15000)
             }).then(response => {
                 if (!response.data.result.includes('Max rate limit reached')) {
                     let items = response.data.result
@@ -235,6 +255,12 @@ async function getTxs(wallet, index) {
             })
         } catch (error) {
             if (debug) console.log(error)
+
+            retry++
+
+            if (retry > 3) {
+                isAllTxTokensCollected = true
+            }
         }
     }
 
