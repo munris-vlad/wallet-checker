@@ -162,7 +162,7 @@ async function fetchWallet(wallet, index, isExtended) {
     }
 
     while (!isClustersParsed) {
-        await axios.post(`https://api.clusters.xyz/v0.1/name/addresses`, [wallet], {
+        await axios.post(`https://api.clusters.xyz/v0.1/name/addresses`, [wallet.toLowerCase()], {
             headers: getQueryHeaders(),
             httpsAgent: agent,
             signal: newAbortSignal(15000)
