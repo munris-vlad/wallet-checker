@@ -1,15 +1,117 @@
-import { ethers } from "ethers"
-import { FetchRequest } from "ethers"
 import { getNativeToken, random, readWallets, getKeyByValue, getProxy } from "../utils/common.js"
 import axios from "axios"
 import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
 import { rpcs } from "../rpc.js"
+import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
+import { arbitrum, avalanche, base, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon } from "viem/chains"
+
+const multicallAbi = [
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockTimestamp",
+        "outputs": [{ "name": "timestamp", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "components": [
+                    { "name": "target", "type": "address" },
+                    { "name": "callData", "type": "bytes" }
+                ],
+                "name": "calls",
+                "type": "tuple[]"
+            }
+        ],
+        "name": "aggregate",
+        "outputs": [
+            { "name": "blockNumber", "type": "uint256" },
+            { "name": "returnData", "type": "bytes[]" }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getLastBlockHash",
+        "outputs": [{ "name": "blockHash", "type": "bytes32" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [{ "name": "addr", "type": "address" }],
+        "name": "getEthBalance",
+        "outputs": [{ "name": "balance", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockDifficulty",
+        "outputs": [{ "name": "difficulty", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockGasLimit",
+        "outputs": [{ "name": "gaslimit", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockCoinbase",
+        "outputs": [{ "name": "coinbase", "type": "address" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [{ "name": "blockNumber", "type": "uint256" }],
+        "name": "getBlockHash",
+        "outputs": [{ "name": "blockHash", "type": "bytes32" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
+
+const erc20Abi = [
+    'event Approval(address indexed owner, address indexed spender, uint256 value)',
+    'event UnBlacklisted(address indexed _account)',
+    'function allowance(address owner, address spender) view returns (uint256)',
+    'function approve(address spender, uint256 value) returns (bool)',
+    'function balanceOf(address account) view returns (uint256)',
+    'function decimals() view returns (uint8)',
+    'function name() view returns (string)',
+    'function symbol() view returns (string)',
+    'function totalSupply() view returns (uint256)',
+    'function transfer(address to, uint256 value) returns (bool)',
+    'function transferFrom(address from, address to, uint256 value) returns (bool)',
+]
 
 let columns = [
     { name: 'n', alignment: 'left', color: 'green' },
     { name: 'wallet', color: 'green', alignment: "right" },
     { name: 'Tx count', color: 'green', alignment: "right" },
+    { name: 'Native', alignment: 'right', color: 'cyan' },
     { name: 'NativeUSD', alignment: 'right', color: 'cyan' },
     { name: 'USDT', alignment: 'right', color: 'cyan' },
     { name: 'USDC', alignment: 'right', color: 'cyan' },
@@ -20,6 +122,7 @@ let headers = [
     { id: 'n', title: 'n' },
     { id: 'wallet', title: 'wallet' },
     { id: 'Tx count', title: 'Tx count' },
+    { id: 'Native', title: 'Native' },
     { id: 'NativeUSD', title: 'NativeUSD' },
     { id: 'USDT', title: 'USDT' },
     { id: 'USDC', title: 'USDC' },
@@ -208,197 +311,200 @@ const networks = {
     }
 }
 
-let debug = false
+let debug = true
+const multicallAddress = '0xca11bde05977b3631167028862be2a173976ca11'
 let wallets = readWallets('./addresses/evm.txt')
 let walletsData = []
 let csvData = []
-let stables = ['USDT', 'USDC', 'USDC.e', 'DAI']
 let p
 let isJson = false
 
-function getProvider(network) {
-    let agent = getProxy()
-    let rpc = rpcs[network][random(0, rpcs[network].length - 1)]
+function getClient(network) {
+    const rpc = rpcs[network][random(0, rpcs[network].length-1)]
 
-    const fetchReq = new FetchRequest(rpc)
-    fetchReq.getUrlFunc = FetchRequest.createGetUrlFunc({ agent })
-    const provider = new ethers.JsonRpcProvider(fetchReq)
-
-    return provider
-}
-
-async function fetchWallet(wallet, index, network) {
-    let nativeBalance = 0
-    let txCount = 0
-    let provider = getProvider(network)
-
-    let nativeDone = false
-    let txCountDone = false
-    let stableDone = false
-
-    let nativeRetry = 0
-    let txCountRetry = 0
-    let stableRetry = 0
-
-    while (!nativeDone) {
-        try {
-            const nativeBalanceWei = await provider.getBalance(wallet)
-            nativeBalance = parseInt(nativeBalanceWei) / Math.pow(10, 18)
-            nativeDone = true
-        } catch (e) {
-            if (debug) console.log(e.toString())
-            provider = getProvider(network)
-            nativeRetry++
-
-            if (nativeRetry > 3) {
-                nativeDone = true
-            }
-        }
+    switch (network) {
+        case 'ETH':
+            return createPublicClient({ chain: mainnet, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Arbitrum':
+            return createPublicClient({ chain: arbitrum, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Optimism':
+            return createPublicClient({ chain: optimism, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Polygon':
+            return createPublicClient({ chain: polygon, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'BSC':
+            return createPublicClient({ chain: bsc, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Avalanche':
+            return createPublicClient({ chain: avalanche, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Base':
+            return createPublicClient({ chain: base, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Core':
+            return createPublicClient({ chain: coreDao, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'opBNB':
+            return createPublicClient({ chain: opBNB, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Celo':
+            return createPublicClient({ chain: celo, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Klaytn':
+            return createPublicClient({ chain: klaytn, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Fantom':
+            return createPublicClient({ chain: fantom, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Moonbeam':
+            return createPublicClient({ chain: moonbeam, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Moonriver':
+            return createPublicClient({ chain: moonriver, transport: http(rpc), batch: { multicall: true } })
+            break
     }
-
-    while (!txCountDone) {
-        try {
-            txCount = await provider.getTransactionCount(wallet)
-            txCountDone = true
-        } catch (e) {
-            if (debug) console.log(e.toString())
-            provider = getProvider(network)
-
-            txCountRetry++
-
-            if (txCountRetry > 3) {
-                txCountDone = true
-            }
-        }
-    }
-
-    let walletData = {
-        n: index,
-        wallet: wallet,
-        'Tx count': txCount,
-        Native: nativeBalance.toFixed(3),
-        NativeUSD: nativeBalance > 0 ? (nativeBalance * networks[network].nativePrice).toFixed(2) : 0
-    }
-
-    walletData['USDC'] = 0
-    walletData['USDC.e'] = 0
-    walletData['USDT'] = 0
-    walletData['DAI'] = 0
-
-    while (!stableDone) {
-        try {
-            for (const stable of stables) {
-                if (networks[network][stable]) {
-                    let tokenContract = new ethers.Contract(networks[network][stable].address, ['function balanceOf(address) view returns (uint256)'], provider)
-                    let balance = await tokenContract.balanceOf(wallet)
-                    walletData[stable] = parseInt(balance) / Math.pow(10, networks[network][stable].decimals)
-                    walletData[stable] = walletData[stable] > 0 ? walletData[stable].toFixed(2) : 0
-                }
-            }
-
-            walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
-            delete walletData['USDC.e']
-            stableDone = true
-        } catch (e) {
-            if (debug) console.log(e.toString())
-            provider = getProvider(network)
-
-            stableRetry++
-
-            if (stableRetry > 3) {
-                stableDone = true
-            }
-        }
-    }
-
-    walletsData.push(walletData)
-}
-
-async function fetchWalletAllNetwork(wallet, index) {
-    let nativeBalance = 0
-    let walletData = {
-        n: index,
-        wallet: wallet,
-        'Tx count': 0,
-        NativeUSD: 0,
-        USDC: 0,
-        'USDC.e': 0,
-        USDT: 0,
-        DAI: 0
-    }
-
-    for (const [networkName, network] of Object.entries(networks)) {
-        let rpc = rpcs[networkName][random(0, rpcs[networkName].length - 1)]
-        let provider = new ethers.providers.JsonRpcProvider(rpc)
-
-        try {
-            const nativeBalanceWei = await provider.getBalance(wallet)
-            nativeBalance = parseInt(nativeBalanceWei) / Math.pow(10, 18)
-        } catch (e) { }
-
-        walletData.NativeUSD = parseFloat(walletData.NativeUSD) + parseFloat(nativeBalance > 0 ? (nativeBalance * network.nativePrice).toFixed(2) : 0)
-
-        try {
-            for (const stable of stables) {
-                if (network[stable]) {
-                    let stableData
-                    let tokenContract = new ethers.Contract(network[stable].address, ['function balanceOf(address) view returns (uint256)'], provider)
-                    let balance = await tokenContract.balanceOf(wallet)
-                    stableData = parseInt(balance) / Math.pow(10, network[stable].decimals)
-                    stableData = parseFloat(stableData) > 0 ? stableData.toFixed(2) : 0
-                    walletData[stable] = (parseFloat(walletData[stable]) + parseFloat(stableData)).toFixed(2)
-                }
-            }
-        } catch (e) { }
-    }
-    walletData.NativeUSD = parseFloat(walletData.NativeUSD.toFixed(2))
-    walletData['USDC'] = parseFloat(walletData['USDC']) + parseFloat(walletData['USDC.e'])
-    walletData['USDT'] = parseFloat(walletData['USDT'])
-    walletData['DAI'] = parseFloat(walletData['DAI'])
-    delete walletData['USDC.e']
-    walletsData.push(walletData)
-}
-
-async function fetchBatch(batch, network) {
-    await Promise.all(batch.map((account) => fetchWallet(account, getKeyByValue(wallets, account), network)))
 }
 
 async function fetchWallets(network) {
     walletsData = []
     csvData = []
     wallets = readWallets('./addresses/evm.txt')
-    let walletPromises = []
 
-    if (network === 'all') {
-        walletPromises = wallets.map((account, index) => fetchWalletAllNetwork(account, index + 1))
-    } else {
-        columns.push({ name: 'Native', alignment: 'right', color: 'cyan' })
-        headers.push({ id: 'Native', title: 'Native' })
-        // walletPromises = wallets.map((account, index) => fetchWallet(account, index+1, network))
+    let transactionCounts
+    let daiResults, balanceResults, usdtResults, usdcResults, usdceResults
 
-        const batchSize = 100
-        const batchCount = Math.ceil(wallets.length / batchSize)
+    let isSuccess = false, retry = 0
 
-        for (let i = 0; i < batchCount; i++) {
-            const startIndex = i * batchSize
-            const endIndex = (i + 1) * batchSize
-            const batch = wallets.slice(startIndex, endIndex)
+    while (!isSuccess) {
+        const client = getClient(network)
+        try {
+            const promises = wallets.map(wallet => client.getTransactionCount({ address: wallet }))
 
-            const promise = new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(fetchBatch(batch, network))
-                }, i * 5000)
+            await Promise.all(promises).then(results => {
+                transactionCounts = results.map((count, index) => ({ address: wallets[index], count }))
             })
 
-            walletPromises.push(promise)
+            const balanceMulticall = wallets.map(wallet => {
+                return {
+                    address: multicallAddress,
+                    abi: multicallAbi,
+                    functionName: 'getEthBalance',
+                    args: [wallet]
+                }
+            })
+
+            balanceResults = await client.multicall({
+                contracts: balanceMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            const usdtMulticall = wallets.map(wallet => {
+                return {
+                    address: networks[network]['USDT'].address,
+                    abi: parseAbi(erc20Abi),
+                    functionName: 'balanceOf',
+                    args: [wallet]
+                }
+            })
+
+            usdtResults = await client.multicall({
+                contracts: usdtMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            const usdcMulticall = wallets.map(wallet => {
+                return {
+                    address: networks[network]['USDC'].address,
+                    abi: parseAbi(erc20Abi),
+                    functionName: 'balanceOf',
+                    args: [wallet]
+                }
+            })
+
+            usdcResults = await client.multicall({
+                contracts: usdcMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            
+            if (networks[network]['USDC.e']) {
+                const usdceMulticall = wallets.map(wallet => {
+                    return {
+                        address: networks[network]['USDC.e'].address,
+                        abi: parseAbi(erc20Abi),
+                        functionName: 'balanceOf',
+                        args: [wallet]
+                    }
+                })
+
+                usdceResults = await client.multicall({
+                    contracts: usdceMulticall,
+                    multicallAddress: multicallAddress
+                })
+            }
+
+            if (networks[network]['DAI']) {
+                const daiMulticall = wallets.map(wallet => {
+                    return {
+                        address: networks[network]['DAI'].address,
+                        abi: parseAbi(erc20Abi),
+                        functionName: 'balanceOf',
+                        args: [wallet]
+                    }
+                })
+
+                daiResults = await client.multicall({
+                    contracts: daiMulticall,
+                    multicallAddress: multicallAddress
+                })
+            }
+
+            isSuccess = true
+        } catch (e) {
+            if (debug) console.log(e.toString())
+
+            retry++
+
+            if (retry > 3) {
+                isSuccess = true
+            }
         }
     }
+
+    walletsData = wallets.map((wallet, index) => {
+        const eth = formatEther(balanceResults[index].result)
+        let usdt = parseFloat(formatUnits(usdtResults[index].result, networks[network]['USDT'].decimals)).toFixed(1)
+        let usdc = 0
+        let dai = 0
+
+        if (networks[network]['USDC.e']) {
+            usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals) + formatUnits(usdceResults[index].result, networks[network]['USDC.e'].decimals)).toFixed(1)
+        } else [
+            usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals)).toFixed(1)
+        ]
+
+        if (networks[network]['DAI']) {
+            dai = parseFloat(formatUnits(daiResults[index].result, networks[network]['DAI'].decimals)).toFixed(1)
+        }
+
+        return {
+            'n': index + 1,
+            'wallet': wallet,
+            'Tx count': transactionCounts[index].count,
+            'Native': parseFloat(eth).toFixed(3),
+            'NativeUSD': parseFloat(parseFloat(eth) * networks[network].nativePrice).toFixed(2),
+            'USDT': usdt,
+            'USDC': usdc,
+            'DAI': dai,
+        }
+    })
 
     p = new Table({
         columns: columns
     })
-
-    return Promise.all(walletPromises)
 }
 
 async function collectData(network) {
