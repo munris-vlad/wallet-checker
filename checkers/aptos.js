@@ -148,22 +148,25 @@ async function getTxs(wallet, index) {
     let txs = []
     let isAllTxCollected = false
     let retry = 0
-
-    let config = {
-        method: 'GET',
-        url: apiUrl + `/account/${wallet}/sendTx?page=0&pageSize=1000`,
-        timeout: 5000,
-        headers: reqheaders
-    }
+    let page = 0
 
     while (!isAllTxCollected) {
         try {
-            await cloudscraper(config).then(async response => {
+            await cloudscraper({
+                method: 'GET',
+                url: apiUrl + `/account/${wallet}/sendTx?page=${page}&pageSize=25`,
+                timeout: 5000,
+                headers: reqheaders
+            }).then(async response => {
                 const data = JSON.parse(response)
                 Object.values(data.data).forEach(tx => {
                     txs.push(tx)
                 })
-                isAllTxCollected = true
+                if (data.data.length == 0) {
+                    isAllTxCollected = true
+                } else {
+                    page++
+                }
             })
         } catch (e) {
             if (debug) console.log(e.toString())

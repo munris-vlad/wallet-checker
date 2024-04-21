@@ -213,7 +213,7 @@ async function getTxs(wallet) {
     let isAllTxCollected = false
 
     while (!isAllTxCollected) {
-        await axios.get(`${apiUrl}/${wallet}/transactions`, {
+        await axios.get(`https://api.w3w.ai/linea/v1/explorer/transactions?size=1000&address=${wallet}`, {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
         }).then(async response => {
@@ -269,7 +269,6 @@ async function getTxs(wallet) {
     const numUniqueWeeks = uniqueWeeks.size
     const numUniqueMonths = uniqueMonths.size
     const numUniqueContracts = uniqueContracts.size
-
     if (txs.length) {
         stats[wallet].first_tx_date = new Date(txs[txs.length - 1].block_timestamp)
         stats[wallet].last_tx_date = new Date(txs[0].block_timestamp)
