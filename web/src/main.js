@@ -17,6 +17,7 @@ import BaseView from "@/views/BaseView"
 import ZkbridgeView from "@/views/ZkbridgeView"
 import HyperlaneView from "@/views/HyperlaneView"
 import ClustersView from './views/ClustersView.vue'
+import DebridgeView from './views/DebridgeView.vue'
 
 const app = createApp(App)
 
@@ -32,6 +33,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$wormhole_count = data.wormhole_wallets.length
     app.config.globalProperties.$zkbridge_count = data.zkbridge_wallets.length
     app.config.globalProperties.$hyperlane_count = data.hyperlane_wallets.length
+    app.config.globalProperties.$debridge_count = data.debridge_wallets.length
     app.config.globalProperties.$zora_count = data.zora_wallets.length
     app.config.globalProperties.$base_count = data.base_wallets.length
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
@@ -79,6 +81,12 @@ const routes = [
         name: 'Hyperlane',
         component: HyperlaneView,
         meta: { title: 'Hyperlane' }
+    },
+    {
+        path: '/debridge',
+        name: 'Debridge',
+        component: DebridgeView,
+        meta: { title: 'Debridge' }
     },
     {
         path: '/zora',

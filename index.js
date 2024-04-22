@@ -17,6 +17,7 @@ import { exec } from "child_process"
 import fs from "fs"
 import axios from "axios"
 import { clustersFetchDataAndPrintTable } from "./checkers/clusters.js"
+import { debridgeFetchDataAndPrintTable } from "./checkers/debridge.js"
 
 function startExpressServer() {
     const expressServer = exec('node server.js', (error, stdout, stderr) => {
@@ -79,6 +80,10 @@ async function startMenu(menu) {
             break
         case "zksync":
             await zkSyncFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            if (startOver) await startMenu()
+            break
+        case "debridge":
+            await debridgeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
             if (startOver) await startMenu()
             break
         case "wormhole":

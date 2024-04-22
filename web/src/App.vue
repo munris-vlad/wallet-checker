@@ -8,6 +8,7 @@
                 <router-link v-if="wormhole_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/wormhole"><img class="rounded-full w-6 h-6 mr-2" :src="'/wormhole.jpg'" alt=""> Wormhole</router-link>
                 <router-link v-if="zkbridge_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/zkbridge"><img class="rounded-full w-6 h-6 mr-2" :src="'/zkbridge.png'" alt=""> ZkBridge</router-link>
                 <router-link v-if="hyperlane_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/hyperlane"><img class="rounded-full w-6 h-6 mr-2" :src="'/hyperlane.png'" alt=""> Hyperlane</router-link>
+                <router-link v-if="debridge_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/debridge"><img class="rounded-full w-6 h-6 mr-2" :src="'/debridge.png'" alt=""> Debridge</router-link>
                 <router-link v-if="zora_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/zora"><img class="rounded-full w-6 h-6 mr-2" :src="'/zora-scan.png'" alt=""> Zora</router-link>
                 <router-link v-if="base_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/base"><img class="rounded-full w-6 h-6 mr-2" :src="'/base.png'" alt=""> Base</router-link>
                 <router-link v-if="aptos_count" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/aptos"><img class="rounded-full w-6 h-6 mr-2" :src="'/aptos.png'" alt=""> Aptos</router-link>
@@ -30,6 +31,7 @@ export default {
             layerzero_count: this.$layerzero_count,
             wormhole_count: this.$wormhole_count,
             hyperlane_count: this.$hyperlane_count,
+            debridge_count: this.$debridge_count,
             zkbridge_count: this.$zkbridge_count,
             zora_count: this.$zora_count,
             base_count: this.$base_count,

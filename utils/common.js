@@ -244,6 +244,10 @@ export const entryPoint = async () => {
                     value: "layerzero_extended",
                 },
                 {
+                    name: "Debridge",
+                    value: "debridge",
+                },
+                {
                     name: "Hyperlane",
                     value: "hyperlane",
                 },
