@@ -17,6 +17,8 @@ const columns = [
     { name: 'TX Count', alignment: 'right', color: 'cyan'},
     { name: 'Volume', alignment: 'right', color: 'cyan'},
     { name: 'Contracts', alignment: 'right', color: 'cyan'},
+    { name: 'Bridge to', alignment: 'right', color: 'cyan'},
+    { name: 'Bridge from', alignment: 'right', color: 'cyan'},
     { name: 'Days', alignment: 'right', color: 'cyan'},
     { name: 'Weeks', alignment: 'right', color: 'cyan'},
     { name: 'Months', alignment: 'right', color: 'cyan'},
@@ -36,6 +38,8 @@ const headers = [
     { id: 'TX Count', title: 'TX Count'},
     { id: 'Volume', title: 'Volume'},
     { id: 'Contracts', title: 'Contracts'},
+    { id: 'Bridge to', title: 'Bridge to'},
+    { id: 'Bridge from', title: 'Bridge from'},
     { id: 'Days', title: 'Days'},
     { id: 'Weeks', title: 'Weeks'},
     { id: 'Months', title: 'Months'},
@@ -166,6 +170,8 @@ async function getTxs(wallet, index) {
     let txs = []
     let isAllTxCollected = false
     let retry = 0
+    let bridgeTo = 0
+    let bridgeFrom = 0
 
     while (!isAllTxCollected) {
         try {
@@ -202,7 +208,6 @@ async function getTxs(wallet, index) {
     }
 
     let totalGasUsed = 0
-
     Object.values(txs).forEach(tx => {
         if (tx.isError === '0') {
             const date = new Date(tx.timeStamp*1000)
@@ -222,6 +227,10 @@ async function getTxs(wallet, index) {
 
             if (!tx.functionName.includes('transfer') && !tx.functionName.includes('approve')) {
                 stats[wallet].volume += parseFloat((parseInt(tx.value) / Math.pow(10, 18)) * ethPrice, 0)
+            }
+
+            if (tx.to === '0x781e90f1c8fc4611c9b7497c3b47f99ef6969cbc') {
+                bridgeFrom++
             }
         }
     })
@@ -243,7 +252,6 @@ async function getTxs(wallet, index) {
                 if (!response.data.result.includes('Max rate limit reached')) {
                     let items = response.data.result
                     isAllTxTokensCollected = true
-
                     Object.values(items).forEach(transfer => {
                         if (stables.includes(transfer.tokenSymbol)) {
                             stats[wallet].volume += parseFloat((parseInt(transfer.value) / Math.pow(10, transfer.tokenDecimal)), 0)
@@ -264,6 +272,43 @@ async function getTxs(wallet, index) {
         }
     }
 
+    let isInternalCollected
+    retry = 0
+    while (!isInternalCollected) {
+        try {
+            await axios.get(apiUrl, {
+                params: {
+                    module: 'account',
+                    action: 'txlistinternal',
+                    offset: 1000,
+                    address: wallet
+                },
+                httpsAgent: agent,
+                signal: newAbortSignal(15000)
+            }).then(response => {
+                if (!response.data.result.includes('Max rate limit reached')) {
+                    let items = response.data.result
+                    isInternalCollected = true
+                    Object.values(items).forEach(internal => {
+                        if (internal.from === '0x781e90f1c8fc4611c9b7497c3b47f99ef6969cbc') {
+                            bridgeTo++
+                        }
+                    })
+                } else {
+                    agent = getProxy(index)
+                }
+            })
+        } catch (error) {
+            if (debug) console.log(error)
+
+            retry++
+
+            if (retry > 3) {
+                isInternalCollected = true
+            }
+        }
+    }
+
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
     const numUniqueMonths = uniqueMonths.size
@@ -277,6 +322,8 @@ async function getTxs(wallet, index) {
         stats[wallet].unique_months = numUniqueMonths
         stats[wallet].unique_contracts = numUniqueContracts
         stats[wallet].total_gas = totalGasUsed
+        stats[wallet].bridge_to = bridgeTo
+        stats[wallet].bridge_from = bridgeFrom
     }
 }
 
@@ -285,7 +332,9 @@ async function fetchWallet(wallet, index) {
         txcount: 0,
         volume: 0,
         balances: [],
-        contractdeployed: 'No'
+        contractdeployed: 'No',
+        bridge_to: 0,
+        bridge_from: 0
     }
 
     await getBalances(wallet, index)
@@ -311,6 +360,8 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Volume': `$`+parseInt(stats[wallet].volume),
         'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Bridge to': stats[wallet].bridge_to,
+        'Bridge from': stats[wallet].bridge_from,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
@@ -331,6 +382,8 @@ async function fetchWallet(wallet, index) {
         'TX Count': stats[wallet].txcount,
         'Volume': parseInt(stats[wallet].volume),
         'Contracts': stats[wallet].unique_contracts ?? 0,
+        'Bridge to': stats[wallet].bridge_to,
+        'Bridge from': stats[wallet].bridge_from,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
