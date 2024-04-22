@@ -31,8 +31,8 @@
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Volume'] > 0 ? '$'+item['Volume'] : '' }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
-                    <td :class="tdClass">{{ item['Bridge from'] }}</td>
                     <td :class="tdClass">{{ item['Bridge to'] }}</td>
+                    <td :class="tdClass">{{ item['Bridge from'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
                     <td :class="tdClass">{{ item['Months'] }}</td>
@@ -80,8 +80,8 @@ export default {
                 'TX Count',
                 'Volume',
                 'Contracts',
-                'Bridge from',
                 'Bridge to',
+                'Bridge from',
                 'Days',
                 'Weeks',
                 'Months',
