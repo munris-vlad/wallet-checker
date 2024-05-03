@@ -161,7 +161,7 @@ async function getBalances(wallet, index) {
 }
 
 async function getTxs(wallet, index) {
-    let agent = getProxy(index)
+    let agent = getProxy(index, true)
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -198,6 +198,7 @@ async function getTxs(wallet, index) {
             })
         } catch (error) {
             if (debug) console.log(error)
+            agent = getProxy(index, true)
 
             retry++
 
@@ -206,7 +207,7 @@ async function getTxs(wallet, index) {
             }
         }
     }
-
+    
     let totalGasUsed = 0
     Object.values(txs).forEach(tx => {
         if (tx.isError === '0') {
@@ -238,6 +239,7 @@ async function getTxs(wallet, index) {
     let isAllTxTokensCollected
     retry = 0
     while (!isAllTxTokensCollected) {
+        agent = getProxy(index, true)
         try {
             await axios.get(apiUrl, {
                 params: {
@@ -263,6 +265,7 @@ async function getTxs(wallet, index) {
             })
         } catch (error) {
             if (debug) console.log(error)
+            agent = getProxy(index, true)
 
             retry++
 
@@ -275,6 +278,7 @@ async function getTxs(wallet, index) {
     let isInternalCollected
     retry = 0
     while (!isInternalCollected) {
+        agent = getProxy(index, true)
         try {
             await axios.get(apiUrl, {
                 params: {
@@ -300,6 +304,7 @@ async function getTxs(wallet, index) {
             })
         } catch (error) {
             if (debug) console.log(error)
+            agent = getProxy(index, true)
 
             retry++
 

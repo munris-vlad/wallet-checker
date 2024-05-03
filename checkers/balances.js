@@ -3,7 +3,7 @@ import axios from "axios"
 import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
 import { rpcs } from "../rpc.js"
-import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
+import { createPublicClient, http, formatEther, parseAbi, formatUnits, defineChain } from 'viem'
 import { arbitrum, avalanche, base, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon } from "viem/chains"
 
 const multicallAbi = [
@@ -128,6 +128,33 @@ let headers = [
     { id: 'USDC', title: 'USDC' },
     { id: 'DAI', title: 'DAI' },
 ]
+
+export const redstone = /*#__PURE__*/ defineChain({
+    id: 690,
+    name: 'Redstone',
+    network: 'redstone',
+    nativeCurrency: {
+      decimals: 18,
+      name: 'Ether',
+      symbol: 'ETH',
+    },
+    rpcUrls: {
+      default: {
+        http: ['https://rpc.redstonechain.com'],
+        webSocket: ['wss://rpc.redstonechain.com'],
+      },
+      public: {
+        http: ['https://rpc.redstonechain.com'],
+        webSocket: ['wss://rpc.redstonechain.com'],
+      },
+    },
+    blockExplorers: {
+      default: {
+        name: 'Redstone',
+        url: 'https://explorer.redstone.xyz',
+      },
+    }
+  })
 
 const priceApi = 'https://min-api.cryptocompare.com/data/price'
 const networks = {
@@ -308,6 +335,9 @@ const networks = {
             decimals: 6
         },
         'nativePrice': await axios.get(priceApi + '?fsym=MOVR&tsyms=USD').then(r => { return r.data.USD })
+    },
+    'Redstone': {
+        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD })
     }
 }
 
@@ -365,6 +395,9 @@ function getClient(network) {
         case 'Moonriver':
             return createPublicClient({ chain: moonriver, transport: http(rpc), batch: { multicall: true } })
             break
+        case 'Redstone':
+            return createPublicClient({ chain: redstone, transport: http(rpc), batch: { multicall: true } })
+            break
     }
 }
 
@@ -401,34 +434,37 @@ async function fetchWallets(network) {
                 multicallAddress: multicallAddress
             })
 
-            const usdtMulticall = wallets.map(wallet => {
-                return {
-                    address: networks[network]['USDT'].address,
-                    abi: parseAbi(erc20Abi),
-                    functionName: 'balanceOf',
-                    args: [wallet]
-                }
-            })
+            if (networks[network]['USDT']) {
+                const usdtMulticall = wallets.map(wallet => {
+                    return {
+                        address: networks[network]['USDT'].address,
+                        abi: parseAbi(erc20Abi),
+                        functionName: 'balanceOf',
+                        args: [wallet]
+                    }
+                })
 
-            usdtResults = await client.multicall({
-                contracts: usdtMulticall,
-                multicallAddress: multicallAddress
-            })
+                usdtResults = await client.multicall({
+                    contracts: usdtMulticall,
+                    multicallAddress: multicallAddress
+                })
+            }
 
-            const usdcMulticall = wallets.map(wallet => {
-                return {
-                    address: networks[network]['USDC'].address,
-                    abi: parseAbi(erc20Abi),
-                    functionName: 'balanceOf',
-                    args: [wallet]
-                }
-            })
+            if (networks[network]['USDC']) {
+                const usdcMulticall = wallets.map(wallet => {
+                    return {
+                        address: networks[network]['USDC'].address,
+                        abi: parseAbi(erc20Abi),
+                        functionName: 'balanceOf',
+                        args: [wallet]
+                    }
+                })
 
-            usdcResults = await client.multicall({
-                contracts: usdcMulticall,
-                multicallAddress: multicallAddress
-            })
-
+                usdcResults = await client.multicall({
+                    contracts: usdcMulticall,
+                    multicallAddress: multicallAddress
+                })
+            }
             
             if (networks[network]['USDC.e']) {
                 const usdceMulticall = wallets.map(wallet => {
@@ -476,18 +512,24 @@ async function fetchWallets(network) {
 
     walletsData = wallets.map((wallet, index) => {
         const eth = formatEther(balanceResults[index].result)
-        let usdt = parseFloat(formatUnits(usdtResults[index].result, networks[network]['USDT'].decimals)).toFixed(1)
+        let usdt = 0
         let usdc = 0
         let dai = 0
 
         if (networks[network]['USDC.e']) {
             usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals) + formatUnits(usdceResults[index].result, networks[network]['USDC.e'].decimals)).toFixed(1)
-        } else [
-            usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals)).toFixed(1)
-        ]
+        } else {
+            if (networks[network]['USDC']) {
+                usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals)).toFixed(1)
+            }
+        }
 
         if (networks[network]['DAI']) {
             dai = parseFloat(formatUnits(daiResults[index].result, networks[network]['DAI'].decimals)).toFixed(1)
+        }
+
+        if (networks[network]['USDT']) {
+            usdt = parseFloat(formatUnits(usdtResults[index].result, networks[network]['USDT'].decimals)).toFixed(1)
         }
 
         return {

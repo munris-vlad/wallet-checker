@@ -252,6 +252,7 @@ function fetchWallets() {
     csvData = []
     jsonData = []
     totalPoints = 0
+    totalFee = 0
 
     csvWriter = createObjectCsvWriter({
         path: './results/debridge.csv',

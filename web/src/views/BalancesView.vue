@@ -19,6 +19,7 @@
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Fantom'}" @click="loadNetwork('Fantom')">Fantom</button>
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonbeam'}" @click="loadNetwork('Moonbeam')">Moonbeam</button>
                 <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonriver'}" @click="loadNetwork('Moonriver')">Moonriver</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Redstone'}" @click="loadNetwork('Redstone')">Redstone</button>
             </div>
         </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700" v-if="isDataLoaded && !isError">
@@ -80,6 +81,9 @@
                             </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Moonriver'">
                                 <a target="_blank" :href="'https://moonriver.moonscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/moonriver-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Redstone'">
+                                <a target="_blank" :href="'https://explorer.redstone.xyz/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/redstone.png'" alt=""></a>
                             </div>
                         </div>
                     </td>
