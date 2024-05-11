@@ -130,7 +130,7 @@ async function fetchWallet(wallet, index, isExtended) {
     })
 
     while (!isTxParsed) {
-        await axios.get(`https://zkbridgescan.io/api/scan?txOrAddress=${wallet}&pageStart=0&pageSize=1000`, {
+        await axios.get(`https://api.zkbridgescan.io/api/scan?txOrAddress=${wallet}&pageStart=0&pageSize=1000`, {
             headers: getQueryHeaders(),
             httpsAgent: agent,
             signal: newAbortSignal(5000)

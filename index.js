@@ -18,6 +18,7 @@ import fs from "fs"
 import axios from "axios"
 import { clustersFetchDataAndPrintTable } from "./checkers/clusters.js"
 import { debridgeFetchDataAndPrintTable } from "./checkers/debridge.js"
+import { pohFetchDataAndPrintTable } from "./checkers/linea-poh-checker.js"
 
 function startExpressServer() {
     const expressServer = exec('node server.js', (error, stdout, stderr) => {
@@ -142,6 +143,10 @@ async function startMenu(menu) {
             break
         case "nft":
             await nftFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            if (startOver) await startMenu()
+            break
+        case "linea-poh":
+            await pohFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
             if (startOver) await startMenu()
             break
     }

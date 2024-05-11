@@ -276,6 +276,10 @@ export const entryPoint = async () => {
                     value: "linea",
                 },
                 {
+                    name: "Linea POH",
+                    value: "linea-poh",
+                },
+                {
                     name: "Scroll",
                     value: "scroll",
                 },
