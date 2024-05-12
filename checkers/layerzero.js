@@ -5,8 +5,6 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import moment from "moment"
-import { wrapper } from 'axios-cookiejar-support'
-import { CookieJar } from 'tough-cookie'
 import { config } from '../user_data/config.js'
 
 const columns = [
@@ -134,11 +132,8 @@ async function fetchWallet(wallet, index, isExtended) {
     const destinations = {}
     const protocols = {}
 
-    const jar = new CookieJar()
-    const client = wrapper(axios.create({ jar }))
-
     while (!isTxParsed) {
-        await client.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
+        await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
             // httpsAgent: agent,
             signal: newAbortSignal(5000),
             referrer: `https://layerzeroscan.com/address/${wallet}`,
