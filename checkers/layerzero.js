@@ -7,7 +7,7 @@ import cliProgress from 'cli-progress'
 import moment from "moment"
 import { wrapper } from 'axios-cookiejar-support'
 import { CookieJar } from 'tough-cookie'
-import { config } from '../_user_data/config.js'
+import { config } from '../user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },

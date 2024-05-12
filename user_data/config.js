@@ -2,59 +2,59 @@ export const config = {
     modules: {
         aptos: {
             enabled: true,
-            addresses: './_user_data/addresses/aptos.txt'
+            addresses: './user_data/addresses/aptos.txt'
         },
         base: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         clusters: {
             enabled: false,
-            addresses: './_user_data/addresses/clusters.txt'
+            addresses: './user_data/addresses/clusters.txt'
         },
         debridge: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         evm: {
             enabled: false,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         hyperlane: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         layerzero: {
             enabled: false,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         linea: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         scroll: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         wormhole: {
             enabled: false,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         zkbridge: {
             enabled: false,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         zksync: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         zora: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt'
         },
         balance: {
             enabled: true,
-            addresses: './_user_data/addresses/evm.txt',
+            addresses: './user_data/addresses/evm.txt',
             networks: {
                 'ETH': {
                     enabled: true

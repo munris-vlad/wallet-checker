@@ -2,10 +2,10 @@ import { getNativeToken, random, readWallets, multicallAbi, multicallAddress, er
 import axios from "axios"
 import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
-import { rpcs } from "../_user_data/config.js"
+import { rpcs } from "../user_data/config.js"
 import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
 import { arbitrum, avalanche, base, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon } from "viem/chains"
-import { config } from '../_user_data/config.js'
+import { config } from '../user_data/config.js'
 
 let columns = [
     { name: 'n', alignment: 'left', color: 'green' },

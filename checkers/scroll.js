@@ -5,7 +5,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import { config, rpcs } from '../_user_data/config.js'
+import { config, rpcs } from '../user_data/config.js'
 import { scroll } from 'viem/chains'
 import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
 

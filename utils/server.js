@@ -17,7 +17,7 @@ import { zkbridgeData } from '../checkers/zkbridge.js'
 import { hyperlaneData } from '../checkers/hyperlane.js'
 import { clustersData } from '../checkers/clusters.js'
 import { debridgeData } from '../checkers/debridge.js'
-import { config } from '../_user_data/config.js'
+import { config } from '../user_data/config.js'
 
 const app = express()
 const port = config.port

@@ -6,7 +6,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import { HttpsProxyAgent } from "https-proxy-agent"
-import { config } from '../_user_data/config.js'
+import { config } from '../user_data/config.js'
 
 const agent = getProxy(0)
 

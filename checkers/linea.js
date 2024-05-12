@@ -13,7 +13,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import { config } from '../_user_data/config.js'
+import { config } from '../user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},

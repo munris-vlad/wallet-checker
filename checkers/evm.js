@@ -6,7 +6,7 @@ import cliProgress from "cli-progress"
 import {createObjectCsvWriter} from "csv-writer"
 import moment from "moment"
 import { AxiosError } from "axios"
-import { config } from '../_user_data/config.js'
+import { config } from '../user_data/config.js'
 
 await Moralis.start({
     apiKey: config.moralisApiKey
