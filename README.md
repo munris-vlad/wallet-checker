@@ -3,9 +3,9 @@
 ## Установка
 `npm install` 
 
-Заполняем файлы адресами в папке `addresses`
+Все пользовательские настройки и файлы в папке `user_data`. В `user_data/config.js` включаем/выключаем нужны модули, указываем адреса и прочие настройки.
 
-В корневой директории заполняем файл `proxies.txt` в формате `http://login:pass@domain:port`
+Прокси в файле `user_data/proxies.txt` в формате `http://login:pass@domain:port`
 
 Для запуска `npm start`
 
