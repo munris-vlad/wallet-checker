@@ -58,6 +58,10 @@ async function checkVersion() {
 }
 
 async function startMenu(menu) {
+
+    if (!fs.existsSync('./results')){
+        fs.mkdirSync('./results')
+    }
     
     await checkVersion()
     await sleep(1000)
