@@ -45,8 +45,6 @@ const headers = [
     { id: 'B / 0xScore', title: 'B / 0xScore'},
 ]
 
-
-let debug = true
 let p
 let csvWriter
 let wallets = readWallets(config.modules.linea.addresses)
@@ -100,7 +98,7 @@ async function fetchWallet(wallet, index) {
             data['B / 0xScore'] = response.data.attestations.find(issuer => issuer.issuerName === '0xScore').validated
             pohDone = true
         }).catch(function (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
 
             pohRetry++
             if (pohRetry > 3) {

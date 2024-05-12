@@ -73,7 +73,6 @@ const protocolsList = [
     'whale',
 ]
 
-let debug = true
 let jsonData = []
 let p
 let csvWriter
@@ -150,7 +149,7 @@ async function fetchWallet(wallet, index, isExtended) {
             data.tx_count = response.data.result.data.count
             isTxParsed = true
         }).catch(error => {
-            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
             agent = getProxy(index, true)
@@ -170,7 +169,7 @@ async function fetchWallet(wallet, index, isExtended) {
             data.clusters = response.data[0].name ? response.data[0].name.replace('/main', '') : ''
             isClustersParsed = true
         }).catch(async error => {
-            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
             retryClusters++
 
             agent = getProxy(index, true)

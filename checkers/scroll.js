@@ -1,11 +1,13 @@
 import  '../utils/common.js'
-import { sleep, readWallets, getBalance, getKeyByValue, getTokenPrice, newAbortSignal, getProxy } from '../utils/common.js'
+import { sleep, random, readWallets, getBalance, getKeyByValue, getTokenPrice, newAbortSignal, getProxy, multicallAbi, multicallAddress, erc20Abi } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
-import { config } from '../_user_data/config.js'
+import { config, rpcs } from '../_user_data/config.js'
+import { scroll } from 'viem/chains'
+import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
@@ -72,7 +74,7 @@ const contracts = [
     }
 ]
 
-let debug = false
+
 const apiUrl = "https://api.scrollscan.com/api"
 let p
 let csvWriter
@@ -93,72 +95,124 @@ let stables = ['USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 let ethPrice = await getTokenPrice('ETH')
 
-async function getBalances(wallet, index) {
-    let agent = getProxy(index)
-    let isBalanceCollected = false
-    let retry = 0
-    
-    while (!isBalanceCollected) {
+async function fetchBalances(wallets) {
+    wallets.map(wallet => {
+        stats[wallet] = {
+            balances: {
+                'ETH': 0,
+                'USDT': 0,
+                'USDC': 0,
+                'DAI': 0,
+                'Origins NFT': 'No'
+            }
+        }
+    })
+
+    let daiResults, balanceResults, usdtResults, usdcResults, originsResults
+    let isSuccess = false, retry = 0
+    const rpc = rpcs['Scroll'][random(0, rpcs['Scroll'].length-1)]
+
+    while (!isSuccess) {
+        const client = createPublicClient({ chain: scroll, transport: http(rpc), batch: { multicall: true } })
         try {
-            await axios.get(apiUrl, {
-                params: {
-                    module: 'account',
-                    action: 'balance',
-                    address: wallet
-                },
-                httpsAgent: agent,
-                signal: newAbortSignal(15000)
-            }).then(response => {
-                if (!response.data.result.includes('Max rate limit reached')) {
-                    stats[wallet].balances['ETH'] = getBalance(response.data.result, 18)
-                    isBalanceCollected = true
-                } else {
-                    agent = getProxy(index)
+            const balanceMulticall = wallets.map(wallet => {
+                return {
+                    address: multicallAddress,
+                    abi: multicallAbi,
+                    functionName: 'getEthBalance',
+                    args: [wallet]
                 }
             })
-        } catch (error) {
-            if (debug) console.log(error)
+
+            balanceResults = await client.multicall({
+                contracts: balanceMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            const usdtMulticall = wallets.map(wallet => {
+                return {
+                    address: '0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df',
+                    abi: parseAbi(erc20Abi),
+                    functionName: 'balanceOf',
+                    args: [wallet]
+                }
+            })
+
+            usdtResults = await client.multicall({
+                contracts: usdtMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            
+            const usdcMulticall = wallets.map(wallet => {
+                return {
+                    address: '0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4',
+                    abi: parseAbi(erc20Abi),
+                    functionName: 'balanceOf',
+                    args: [wallet]
+                }
+            })
+
+            usdcResults = await client.multicall({
+                contracts: usdcMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            const daiMulticall = wallets.map(wallet => {
+                return {
+                    address: '0xcA77eB3fEFe3725Dc33bccB54eDEFc3D9f764f97',
+                    abi: parseAbi(erc20Abi),
+                    functionName: 'balanceOf',
+                    args: [wallet]
+                }
+            })
+
+            daiResults = await client.multicall({
+                contracts: daiMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            const originsMulticall = wallets.map(wallet => {
+                return {
+                    address: '0x74670A3998d9d6622E32D0847fF5977c37E0eC91',
+                    abi: parseAbi(erc20Abi),
+                    functionName: 'balanceOf',
+                    args: [wallet]
+                }
+            })
+
+            originsResults = await client.multicall({
+                contracts: originsMulticall,
+                multicallAddress: multicallAddress
+            })
+
+            isSuccess = true
+        } catch (e) {
+            if (config.debug) console.log(e.toString())
+
             retry++
 
             if (retry > 3) {
-                isBalanceCollected = true
+                isSuccess = true
             }
         }
     }
 
-    for (const contract of contracts) {
-        let isContractBalanceCollected = false
-        let retry = 0
+    wallets.map((wallet, index) => {
+        let eth = formatEther(balanceResults[index].result)
+        let usdt = parseFloat(formatUnits(usdtResults[index].result, 6)).toFixed(1)
+        let usdc = parseFloat(formatUnits(usdcResults[index].result, 6)).toFixed(1)
+        let dai = parseFloat(formatUnits(daiResults[index].result, 18)).toFixed(1)
+        let origins = parseInt(originsResults[index].result)
 
-        while (!isContractBalanceCollected) {
-            try {
-                await axios.get(apiUrl, {
-                    params: {
-                        module: 'account',
-                        action: 'tokenbalance',
-                        contractaddress: contract.address,
-                        address: wallet
-                    },
-                    httpsAgent: agent,
-                    signal: newAbortSignal(15000)
-                }).then(response => {
-                    if (!response.data.result.includes('Max rate limit reached')) {
-                        stats[wallet].balances[contract.token] = getBalance(response.data.result, contract.decimals)
-                        isContractBalanceCollected = true
-                    } else {
-                        agent = getProxy(index)
-                    }
-                })
-            } catch (error) {
-                if (debug) console.log(error)
-                retry++
-
-                if (retry > 3) {
-                    isContractBalanceCollected = true
-                }
-            }
+        stats[wallet].balances = {
+            'ETH': eth,
+            'USDT': usdt,
+            'USDC': usdc,
+            'DAI': dai,
+            'Origins NFT': origins,
         }
-    }
+    })
 }
 
 async function getTxs(wallet, index) {
@@ -198,7 +252,7 @@ async function getTxs(wallet, index) {
                 }
             })
         } catch (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
             agent = getProxy(index, true)
 
             retry++
@@ -265,7 +319,7 @@ async function getTxs(wallet, index) {
                 }
             })
         } catch (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
             agent = getProxy(index, true)
 
             retry++
@@ -304,7 +358,7 @@ async function getTxs(wallet, index) {
                 }
             })
         } catch (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
             agent = getProxy(index, true)
 
             retry++
@@ -334,16 +388,12 @@ async function getTxs(wallet, index) {
 }
 
 async function fetchWallet(wallet, index) {
-    stats[wallet] = {
-        txcount: 0,
-        volume: 0,
-        balances: [],
-        contractdeployed: 'No',
-        bridge_to: 0,
-        bridge_from: 0
-    }
+    stats[wallet].txcount = 0
+    stats[wallet].volume = 0
+    stats[wallet].bridge_to = 0
+    stats[wallet].bridge_from = 0
 
-    await getBalances(wallet, index)
+    // await getBalances(wallet, index)
     await getTxs(wallet, index)
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
@@ -379,7 +429,7 @@ async function fetchWallet(wallet, index) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
-        'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? 'Yes' : 'No',
+        'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? true : false,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -473,6 +523,7 @@ async function addTotalRow() {
 
 export async function scrollFetchDataAndPrintTable() {
     progressBar.start(iterations, 0)
+    await fetchBalances(wallets)
     await fetchWallets()
     await addTotalRow()
     await saveToCsv()
@@ -481,6 +532,7 @@ export async function scrollFetchDataAndPrintTable() {
 }
 
 export async function scrollData() {
+    await fetchBalances(wallets)
     await fetchWallets()
     await addTotalRow()
     await saveToCsv()

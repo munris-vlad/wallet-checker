@@ -5,21 +5,21 @@
         </div>
         <div class="min-w-full pb-4 pt-4">
             <div class="flex space-x-4 content-center items-center place-content-center">
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'ETH'}" @click="loadNetwork('ETH')">Ethereum</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Arbitrum'}" @click="loadNetwork('Arbitrum')">Arbitrum</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Optimism'}" @click="loadNetwork('Optimism')">Optimism</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Polygon'}" @click="loadNetwork('Polygon')">Polygon</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'BSC'}" @click="loadNetwork('BSC')">BNB</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'opBNB'}" @click="loadNetwork('opBNB')">opBNB</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Avalanche'}" @click="loadNetwork('Avalanche')">Avalanche</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Base'}" @click="loadNetwork('Base')">Base</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Core'}" @click="loadNetwork('Core')">Core</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Celo'}" @click="loadNetwork('Celo')">Celo</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Klaytn'}" @click="loadNetwork('Klaytn')">Klaytn</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Fantom'}" @click="loadNetwork('Fantom')">Fantom</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonbeam'}" @click="loadNetwork('Moonbeam')">Moonbeam</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonriver'}" @click="loadNetwork('Moonriver')">Moonriver</button>
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Redstone'}" @click="loadNetwork('Redstone')">Redstone</button>
+                <button v-if="appconfig.modules.balance.networks['ETH'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'ETH'}" @click="loadNetwork('ETH')">Ethereum</button>
+                <button v-if="appconfig.modules.balance.networks['Arbitrum'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Arbitrum'}" @click="loadNetwork('Arbitrum')">Arbitrum</button>
+                <button v-if="appconfig.modules.balance.networks['Optimism'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Optimism'}" @click="loadNetwork('Optimism')">Optimism</button>
+                <button v-if="appconfig.modules.balance.networks['Polygon'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Polygon'}" @click="loadNetwork('Polygon')">Polygon</button>
+                <button v-if="appconfig.modules.balance.networks['BSC'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'BSC'}" @click="loadNetwork('BSC')">BNB</button>
+                <button v-if="appconfig.modules.balance.networks['opBNB'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'opBNB'}" @click="loadNetwork('opBNB')">opBNB</button>
+                <button v-if="appconfig.modules.balance.networks['Avalanche'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Avalanche'}" @click="loadNetwork('Avalanche')">Avalanche</button>
+                <button v-if="appconfig.modules.balance.networks['Base'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Base'}" @click="loadNetwork('Base')">Base</button>
+                <button v-if="appconfig.modules.balance.networks['Core'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Core'}" @click="loadNetwork('Core')">Core</button>
+                <button v-if="appconfig.modules.balance.networks['Celo'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Celo'}" @click="loadNetwork('Celo')">Celo</button>
+                <button v-if="appconfig.modules.balance.networks['Klaytn'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Klaytn'}" @click="loadNetwork('Klaytn')">Klaytn</button>
+                <button v-if="appconfig.modules.balance.networks['Fantom'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Fantom'}" @click="loadNetwork('Fantom')">Fantom</button>
+                <button v-if="appconfig.modules.balance.networks['Moonbeam'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonbeam'}" @click="loadNetwork('Moonbeam')">Moonbeam</button>
+                <button v-if="appconfig.modules.balance.networks['Moonriver'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonriver'}" @click="loadNetwork('Moonriver')">Moonriver</button>
+                <button v-if="appconfig.modules.balance.networks['Redstone'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Redstone'}" @click="loadNetwork('Redstone')">Redstone</button>
             </div>
         </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700" v-if="isDataLoaded && !isError">
@@ -113,6 +113,7 @@ import {thClass, tdClass} from "@/utils/tableClass"
 export default {
     data() {
         return {
+            appconfig: this.$appconfig,
             activeNetwork: 'ETH',
             isDataLoaded: false,
             isError: false,

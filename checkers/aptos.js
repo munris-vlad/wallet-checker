@@ -58,7 +58,7 @@ const reqheaders = {
 
 const apiUrl = "https://mainnet-aptos-api.nodereal.io/api"
 
-const debug = false
+
 let stats = []
 let jsonData = []
 let csvData = []
@@ -98,7 +98,7 @@ async function getBalances(wallet, index) {
                 isBalancesCollected = true
             })
         } catch (e) {
-            if (debug) console.log(e.toString())
+            if (config.debug) console.log(e.toString())
             retry++
 
             if (retry > 3) {
@@ -114,7 +114,7 @@ async function getBalances(wallet, index) {
             }
         })
     } catch (e) {
-        if (debug) console.log(e.toString())
+        if (config.debug) console.log(e.toString())
     }
 
     await axios.post('https://graphigo.prd.galaxy.eco/query', {
@@ -136,7 +136,7 @@ async function getBalances(wallet, index) {
     }).then(response => {
         stats[wallet].galxepoints = response.data.data.space ? response.data.data.space.addressLoyaltyPoints.points : null
     }).catch(error => {
-        if (debug) console.log(error.toString())
+        if (config.debug) console.log(error.toString())
     })
 }
 
@@ -170,7 +170,7 @@ async function getTxs(wallet, index) {
                 }
             })
         } catch (e) {
-            if (debug) console.log(e.toString())
+            if (config.debug) console.log(e.toString())
             retry++
 
             if (retry > 3) {
@@ -255,7 +255,7 @@ async function fetchWallet(wallet, index) {
 }
 
 function fetchWallets() {
-    wallets = readWallets(config.modules.aptos)
+    wallets = readWallets(config.modules.aptos.addresses)
     iterations = wallets.length
     iteration = 1
     csvData = []

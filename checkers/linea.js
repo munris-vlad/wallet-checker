@@ -85,7 +85,7 @@ const contracts = [
     }
 ]
 
-let debug = false
+
 const apiUrl = "https://api.w3w.ai/linea/v1/explorer/address"
 let p
 let csvWriter
@@ -128,7 +128,7 @@ async function getBalances(wallet) {
             stats[wallet].balances['ETH'] = parseFloat(response.data.balance)
             ethBalanceDone = true
         }).catch(function (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
             ethBalanceRetry++
             if (ethBalanceRetry > 3) {
                 ethBalanceDone = true
@@ -175,7 +175,7 @@ async function getBalances(wallet) {
             }
             tokenBalanceDone = true
         }).catch(function (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
 
             tokenBalanceRetry++
             if (tokenBalanceRetry > 3) {
@@ -194,7 +194,7 @@ async function getBalances(wallet) {
             stats[wallet].poh = response.data.poh
             pohDone = true
         }).catch(function (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
 
             pohRetry++
             if (pohRetry > 3) {
@@ -226,7 +226,7 @@ async function getTxs(wallet) {
                 txs.push(tx)
             })
         }).catch(function (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
         })
     }
 
@@ -262,7 +262,7 @@ async function getTxs(wallet) {
                 }
             })
         }).catch(function (error) {
-            if (debug) console.log(error)
+            if (config.debug) console.log(error)
         })
     }
 

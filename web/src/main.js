@@ -28,6 +28,7 @@ app.config.globalProperties.$axios = axios.create({
 
 await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     let data = response.data
+    app.config.globalProperties.$appconfig = data.config
     app.config.globalProperties.$zk_count = data.zksync_wallets.length
     app.config.globalProperties.$layerzero_count = data.layerzero_wallets.length
     app.config.globalProperties.$wormhole_count = data.wormhole_wallets.length
@@ -39,6 +40,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
     app.config.globalProperties.$linea_count = data.linea_wallets.length
     app.config.globalProperties.$scroll_count = data.scroll_wallets.length
+    app.config.globalProperties.$balance_count = data.balance_wallets.length
     app.config.globalProperties.$evm_count = data.evm_wallets.length
     app.config.globalProperties.$clusters_count = data.clusters_wallets.length
 }).catch((error) => {

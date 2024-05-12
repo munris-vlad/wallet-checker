@@ -1,55 +1,55 @@
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import express from 'express'
-import path from 'path'
 import cors from 'cors'
-import {zkSyncData} from "../checkers/zksync.js"
-import {zoraData} from "../checkers/zora.js"
-import {baseData} from "../checkers/base.js"
-import {aptosData} from "../checkers/aptos.js"
-import {lineaData} from "../checkers/linea.js"
-import {scrollData} from "../checkers/scroll.js"
-import {balancesData} from "../checkers/balances.js"
-import {evmData} from "../checkers/evm.js"
-import {readWallets} from "./common.js"
-import {layerzeroData} from "../checkers/layerzero.js"
+import { zkSyncData } from "../checkers/zksync.js"
+import { zoraData } from "../checkers/zora.js"
+import { baseData } from "../checkers/base.js"
+import { aptosData } from "../checkers/aptos.js"
+import { lineaData } from "../checkers/linea.js"
+import { scrollData } from "../checkers/scroll.js"
+import { balancesData } from "../checkers/balances.js"
+import { evmData } from "../checkers/evm.js"
+import { readWallets } from "./common.js"
+import { layerzeroData } from "../checkers/layerzero.js"
 import { wormholeData } from '../checkers/wormhole.js'
 import { zkbridgeData } from '../checkers/zkbridge.js'
 import { hyperlaneData } from '../checkers/hyperlane.js'
 import { clustersData } from '../checkers/clusters.js'
 import { debridgeData } from '../checkers/debridge.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+import { config } from '../_user_data/config.js'
 
 const app = express()
-const port = 80
+const port = config.port
 const apiRoutes = express.Router()
 
 app.use(cors())
 app.use('/api', apiRoutes)
 
-app.use(express.static(path.join(__dirname, '/web/dist')))
+app.use(express.static('./web/dist'))
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '/web/dist/index.html'))
+    res.sendFile('./web/dist/index.html')
 })
 
 apiRoutes.get('/stats', async (req, res) => {
-    const zksyncWallets = readWallets('./addresses/zksync.txt')
-    const layerzeroWallets = readWallets('./addresses/layerzero.txt')
-    const wormholeWallets = readWallets('./addresses/wormhole.txt')
-    const debridgeWallets = readWallets('./addresses/debridge.txt')
-    const zkbridgeWallets = readWallets('./addresses/zkbridge.txt')
-    const hyperlaneWallets = readWallets('./addresses/hyperlane.txt')
-    const zoraWallets = readWallets('./addresses/zora.txt')
-    const baseWallets = readWallets('./addresses/base.txt')
-    const aptosWallets = readWallets('./addresses/aptos.txt')
-    const lineaWallets = readWallets('./addresses/linea.txt')
-    const scrollWallets = readWallets('./addresses/scroll.txt')
-    const clustersWallets = readWallets('./addresses/clusters.txt')
-    const evmWallets = readWallets('./addresses/evm.txt')
+    const zksyncWallets = readWallets(config.modules.zksync.addresses)
+    const layerzeroWallets = readWallets(config.modules.layerzero.addresses)
+    const wormholeWallets = readWallets(config.modules.wormhole.addresses)
+    const debridgeWallets = readWallets(config.modules.debridge.addresses)
+    const zkbridgeWallets = readWallets(config.modules.zkbridge.addresses)
+    const hyperlaneWallets = readWallets(config.modules.hyperlane.addresses)
+    const zoraWallets = readWallets(config.modules.zora.addresses)
+    const baseWallets = readWallets(config.modules.base.addresses)
+    const aptosWallets = readWallets(config.modules.aptos.addresses)
+    const lineaWallets = readWallets(config.modules.linea.addresses)
+    const scrollWallets = readWallets(config.modules.scroll.addresses)
+    const clustersWallets = readWallets(config.modules.clusters.addresses)
+    const evmWallets = readWallets(config.modules.evm.addresses)
+    const balanceWallets = readWallets(config.modules.balance.addresses)
+
     res.json({
+        'config': config,
         'zksync_wallets': zksyncWallets,
         'layerzero_wallets': layerzeroWallets,
         'zkbridge_wallets': zkbridgeWallets,
@@ -63,6 +63,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'scroll_wallets': scrollWallets,
         'clusters_wallets': clustersWallets,
         'evm_wallets': evmWallets,
+        'balance_wallets': balanceWallets,
     })
 })
 
@@ -139,5 +140,5 @@ apiRoutes.get('/clusters', async (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Чекер запущен: http://localhost`)
+    console.log(`Wallet checker web version started: http://localhost${port == 80 ? '' : ':' + port}`)
 })

@@ -3,6 +3,7 @@ import axios from "axios"
 import inquirer from "inquirer"
 import { HttpsProxyAgent } from "https-proxy-agent"
 import { SocksProxyAgent } from "socks-proxy-agent"
+import { defineChain } from 'viem'
 
 export const wait = ms => new Promise(r => setTimeout(r, ms))
 export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis))
@@ -49,7 +50,7 @@ export function compareVersions(version1, version2) {
         const part2 = parts2[i] || 0
 
         if (part1 < part2) return -1
-        if (part1 > part2) return 1 
+        if (part1 > part2) return 1
     }
 
     return 0
@@ -225,10 +226,10 @@ export const entryPoint = async () => {
         {
             name: "choice",
             type: "list",
-            message: "Действие:",
+            message: "Action:",
             choices: [
                 {
-                    name: "Веб версия",
+                    name: "Web version",
                     value: "web",
                 },
                 {
@@ -461,3 +462,133 @@ export function sortObjectByKey(obj) {
     const sortedEntries = Object.entries(obj).sort((a, b) => a[0].localeCompare(b[0]))
     return Object.fromEntries(sortedEntries)
 }
+
+export const multicallAddress = '0xca11bde05977b3631167028862be2a173976ca11'
+
+export const multicallAbi = [
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockTimestamp",
+        "outputs": [{ "name": "timestamp", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "components": [
+                    { "name": "target", "type": "address" },
+                    { "name": "callData", "type": "bytes" }
+                ],
+                "name": "calls",
+                "type": "tuple[]"
+            }
+        ],
+        "name": "aggregate",
+        "outputs": [
+            { "name": "blockNumber", "type": "uint256" },
+            { "name": "returnData", "type": "bytes[]" }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getLastBlockHash",
+        "outputs": [{ "name": "blockHash", "type": "bytes32" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [{ "name": "addr", "type": "address" }],
+        "name": "getEthBalance",
+        "outputs": [{ "name": "balance", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockDifficulty",
+        "outputs": [{ "name": "difficulty", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockGasLimit",
+        "outputs": [{ "name": "gaslimit", "type": "uint256" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getCurrentBlockCoinbase",
+        "outputs": [{ "name": "coinbase", "type": "address" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [{ "name": "blockNumber", "type": "uint256" }],
+        "name": "getBlockHash",
+        "outputs": [{ "name": "blockHash", "type": "bytes32" }],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
+
+export const erc20Abi = [
+    'event Approval(address indexed owner, address indexed spender, uint256 value)',
+    'event UnBlacklisted(address indexed _account)',
+    'function allowance(address owner, address spender) view returns (uint256)',
+    'function approve(address spender, uint256 value) returns (bool)',
+    'function balanceOf(address account) view returns (uint256)',
+    'function decimals() view returns (uint8)',
+    'function name() view returns (string)',
+    'function symbol() view returns (string)',
+    'function totalSupply() view returns (uint256)',
+    'function transfer(address to, uint256 value) returns (bool)',
+    'function transferFrom(address from, address to, uint256 value) returns (bool)',
+]
+
+export const redstone = /*#__PURE__*/ defineChain({
+    id: 690,
+    name: 'Redstone',
+    network: 'redstone',
+    nativeCurrency: {
+        decimals: 18,
+        name: 'Ether',
+        symbol: 'ETH',
+    },
+    rpcUrls: {
+        default: {
+            http: ['https://rpc.redstonechain.com'],
+            webSocket: ['wss://rpc.redstonechain.com'],
+        },
+        public: {
+            http: ['https://rpc.redstonechain.com'],
+            webSocket: ['wss://rpc.redstonechain.com'],
+        },
+    },
+    blockExplorers: {
+        default: {
+            name: 'Redstone',
+            url: 'https://explorer.redstone.xyz',
+        },
+    }
+})

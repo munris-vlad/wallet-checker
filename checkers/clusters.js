@@ -21,7 +21,7 @@ const headers = [
     { id: 'Total', title: 'Total' },
 ]
 
-let debug = false
+
 let jsonData = []
 let p
 let csvWriter
@@ -66,7 +66,7 @@ async function fetchWallet(walletData, index) {
                 await sleep(1000)
             }
         }).catch(async error => {
-            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
             agent = getProxy(index, true)
@@ -128,7 +128,7 @@ async function fetchClusters() {
                 }
                 isClustersParsed = true
             }).catch(async error => {
-                if (debug) console.error(layerzeroWallet, error.toString(), '| Get random proxy')
+                if (config.debug) console.error(layerzeroWallet, error.toString(), '| Get random proxy')
                 retryClusters++
 
                 agent = getProxy(0, true)

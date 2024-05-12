@@ -34,7 +34,7 @@ const headers = [
 ]
 
 
-let debug = false
+
 let jsonData = []
 let p
 let csvWriter
@@ -93,7 +93,7 @@ async function fetchWallet(wallet, index) {
             txs = response.data.transactions
             isTxParsed = true
         }).catch(error => {
-            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
             agent = getProxy(index, true)

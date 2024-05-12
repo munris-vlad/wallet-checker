@@ -19,19 +19,19 @@ import { debridgeFetchDataAndPrintTable } from "../checkers/debridge.js"
 import { pohFetchDataAndPrintTable } from "../checkers/linea-poh-checker.js"
 
 function startExpressServer() {
-    const expressServer = exec('node /utils/server.js', (error, stdout, stderr) => {
+    const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
         if (error) {
-            console.error(`[Express Server Error]: ${error}`)
+            console.error(`${error}`)
         }
-        console.log(`[Express Server]: ${stdout}`)
+        console.log(`${stdout}`)
     })
 
     expressServer.stdout.on('data', (data) => {
-        console.log(`[Express Server]: ${data}`)
+        console.log(`${data}`)
     })
 
     expressServer.stderr.on('data', (data) => {
-        console.error(`[Express Server Error]: ${data}`)
+        console.error(`${data}`)
     })
 }
 
@@ -74,69 +74,69 @@ async function startMenu(menu) {
             startExpressServer()
             break
         case "clusters":
-            await clustersFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await clustersFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "zksync":
-            await zkSyncFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await zkSyncFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "debridge":
-            await debridgeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await debridgeFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "wormhole":
-            await wormholeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await wormholeFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "zkbridge":
-            await zkbridgeFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await zkbridgeFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "hyperlane":
-            await hyperlaneFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await hyperlaneFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "layerzero":
-            await layerzeroFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await layerzeroFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "layerzero_extended":
-            await layerzeroFetchDataAndPrintTable(true).catch(error => { console.error('Произошла ошибка:', error) })
+            await layerzeroFetchDataAndPrintTable(true).catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "zora":
-            await zoraFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await zoraFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "base":
-            await baseFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await baseFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "aptos":
-            await aptosFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await aptosFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "linea":
-            await lineaFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await lineaFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "scroll":
-            await scrollFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await scrollFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "evm":
             let chain = await evmNetwork()
-            await evmFetchDataAndPrintTable(chain).catch(error => { console.error('Произошла ошибка:', error) })
+            await evmFetchDataAndPrintTable(chain).catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "balances":
             let network = await chooiceNetwork()
-            await balancesFetchDataAndPrintTable(network).catch(error => { console.error('Произошла ошибка:', error) })
+            await balancesFetchDataAndPrintTable(network).catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "linea-poh":
-            await pohFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
+            await pohFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
     }

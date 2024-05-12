@@ -23,7 +23,7 @@
                             </div>
                         </div>
                     </td>
-                    <td :class="tdClass">{{ item['Origins NFT'] }}</td>
+                    <td :class="tdClass">{{ item['Origins NFT'] ? '✅' : '❌' }}</td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < 0.005 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDT'] }}</td>

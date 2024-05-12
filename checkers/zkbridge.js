@@ -44,7 +44,7 @@ const headers = [
 ]
 
 
-let debug = false
+
 let p
 let csvWriter
 let wallets = readWallets(config.modules.zkbridge.addresses)
@@ -127,7 +127,7 @@ async function fetchWallet(wallet, index, isExtended) {
     }).then(response => {
        data.galxepoints = response.data.data.space ? response.data.data.space.addressLoyaltyPoints.points : 0
     }).catch(error => {
-        if (debug) console.log(error.toString())
+        if (config.debug) console.log(error.toString())
     })
 
     while (!isTxParsed) {
@@ -140,7 +140,7 @@ async function fetchWallet(wallet, index, isExtended) {
             data.tx_count = response.data.total
             isTxParsed = true
         }).catch(error => {
-            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
             agent = getProxy(index, true)

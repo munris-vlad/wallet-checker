@@ -1,6 +1,5 @@
 import Moralis from "moralis"
 import { EvmChain } from "@moralisweb3/common-evm-utils"
-import dotenv from 'dotenv'
 import {getNativeToken, readWallets, sleep, getKeyByValue} from '../utils/common.js'
 import {Table} from "console-table-printer"
 import cliProgress from "cli-progress"
@@ -9,10 +8,8 @@ import moment from "moment"
 import { AxiosError } from "axios"
 import { config } from '../_user_data/config.js'
 
-dotenv.config()
-
 await Moralis.start({
-    apiKey: process.env.MORALIS_API_KEY
+    apiKey: config.moralisApiKey
 })
 
 const p = new Table({

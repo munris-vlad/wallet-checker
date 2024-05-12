@@ -34,7 +34,7 @@ const headers = [
 ]
 
 
-let debug = false
+
 let p
 let csvWriter
 let wallets = readWallets(config.modules.hyperlane.addresses)
@@ -96,7 +96,7 @@ async function fetchWallet(wallet, index) {
             }
             isTxParsed = true
         }).catch(async error => {
-            if (debug) console.error(wallet, error.toString(), '| Get random proxy')
+            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
             agent = getProxy(index, true)
