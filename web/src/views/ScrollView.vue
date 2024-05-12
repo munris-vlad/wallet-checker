@@ -24,7 +24,7 @@
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['Origins NFT'] ? '✅' : '❌' }}</td>
-                    <td :class="[tdClass, parseFloat(item['ETH']) < 0.005 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
+                    <td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.scroll.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDT'] }}</td>
                     <td :class="tdClass">{{ item['DAI'] }}</td>
@@ -61,6 +61,7 @@ import {thClass, tdClass} from "@/utils/tableClass"
 export default {
     data() {
         return {
+            appconfig: this.$appconfig,
             isDataLoaded: false,
             isError: false,
             error: '',

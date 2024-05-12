@@ -23,7 +23,7 @@
                             </div>
                         </div>
                     </td>
-                    <td :class="[tdClass, parseFloat(item['ETH']) < 0.001 ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
+                    <td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.zora.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Zora.co NFT'] }}</td>
                     <td :class="tdClass">{{ item['Collection count'] }}</td>
@@ -55,6 +55,7 @@ import {thClass, tdClass} from "@/utils/tableClass"
 export default {
     data() {
         return {
+            appconfig: this.$appconfig,
             isDataLoaded: false,
             isError: false,
             error: '',

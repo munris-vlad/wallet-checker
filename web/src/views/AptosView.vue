@@ -22,7 +22,7 @@
                     </td>
                     <td :class="tdClass">{{ item['AptosName'] }}</td>
                     <td :class="tdClass">{{ item['GalxePoints'] }}</td>
-                    <td :class="[tdClass, parseFloat(item['APT']) < 0.01 ? 'text-red-500' : '']">{{ item['APT'] }} (${{ item['APT USDVALUE'] }})</td>
+                    <td :class="[tdClass, parseFloat(item['APT']) < appconfig.modules.aptos.minBalanceHighlight ? 'text-red-500' : '']">{{ item['APT'] }} (${{ item['APT USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['DAI'] }}</td>
@@ -54,6 +54,7 @@ import {thClass, tdClass} from "@/utils/tableClass"
 export default {
     data() {
         return {
+            appconfig: this.$appconfig,
             isDataLoaded: false,
             isError: false,
             error: '',

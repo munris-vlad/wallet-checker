@@ -2,11 +2,13 @@ export const config = {
     modules: {
         aptos: {
             enabled: true,
-            addresses: './user_data/addresses/aptos.txt'
+            addresses: './user_data/addresses/aptos.txt',
+            minBalanceHighlight: 1
         },
         base: {
             enabled: true,
-            addresses: './user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.05
         },
         clusters: {
             enabled: false,
@@ -30,11 +32,13 @@ export const config = {
         },
         linea: {
             enabled: true,
-            addresses: './user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.05
         },
         scroll: {
             enabled: true,
-            addresses: './user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.05
         },
         wormhole: {
             enabled: false,
@@ -46,11 +50,13 @@ export const config = {
         },
         zksync: {
             enabled: true,
-            addresses: './user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.05
         },
         zora: {
             enabled: true,
-            addresses: './user_data/addresses/evm.txt'
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.05
         },
         balance: {
             enabled: true,
