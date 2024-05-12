@@ -5,6 +5,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
+import { config } from '../_user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
@@ -76,7 +77,7 @@ const apiUrl = "https://api.scrollscan.com/api"
 let p
 let csvWriter
 let stats = []
-let wallets = readWallets('./addresses/scroll.txt')
+let wallets = readWallets(config.modules.scroll.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -406,7 +407,7 @@ async function fetchBatch(batch) {
 }
 
 async function fetchWallets() {
-    wallets = readWallets('./addresses/scroll.txt')
+    wallets = readWallets(config.modules.scroll.addresses)
     iterations = wallets.length
     csvData = []
     jsonData = []

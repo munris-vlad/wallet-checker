@@ -4,6 +4,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import moment from "moment"
+import { config } from '../_user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -46,7 +47,7 @@ let debug = false
 let jsonData = []
 let p
 let csvWriter
-let wallets = readWallets('./addresses/debridge.txt')
+let wallets = readWallets(config.modules.debridge.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -246,7 +247,7 @@ async function fetchBatch(batch) {
 }
 
 function fetchWallets() {
-    wallets = readWallets('./addresses/debridge.txt')
+    wallets = readWallets(config.modules.debridge.addresses)
     iterations = wallets.length
     iteration = 1
     csvData = []

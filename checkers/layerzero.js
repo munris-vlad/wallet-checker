@@ -5,6 +5,9 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import moment from "moment"
+import { wrapper } from 'axios-cookiejar-support'
+import { CookieJar } from 'tough-cookie'
+import { config } from '../_user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -74,28 +77,25 @@ let debug = true
 let jsonData = []
 let p
 let csvWriter
-let wallets = readWallets('./addresses/layerzero.txt')
+let wallets = readWallets(config.modules.layerzero.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
-function getQueryHeaders(wallet) {
+
+function getQueryHeaders() {
     return {
-        'accept': '*/*',
-        'accept-language': 'en-US,en;q=0.9,ru;q=0.8,bg;q=0.7',
-        'baggage': 'sentry-environment=vercel-production,sentry-release=8b2b3e1a5f4040e5282f0c75f86e8efb01d3fd33,sentry-public_key=7ea9fec73d6d676df2ec73f61f6d88f0,sentry-trace_id=9120fe8b7ed94428851697ab60657409',
-        'content-type': 'application/json',
-        'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'sentry-trace': '9120fe8b7ed94428851697ab60657409-b26417f0ca88871e-1',
-        'cookie': '_ga=GA1.1.520004272.1700156268; _clck=cbqpar|2|fgr|0|1415; _clsk=1fu326x|1700157520972|18|1|t.clarity.ms/collect; _ga_1ZKFRJ8ERQ=GS1.1.1700156267.1.1.1700157521.0.0.0; _ga_3LWZVPQJTS=GS1.1.1700156268.1.1.1700157521.0.0.0',
-        'Referer': `https://layerzeroscan.com/address/${wallet}`,
-        'Referrer-Policy': 'strict-origin-when-cross-origin'
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+        "content-type": "application/json",
+        "priority": "u=1, i",
+        "sec-ch-ua": "\"Chromium\";v=\"124\", \"Google Chrome\";v=\"124\", \"Not-A.Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
     }
 }
 
@@ -135,11 +135,16 @@ async function fetchWallet(wallet, index, isExtended) {
     const destinations = {}
     const protocols = {}
 
+    const jar = new CookieJar()
+    const client = wrapper(axios.create({ jar }))
+
     while (!isTxParsed) {
-        await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
-            headers: getQueryHeaders(),
-            httpsAgent: agent,
-            signal: newAbortSignal(5000)
+        await client.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
+            // httpsAgent: agent,
+            signal: newAbortSignal(5000),
+            referrer: `https://layerzeroscan.com/address/${wallet}`,
+            referrerPolicy: "strict-origin-when-cross-origin",
+            credentials: "include"
         }).then(response => {
             txs = response.data.result.data.messages
             data.tx_count = response.data.result.data.count
@@ -288,7 +293,7 @@ async function fetchBatch(batch, isExtended) {
 }
 
 function fetchWallets(isExtended) {
-    wallets = readWallets('./addresses/layerzero.txt')
+    wallets = readWallets(config.modules.layerzero.addresses)
     iterations = wallets.length
     iteration = 1
     csvData = []

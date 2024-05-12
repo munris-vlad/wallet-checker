@@ -427,7 +427,7 @@ export function newAbortSignal(timeoutMs) {
     return abortController.signal
 }
 
-let proxies = readWallets('./proxies.txt')
+let proxies = readWallets('./_user_data/proxies.txt')
 
 export function getProxy(index, isRandom = false) {
     let agent

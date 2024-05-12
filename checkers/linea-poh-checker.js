@@ -3,6 +3,7 @@ import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
+import { config } from '../_user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -48,7 +49,7 @@ const headers = [
 let debug = true
 let p
 let csvWriter
-let wallets = readWallets('./addresses/linea.txt')
+let wallets = readWallets(config.modules.linea.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -140,13 +141,13 @@ async function fetchBatch(batch) {
 }
 
 function fetchWallets() {
-    wallets = readWallets('./addresses/linea.txt')
+    wallets = readWallets(config.modules.linea.addresses)
     iterations = wallets.length
     iteration = 1
     csvData = []
 
     csvWriter = createObjectCsvWriter({
-        path: './poh.csv',
+        path: './results/linea-poh.csv',
         header: headers
     })
 

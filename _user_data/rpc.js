@@ -1,6 +1,5 @@
 export const rpcs = {
     'ETH': [
-        'https://eth1.lava.build/lava-referer-8cbb1c15-1ded-4c4b-a0bb-1dc32bec8c9c',
         'https://eth.llamarpc.com',
         'https://eth-mainnet.public.blastapi.io',
         'https://eth-pokt.nodies.app',

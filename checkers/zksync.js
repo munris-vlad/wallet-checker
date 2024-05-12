@@ -11,6 +11,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
+import { config } from '../_user_data/config.js'
 
 let headers = [
     { id: 'n', title: '№'},
@@ -209,7 +210,7 @@ let p
 let csvWriter
 let stats = []
 let jsonData = []
-let wallets = readWallets('./addresses/zksync.txt')
+let wallets = readWallets(config.modules.zksync.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -493,7 +494,7 @@ async function fetchWallet(wallet, index) {
 }
 
 function fetchWallets() {
-    wallets = readWallets('./addresses/zksync.txt')
+    wallets = readWallets(config.modules.zksync.addresses)
     iterations = wallets.length
     iteration = 1
     jsonData = []

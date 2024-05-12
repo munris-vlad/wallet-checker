@@ -7,6 +7,7 @@ import cliProgress from "cli-progress"
 import {createObjectCsvWriter} from "csv-writer"
 import moment from "moment"
 import { AxiosError } from "axios"
+import { config } from '../_user_data/config.js'
 
 dotenv.config()
 
@@ -31,7 +32,7 @@ const p = new Table({
 let total = 0
 let jsonData = []
 let isJson = false
-let wallets = readWallets('./addresses/evm.txt')
+let wallets = readWallets(config.modules.evm.addresses)
 let csvData = []
 let iteration = 1
 let iterations = wallets.length
@@ -117,7 +118,7 @@ async function fetchBatch(batch, chain, network) {
 }
 
 async function fetchWallets(chain, network) {
-    wallets = readWallets('./addresses/evm.txt')
+    wallets = readWallets(config.modules.evm.addresses)
     jsonData = []
     iteration = 1
     total = 0

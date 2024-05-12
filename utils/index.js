@@ -1,27 +1,25 @@
-import { chooiceNetwork, compareVersions, entryPoint, evmNetwork, sleep } from "./utils/common.js"
-import { zkSyncFetchDataAndPrintTable } from "./checkers/zksync.js"
-import { aptosFetchDataAndPrintTable } from "./checkers/aptos.js"
-import { zoraFetchDataAndPrintTable } from "./checkers/zora.js"
-import { lineaFetchDataAndPrintTable } from "./checkers/linea.js"
-import { scrollFetchDataAndPrintTable } from "./checkers/scroll.js"
-import { balancesFetchDataAndPrintTable } from "./checkers/balances.js"
-import { evmFetchDataAndPrintTable } from "./checkers/evm.js"
-import { filterFetchDataAndPrintTable } from "./checkers/filter.js"
-import { nftFetchDataAndPrintTable } from "./checkers/nft.js"
-import { layerzeroFetchDataAndPrintTable } from "./checkers/layerzero.js"
-import { baseFetchDataAndPrintTable } from "./checkers/base.js"
-import { wormholeFetchDataAndPrintTable } from "./checkers/wormhole.js"
-import { zkbridgeFetchDataAndPrintTable } from "./checkers/zkbridge.js"
-import { hyperlaneFetchDataAndPrintTable } from "./checkers/hyperlane.js"
+import { chooiceNetwork, compareVersions, entryPoint, evmNetwork, sleep } from "./common.js"
+import { zkSyncFetchDataAndPrintTable } from "../checkers/zksync.js"
+import { aptosFetchDataAndPrintTable } from "../checkers/aptos.js"
+import { zoraFetchDataAndPrintTable } from "../checkers/zora.js"
+import { lineaFetchDataAndPrintTable } from "../checkers/linea.js"
+import { scrollFetchDataAndPrintTable } from "../checkers/scroll.js"
+import { balancesFetchDataAndPrintTable } from "../checkers/balances.js"
+import { evmFetchDataAndPrintTable } from "../checkers/evm.js"
+import { layerzeroFetchDataAndPrintTable } from "../checkers/layerzero.js"
+import { baseFetchDataAndPrintTable } from "../checkers/base.js"
+import { wormholeFetchDataAndPrintTable } from "../checkers/wormhole.js"
+import { zkbridgeFetchDataAndPrintTable } from "../checkers/zkbridge.js"
+import { hyperlaneFetchDataAndPrintTable } from "../checkers/hyperlane.js"
 import { exec } from "child_process"
 import fs from "fs"
 import axios from "axios"
-import { clustersFetchDataAndPrintTable } from "./checkers/clusters.js"
-import { debridgeFetchDataAndPrintTable } from "./checkers/debridge.js"
-import { pohFetchDataAndPrintTable } from "./checkers/linea-poh-checker.js"
+import { clustersFetchDataAndPrintTable } from "../checkers/clusters.js"
+import { debridgeFetchDataAndPrintTable } from "../checkers/debridge.js"
+import { pohFetchDataAndPrintTable } from "../checkers/linea-poh-checker.js"
 
 function startExpressServer() {
-    const expressServer = exec('node server.js', (error, stdout, stderr) => {
+    const expressServer = exec('node /utils/server.js', (error, stdout, stderr) => {
         if (error) {
             console.error(`[Express Server Error]: ${error}`)
         }
@@ -135,14 +133,6 @@ async function startMenu(menu) {
         case "balances":
             let network = await chooiceNetwork()
             await balancesFetchDataAndPrintTable(network).catch(error => { console.error('Произошла ошибка:', error) })
-            if (startOver) await startMenu()
-            break
-        case "filter":
-            await filterFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
-            if (startOver) await startMenu()
-            break
-        case "nft":
-            await nftFetchDataAndPrintTable().catch(error => { console.error('Произошла ошибка:', error) })
             if (startOver) await startMenu()
             break
         case "linea-poh":

@@ -3,21 +3,21 @@ import { fileURLToPath } from 'url'
 import express from 'express'
 import path from 'path'
 import cors from 'cors'
-import {zkSyncData} from "./checkers/zksync.js"
-import {zoraData} from "./checkers/zora.js"
-import {baseData} from "./checkers/base.js"
-import {aptosData} from "./checkers/aptos.js"
-import {lineaData} from "./checkers/linea.js"
-import {scrollData} from "./checkers/scroll.js"
-import {balancesData} from "./checkers/balances.js"
-import {evmData} from "./checkers/evm.js"
-import {readWallets} from "./utils/common.js"
-import {layerzeroData} from "./checkers/layerzero.js"
-import { wormholeData } from './checkers/wormhole.js'
-import { zkbridgeData } from './checkers/zkbridge.js'
-import { hyperlaneData } from './checkers/hyperlane.js'
-import { clustersData } from './checkers/clusters.js'
-import { debridgeData } from './checkers/debridge.js'
+import {zkSyncData} from "../checkers/zksync.js"
+import {zoraData} from "../checkers/zora.js"
+import {baseData} from "../checkers/base.js"
+import {aptosData} from "../checkers/aptos.js"
+import {lineaData} from "../checkers/linea.js"
+import {scrollData} from "../checkers/scroll.js"
+import {balancesData} from "../checkers/balances.js"
+import {evmData} from "../checkers/evm.js"
+import {readWallets} from "./common.js"
+import {layerzeroData} from "../checkers/layerzero.js"
+import { wormholeData } from '../checkers/wormhole.js'
+import { zkbridgeData } from '../checkers/zkbridge.js'
+import { hyperlaneData } from '../checkers/hyperlane.js'
+import { clustersData } from '../checkers/clusters.js'
+import { debridgeData } from '../checkers/debridge.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

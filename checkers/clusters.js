@@ -5,6 +5,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import fs from "fs"
+import { config } from '../_user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -24,7 +25,7 @@ let debug = false
 let jsonData = []
 let p
 let csvWriter
-let wallets = readWallets('./addresses/clusters.txt')
+let wallets = readWallets(config.modules.clusters.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -107,9 +108,9 @@ async function fetchBatch(batch) {
 }
 
 async function fetchClusters() {
-    let layerzeroWallets = readWallets('./addresses/layerzero.txt')
+    let layerzeroWallets = readWallets(config.modules.layerzero.addresses)
     let clusters = []
-    const file = fs.createWriteStream('./addresses/clusters.txt')
+    const file = fs.createWriteStream(config.modules.clusters.addresses)
 
     for (const layerzeroWallet of layerzeroWallets) {
         let isClustersParsed = false
@@ -143,7 +144,7 @@ async function fetchClusters() {
 }
 
 async function fetchWallets() {
-    wallets = readWallets('./addresses/clusters.txt')
+    wallets = readWallets(config.modules.clusters.addresses)
     if (!wallets.length) {
         await fetchClusters()
     }

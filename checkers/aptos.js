@@ -6,6 +6,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import cloudscraper from 'cloudscraper'
+import { config } from '../_user_data/config.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -64,7 +65,7 @@ let csvData = []
 let p
 let csvWriter
 const filterSymbol = ['APT', 'USDT', 'USDC', 'DAI']
-let wallets = readWallets('./addresses/aptos.txt')
+let wallets = readWallets(config.modules.aptos.addresses)
 let iterations = wallets.length
 let iteration = 1
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
@@ -254,7 +255,7 @@ async function fetchWallet(wallet, index) {
 }
 
 function fetchWallets() {
-    wallets = readWallets('./addresses/aptos.txt')
+    wallets = readWallets(config.modules.aptos)
     iterations = wallets.length
     iteration = 1
     csvData = []

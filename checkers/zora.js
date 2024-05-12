@@ -6,6 +6,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import { HttpsProxyAgent } from "https-proxy-agent"
+import { config } from '../_user_data/config.js'
 
 const agent = getProxy(0)
 
@@ -45,7 +46,7 @@ let p
 let csvWriter
 let stats = []
 let jsonData = []
-let wallets = readWallets('./addresses/zora.txt')
+let wallets = readWallets(config.modules.zora.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -188,7 +189,7 @@ async function fetchWallet(wallet, index) {
 }
 
 function fetchWallets() {
-    wallets = readWallets('./addresses/zora.txt')
+    wallets = readWallets(config.modules.zora.addresses)
     iterations = wallets.length
     iteration = 1
     jsonData = []

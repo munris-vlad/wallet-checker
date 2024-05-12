@@ -2,8 +2,8 @@
   "name": "wallet-checker",
   "version": "1.1.18",
   "scripts": {
-    "start": "node index.js",
-    "web": "node index.js web",
+    "start": "node utils/index.js",
+    "web": "node utils/index.js web",
     "zksync": "node checkers/zksync.js",
     "aptos": "node checkers/aptos.js",
     "linea": "node checkers/linea.js",

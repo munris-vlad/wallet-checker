@@ -5,6 +5,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
+import { config } from '../_user_data/config.js'
 
 const headers = [
     { id: 'n', title: '№'},
@@ -51,7 +52,7 @@ let totalGas = 0
 let totalUsdc = 0
 let totalDai = 0
 const filterSymbol = ['USDbC', 'DAI']
-let wallets = readWallets('./addresses/base.txt')
+let wallets = readWallets(config.modules.base.addresses)
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -219,7 +220,7 @@ function fetchWallets() {
         sort: (row1, row2) => +row1.n - +row2.n
     })
 
-    wallets = readWallets('./addresses/base.txt')
+    wallets = readWallets(config.modules.base.addresses)
     const batchSize = 50
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []

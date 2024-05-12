@@ -2,9 +2,10 @@ import { getNativeToken, random, readWallets, getKeyByValue, getProxy } from "..
 import axios from "axios"
 import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
-import { rpcs } from "../rpc.js"
+import { rpcs } from "../_user_data/rpc.js"
 import { createPublicClient, http, formatEther, parseAbi, formatUnits, defineChain } from 'viem'
 import { arbitrum, avalanche, base, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon } from "viem/chains"
+import { config } from '../_user_data/config.js'
 
 const multicallAbi = [
     {
@@ -343,7 +344,7 @@ const networks = {
 
 let debug = true
 const multicallAddress = '0xca11bde05977b3631167028862be2a173976ca11'
-let wallets = readWallets('./addresses/evm.txt')
+let wallets = readWallets(config.modules.evm.addresses)
 let walletsData = []
 let csvData = []
 let p
@@ -404,7 +405,7 @@ function getClient(network) {
 async function fetchWallets(network) {
     walletsData = []
     csvData = []
-    wallets = readWallets('./addresses/evm.txt')
+    wallets = readWallets(config.modules.evm.addresses)
 
     let transactionCounts
     let daiResults, balanceResults, usdtResults, usdcResults, usdceResults
