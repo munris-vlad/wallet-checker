@@ -12,6 +12,7 @@ import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'vi
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
+    { name: 'Marks', color: 'green', alignment: "right"},
     { name: 'Origins NFT', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
@@ -33,6 +34,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
+    { id: 'Marks', title: 'Marks'},
     { id: 'Origins NFT', title: 'Origins NFT'},
     { id: 'ETH', title: 'ETH'},
     { id: 'USDC', title: 'USDC'},
@@ -51,31 +53,9 @@ const headers = [
     { id: 'Total gas spent', title: 'Total gas spent'}
 ]
 
-const contracts = [
-    {
-        token: 'Origins NFT',
-        address: '0x74670A3998d9d6622E32D0847fF5977c37E0eC91',
-        decimals: 0
-    },
-    {
-        token: 'USDC',
-        address: '0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4',
-        decimals: 6
-    },
-    {
-        token: 'USDT',
-        address: '0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df',
-        decimals: 6
-    },
-    {
-        token: 'DAI',
-        address: '0xcA77eB3fEFe3725Dc33bccB54eDEFc3D9f764f97',
-        decimals: 18
-    }
-]
-
-
 const apiUrl = "https://api.scrollscan.com/api"
+const marksApi = "https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/scroll/bridge-balances?walletAddress="
+
 let p
 let csvWriter
 let stats = []
@@ -89,7 +69,8 @@ let total = {
     usdc: 0,
     usdt: 0,
     dai: 0,
-    gas: 0
+    gas: 0,
+    marks: 0
 }
 let stables = ['USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
@@ -227,6 +208,9 @@ async function getTxs(wallet, index) {
     let retry = 0
     let bridgeTo = 0
     let bridgeFrom = 0
+    let isMarksCollected = false
+    let marksRetry = 0
+    let marks = 0
 
     while (!isAllTxCollected) {
         try {
@@ -259,6 +243,32 @@ async function getTxs(wallet, index) {
 
             if (retry > 3) {
                 isAllTxCollected = true
+            }
+        }
+    }
+
+    while (!isMarksCollected) {
+        try {
+            await axios.get(marksApi+wallet, {
+                httpsAgent: agent,
+                signal: newAbortSignal(15000)
+            }).then(response => {
+                if (response.data) {
+                    Object.values(response.data).forEach(marksCategory => {
+                        marks += parseInt(marksCategory.points)
+                    })
+                }
+
+                isMarksCollected = true
+            })
+        } catch (error) {
+            if (config.debug) console.log(error)
+            agent = getProxy(index, true)
+
+            marksRetry++
+
+            if (marksRetry > 3) {
+                isMarksCollected = true
             }
         }
     }
@@ -384,6 +394,7 @@ async function getTxs(wallet, index) {
         stats[wallet].total_gas = totalGasUsed
         stats[wallet].bridge_to = bridgeTo
         stats[wallet].bridge_from = bridgeFrom
+        stats[wallet].marks = marks
     }
 }
 
@@ -392,6 +403,7 @@ async function fetchWallet(wallet, index) {
     stats[wallet].volume = 0
     stats[wallet].bridge_to = 0
     stats[wallet].bridge_from = 0
+    stats[wallet].marks = 0
 
     // await getBalances(wallet, index)
     await getTxs(wallet, index)
@@ -401,6 +413,7 @@ async function fetchWallet(wallet, index) {
     total.usdt += parseFloat(stats[wallet].balances['USDT'])
     total.usdc += parseFloat(stats[wallet].balances['USDC'])
     total.dai += parseFloat(stats[wallet].balances['DAI'])
+    total.marks += parseInt(stats[wallet].marks)
 
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
@@ -408,6 +421,7 @@ async function fetchWallet(wallet, index) {
     p.addRow({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Marks': stats[wallet].marks,
         'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? 'Yes' : 'No',
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
@@ -429,6 +443,7 @@ async function fetchWallet(wallet, index) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
+        'Marks': stats[wallet].marks,
         'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? true : false,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
@@ -467,7 +482,8 @@ async function fetchWallets() {
         usdc: 0,
         usdt: 0,
         dai: 0,
-        gas: 0
+        gas: 0,
+        marks: 0
     }
 
     csvWriter = createObjectCsvWriter({
@@ -513,6 +529,7 @@ async function addTotalRow() {
     p.addRow({})
     p.addRow({
         wallet: 'Total',
+        'Marks': total.marks,
         'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
         'USDC': total.usdc.toFixed(2),
         'USDT': total.usdt.toFixed(2),
@@ -539,6 +556,7 @@ export async function scrollData() {
 
     jsonData.push({
         wallet: 'Total',
+        'Marks': total.marks,
         'ETH': total.eth.toFixed(4),
         'ETH USDVALUE': (total.eth*ethPrice).toFixed(2),
         'USDC': total.usdc.toFixed(2),

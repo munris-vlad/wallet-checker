@@ -23,7 +23,8 @@
                             </div>
                         </div>
                     </td>
-                    <td :class="tdClass">{{ item['Origins NFT'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Marks'] }}</td>
+                    <td :class="tdClass"><span v-if="item['wallet'] !== 'Total'">{{ item['Origins NFT'] ? '✅' : '❌' }}</span></td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.scroll.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['USDC'] }}</td>
                     <td :class="tdClass">{{ item['USDT'] }}</td>
@@ -73,6 +74,7 @@ export default {
             headers: [
                 'n',
                 'Wallet',
+                'Marks',
                 'Origins NFT',
                 'ETH',
                 'USDC',

@@ -252,7 +252,7 @@ async function fetchWallet(wallet, index, isExtended) {
         Wallet: wallet,
         Clusters: data.clusters,
         'TX Count': data.tx_count,
-        'Bad protocols %': ((data.badProtocolsCount / data.tx_count) * 100).toFixed(0) + '%',
+        'Bad protocols %': ((data.badProtocolsCount / data.tx_count) * 100).toFixed(0),
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Contracts': data.contracts,
