@@ -592,3 +592,21 @@ export const redstone = /*#__PURE__*/ defineChain({
         },
     }
 })
+
+export function generateRandomString(length) {
+    const chars = '0123456789abcdef'
+    let result = ''
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * chars.length)
+        result += chars[randomIndex]
+    }
+    return result
+}
+
+export function generateFormattedString() {
+    const part1 = generateRandomString(32)
+    const part2 = generateRandomString(16)
+    const part3 = generateRandomString(1)
+    
+    return `${part1}-${part2}-${part3}`
+}

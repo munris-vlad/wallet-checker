@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey, generateFormattedString } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -12,6 +12,7 @@ const columns = [
     { name: 'Wallet', color: 'green', alignment: "right" },
     { name: 'Clusters', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
+    { name: 'Bad protocols %', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
     { name: 'Contracts', alignment: 'right', color: 'cyan' },
@@ -27,6 +28,7 @@ const headers = [
     { id: 'Wallet', title: 'Wallet' },
     { id: 'Clusters', title: 'Clusters' },
     { id: 'TX Count', title: 'TX Count' },
+    { id: 'Bad protocols %', title: 'Bad protocols %' },
     { id: 'Source chains', title: 'Source chains' },
     { id: 'Dest chains', title: 'Dest chains' },
     { id: 'Contracts', title: 'Contracts' },
@@ -81,7 +83,7 @@ let csvData = []
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 
-function getQueryHeaders() {
+function getQueryHeaders(wallet) {
     return {
         "accept": "*/*",
         "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
@@ -93,12 +95,16 @@ function getQueryHeaders() {
         "sec-fetch-dest": "empty",
         "sec-fetch-mode": "cors",
         "sec-fetch-site": "same-origin",
+        "Referer": `https://layerzeroscan.com/address/${wallet}`,
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Sentry-Trace": generateFormattedString(),
+        "Cookie": ""
     }
 }
 
 async function fetchWallet(wallet, index, isExtended) {
 
-    let agent = getProxy(index)
+    let agent = getProxy(index, true)
 
     let data = {
         wallet: wallet,
@@ -113,7 +119,8 @@ async function fetchWallet(wallet, index, isExtended) {
         weeks: 0,
         months: 0,
         first_tx: '',
-        last_tx: ''
+        last_tx: '',
+        badProtocolsCount: 0
     }
 
     let txs = []
@@ -121,6 +128,8 @@ async function fetchWallet(wallet, index, isExtended) {
     let isClustersParsed = false
     let retry = 0
     let retryClusters = 0
+    let badProtocols = ['merkly', 'zerius', 'gas.zip', 'l2telegraph', 'l2pass', 'l2marathon', 'nogem']
+    let badProtocolsCount = 0
 
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
@@ -134,20 +143,19 @@ async function fetchWallet(wallet, index, isExtended) {
 
     while (!isTxParsed) {
         await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
-            // httpsAgent: agent,
-            signal: newAbortSignal(5000),
-            referrer: `https://layerzeroscan.com/address/${wallet}`,
-            referrerPolicy: "strict-origin-when-cross-origin",
-            credentials: "include"
+            headers: getQueryHeaders(wallet),
+            httpsAgent: agent,
+            signal: newAbortSignal(15000)
         }).then(response => {
             txs = response.data.result.data.messages
             data.tx_count = response.data.result.data.count
             isTxParsed = true
-        }).catch(error => {
+        }).catch(async error => {
             if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
             retry++
 
             agent = getProxy(index, true)
+            await sleep(3000)
 
             if (retry >= 3) {
                 isTxParsed = true
@@ -191,6 +199,10 @@ async function fetchWallet(wallet, index, isExtended) {
                 } else {
                     protocols[tx.srcUaProtocol.id]++
                 }
+
+                if (badProtocols.includes(tx.srcUaProtocol.id)) {
+                    badProtocolsCount++
+                }
             }
 
             if (!sources[tx.srcChainKey]) {
@@ -214,6 +226,7 @@ async function fetchWallet(wallet, index, isExtended) {
         data.days = uniqueDays.size
         data.weeks = uniqueWeeks.size
         data.months = uniqueMonths.size
+        data.badProtocolsCount = badProtocolsCount
     }
 
     progressBar.update(iteration)
@@ -223,6 +236,7 @@ async function fetchWallet(wallet, index, isExtended) {
         Wallet: wallet,
         Clusters: data.clusters,
         'TX Count': data.tx_count,
+        'Bad protocols %': ((data.badProtocolsCount / data.tx_count) * 100).toFixed(0) + '%',
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Contracts': data.contracts,
@@ -238,6 +252,7 @@ async function fetchWallet(wallet, index, isExtended) {
         Wallet: wallet,
         Clusters: data.clusters,
         'TX Count': data.tx_count,
+        'Bad protocols %': ((data.badProtocolsCount / data.tx_count) * 100).toFixed(0) + '%',
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Contracts': data.contracts,
@@ -298,7 +313,7 @@ function fetchWallets(isExtended) {
         header: headers
     })
 
-    const batchSize = 50
+    const batchSize = 10
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -310,7 +325,7 @@ function fetchWallets(isExtended) {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch, isExtended))
-            }, i * 5000)
+            }, i * 3000)
         })
 
         walletPromises.push(promise)
