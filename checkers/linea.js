@@ -19,6 +19,7 @@ const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'Linea XP', color: 'green', alignment: "right"},
+    { name: 'LXP-L Points', color: 'green', alignment: "right"},
     { name: 'Voyage NFT', color: 'green', alignment: "right"},
     { name: 'PoH', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
@@ -40,6 +41,7 @@ const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
     { id: 'Linea XP', title: 'Linea XP'},
+    { id: 'LXP-L Points', title: 'LXP-L Points'},
     { id: 'Voyage NFT', title: 'Voyage NFT'},
     { id: 'PoH', title: 'PoH'},
     { id: 'ETH', title: 'ETH'},
@@ -101,7 +103,8 @@ let total = {
     usdt: 0,
     dai: 0,
     gas: 0,
-    xp: 0
+    xp: 0,
+    lxplpoints: 0
 }
 let stables = ['USDT', 'USDC', 'DAI']
 const cancelTimeout = 15000
@@ -117,6 +120,9 @@ async function getBalances(wallet) {
 
     let pohDone
     let pohRetry = 0
+
+    let lxplpointsDone = false
+    let lxplpointsRetry = 0
 
     let voyageNft = ''
 
@@ -202,6 +208,24 @@ async function getBalances(wallet) {
             }
         })
     }
+
+    while (!lxplpointsDone) {
+        await axios.get(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/starknet/getUserPointsSearch?user=${wallet.toLowerCase()}`, {
+            signal: newAbortSignal(cancelTimeout),
+            httpsAgent: getProxy(0, true),
+        }).then(response => {
+            stats[wallet].lxplpoints = response.data.Items[0].xp
+
+            lxplpointsDone = true
+        }).catch(function (error) {
+            if (config.debug) console.log(error)
+
+            lxplpointsRetry++
+            if (lxplpointsRetry > 3) {
+                lxplpointsDone = true
+            }
+        })
+    }
 }
 
 async function getTxs(wallet) {
@@ -284,6 +308,7 @@ async function getTxs(wallet) {
 async function fetchWallet(wallet, index) {
     stats[wallet] = {
         txcount: 0,
+        lxplpoints: 0,
         volume: 0,
         balances: [],
         voyagenft: '',
@@ -296,6 +321,7 @@ async function fetchWallet(wallet, index) {
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
     total.xp += stats[wallet].balances['LXP'] ? parseFloat(stats[wallet].balances['LXP']) : 0
+    total.lxplpoints += stats[wallet].lxplpoints ? parseInt(stats[wallet].lxplpoints) : 0
     total.eth += stats[wallet].balances['ETH'] ? parseFloat(stats[wallet].balances['ETH']) : 0
     total.usdt += stats[wallet].balances['USDT'] ? parseFloat(stats[wallet].balances['USDT']) : 0
     total.usdc += stats[wallet].balances['USDC'] ? parseFloat(stats[wallet].balances['USDC']) : 0
@@ -308,6 +334,7 @@ async function fetchWallet(wallet, index) {
         n: parseInt(index)+1,
         wallet: wallet,
         'Linea XP': stats[wallet].balances['LXP'],
+        'LXP-L Points': stats[wallet].lxplpoints,
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
@@ -329,6 +356,7 @@ async function fetchWallet(wallet, index) {
         n: parseInt(index)+1,
         wallet: wallet,
         'Linea XP': stats[wallet].balances['LXP'],
+        'LXP-L Points': stats[wallet].lxplpoints,
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
@@ -367,7 +395,8 @@ async function fetchWallets() {
         usdt: 0,
         dai: 0,
         gas: 0,
-        xp: 0
+        xp: 0,
+        lxplpoints: 0
     }
 
     csvWriter = createObjectCsvWriter({
@@ -414,6 +443,7 @@ async function addTotalRow() {
     p.addRow({
         wallet: 'Total',
         'Linea XP': total.xp,
+        'LXP-L Points': total.lxplpoints,
         'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
         'USDC': total.usdc.toFixed(2),
         'USDT': total.usdt.toFixed(2),
@@ -439,6 +469,7 @@ export async function lineaData() {
     jsonData.push({
         wallet: 'Total',
         'Linea XP': total.xp,
+        'LXP-L Points': total.lxplpoints,
         'ETH': total.eth.toFixed(4),
         'ETH USDVALUE': (total.eth*ethPrice).toFixed(2),
         'USDC': total.usdc.toFixed(2),

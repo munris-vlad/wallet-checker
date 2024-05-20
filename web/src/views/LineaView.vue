@@ -24,6 +24,7 @@
                         </div>
                     </td>
                     <td :class="tdClass">{{ item['Linea XP'] }}</td>
+                    <td :class="tdClass">{{ item['LXP-L Points'] }}</td>
                     <td :class="tdClass">{{ item['Voyage NFT'] }}</td>
                     <td :class="tdClass">{{ item['PoH'] ? '✅' : '❌' }}</td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.linea.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
@@ -74,6 +75,7 @@ export default {
                 'n',
                 'Wallet',
                 'Linea XP',
+                'LXP-L Points',
                 'Voyage NFT',
                 'PoH',
                 'ETH',

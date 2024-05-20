@@ -33,7 +33,7 @@
                                     <img class="rounded-full w-7 h-7 rounded-full"
                                         :src="token.imageUrl ? token.imageUrl : '/eth1.png'" :alt="token.symbol">
                                     <img class="absolute w-3.5 h-3.5 bottom-2 -right-1 rounded-full"
-                                        :src="`https://clusters.xyz/images/chains-circles/${token.chainId}.png`"
+                                        :src="`https://cdn.clusters.xyz/public/chains/circles/${token.chainId}`"
                                         :alt="token.symbol">
                                 </div>
                                 <span class="text-xs protocol-text">${{ parseInt(token.valueUsd) }}</span> <br>
