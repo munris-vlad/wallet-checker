@@ -291,6 +291,10 @@ export const entryPoint = async () => {
                 {
                     name: "Balances",
                     value: "balances",
+                },
+                {
+                    name: "Rabby",
+                    value: "rabby",
                 }
             ],
             default: "web",
@@ -309,10 +313,6 @@ export const chooiceNetwork = async () => {
             type: "list",
             message: "Сеть:",
             choices: [
-                {
-                    name: "All",
-                    value: "all",
-                },
                 {
                     name: "Ethereum",
                     value: "ETH",

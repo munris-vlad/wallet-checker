@@ -18,6 +18,7 @@ import ZkbridgeView from "@/views/ZkbridgeView"
 import HyperlaneView from "@/views/HyperlaneView"
 import ClustersView from './views/ClustersView.vue'
 import DebridgeView from './views/DebridgeView.vue'
+import RabbyView from './views/RabbyView.vue'
 
 const app = createApp(App)
 
@@ -43,6 +44,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$balance_count = data.balance_wallets.length
     app.config.globalProperties.$evm_count = data.evm_wallets.length
     app.config.globalProperties.$clusters_count = data.clusters_wallets.length
+    app.config.globalProperties.$rabby_count = data.rabby_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -137,6 +139,12 @@ const routes = [
         name: 'Clusters',
         component: ClustersView,
         meta: { title: 'Clusters' }
+    },
+    {
+        path: '/rabby',
+        name: 'Rabby',
+        component: RabbyView,
+        meta: { title: 'Rabby' }
     },
 ]
 

@@ -9,8 +9,21 @@
     "tailwind": "postcss src/assets/tailwind.css -o public/css/tailwind.css"
   },
   "dependencies": {
+    "assert": "^2.1.0",
     "axios": "^1.5.0",
     "core-js": "^3.8.3",
+    "crypto-browserify": "^3.12.0",
+    "http": "^0.0.1-security",
+    "http-browserify": "^1.7.0",
+    "https": "^1.0.0",
+    "https-browserify": "^1.0.0",
+    "https-proxy-agent": "^7.0.4",
+    "net": "^1.0.2",
+    "socks-proxy-agent": "^8.0.3",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "tls": "^0.0.1",
+    "url": "^0.11.3",
     "vue": "^3.2.13",
     "vue-moment": "^4.1.0",
     "vue-router": "^4.0.3"

@@ -46,7 +46,7 @@ let totalPoints = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function fetchWallet(wallet, index) {
-    let agent = getProxy(index)
+    let agent = getProxy(0, true)
 
     let data = {
         wallet: wallet,

@@ -17,6 +17,7 @@ import axios from "axios"
 import { clustersFetchDataAndPrintTable } from "../checkers/clusters.js"
 import { debridgeFetchDataAndPrintTable } from "../checkers/debridge.js"
 import { pohFetchDataAndPrintTable } from "../checkers/linea-poh-checker.js"
+import { rabbyFetchDataAndPrintTable } from "../checkers/rabby.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -76,6 +77,10 @@ async function startMenu(menu) {
     switch (mode) {
         case "web":
             startExpressServer()
+            break
+        case "rabby":
+            await rabbyFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
             break
         case "clusters":
             await clustersFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })

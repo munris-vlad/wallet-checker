@@ -18,6 +18,7 @@ import { hyperlaneData } from '../checkers/hyperlane.js'
 import { clustersData } from '../checkers/clusters.js'
 import { debridgeData } from '../checkers/debridge.js'
 import { config } from '../user_data/config.js'
+import { chainFetchData, rabbyData } from '../checkers/rabby.js'
 
 const app = express()
 const port = config.port
@@ -45,6 +46,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const lineaWallets = readWallets(config.modules.linea.addresses)
     const scrollWallets = readWallets(config.modules.scroll.addresses)
     const clustersWallets = readWallets(config.modules.clusters.addresses)
+    const rabbyWallets = readWallets(config.modules.rabby.addresses)
     const evmWallets = readWallets(config.modules.evm.addresses)
     const balanceWallets = readWallets(config.modules.balance.addresses)
 
@@ -62,6 +64,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'linea_wallets': lineaWallets,
         'scroll_wallets': scrollWallets,
         'clusters_wallets': clustersWallets,
+        'rabby_wallets': rabbyWallets,
         'evm_wallets': evmWallets,
         'balance_wallets': balanceWallets,
     })
@@ -136,6 +139,18 @@ apiRoutes.get('/evm', async (req, res) => {
 
 apiRoutes.get('/clusters', async (req, res) => {
     const responseData = await clustersData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/rabby', async (req, res) => {
+    const responseData = await rabbyData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/rabby-chain', async (req, res) => {
+    const wallet = req.query.wallet
+    const chainId = req.query.chainId
+    const responseData = await chainFetchData(wallet, chainId)
     res.json(responseData)
 })
 

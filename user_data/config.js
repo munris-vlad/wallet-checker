@@ -109,6 +109,10 @@ export const config = {
                 },
             }
         },
+        rabby: {
+            enabled: true,
+            addresses: './user_data/addresses/evm.txt',
+        },        
     },
     port: 80, // порт для запуска веб версии
     moralisApiKey: '',
