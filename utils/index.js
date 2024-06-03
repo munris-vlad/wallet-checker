@@ -18,6 +18,7 @@ import { clustersFetchDataAndPrintTable } from "../checkers/clusters.js"
 import { debridgeFetchDataAndPrintTable } from "../checkers/debridge.js"
 import { pohFetchDataAndPrintTable } from "../checkers/linea-poh-checker.js"
 import { rabbyFetchDataAndPrintTable } from "../checkers/rabby.js"
+import { config } from '../user_data/config.js'
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -45,15 +46,20 @@ async function checkVersion() {
         const packageInfo = JSON.parse(content)
         let actualVersion = 0
 
+        
         await axios.get('https://munris.tech/checker-version.json').then(response => {
             actualVersion = response.data
+        }).catch(error => {
+            if (config.debug) console.log(error.toString())
         })
 
-        if (compareVersions(actualVersion, packageInfo.version)) {
-            console.log('\x1b[31m', `Your version of Wallet checker is out of date. Please update it before use.`)
-            console.log('\x1b[31m', `Actual: ${actualVersion} Local: ${packageInfo.version}`)
-            console.log('\x1b[0m')
-            await sleep(5000)
+        if (actualVersion !== 0) {
+            if (compareVersions(actualVersion, packageInfo.version)) {
+                console.log('\x1b[31m', `Your version of Wallet checker is out of date. Please update it before use.`)
+                console.log('\x1b[31m', `Actual: ${actualVersion} Local: ${packageInfo.version}`)
+                console.log('\x1b[0m')
+                await sleep(5000)
+            }
         }
     })
 }
