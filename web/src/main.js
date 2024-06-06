@@ -19,6 +19,7 @@ import HyperlaneView from "@/views/HyperlaneView"
 import ClustersView from './views/ClustersView.vue'
 import DebridgeView from './views/DebridgeView.vue'
 import RabbyView from './views/RabbyView.vue'
+import NftView from './views/NftView.vue'
 
 const app = createApp(App)
 
@@ -145,6 +146,12 @@ const routes = [
         name: 'Rabby',
         component: RabbyView,
         meta: { title: 'Rabby' }
+    },
+    {
+        path: '/nft',
+        name: 'NFT',
+        component: NftView,
+        meta: { title: 'NFT' }
     },
 ]
 

@@ -1,4 +1,4 @@
-import { getKeyByValue, newAbortSignal, readWallets, timestampToDate, getProxy, getTokenPrice } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, timestampToDate, getProxy, ethPrice, bnbPrice } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -72,8 +72,8 @@ function getQueryHeaders() {
 }
 
 let prices = {
-    'ETH': await getTokenPrice('ETH'),
-    'BNB': await getTokenPrice('BNB'),
+    'ETH': ethPrice,
+    'BNB': bnbPrice,
     'USDT': 1,
     'USDC': 1,
 }

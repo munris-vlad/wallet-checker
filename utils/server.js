@@ -19,6 +19,7 @@ import { clustersData } from '../checkers/clusters.js'
 import { debridgeData } from '../checkers/debridge.js'
 import { config } from '../user_data/config.js'
 import { chainFetchData, rabbyData } from '../checkers/rabby.js'
+import { nftData } from '../checkers/nft.js'
 
 const app = express()
 const port = config.port
@@ -151,6 +152,11 @@ apiRoutes.get('/rabby-chain', async (req, res) => {
     const wallet = req.query.wallet
     const chainId = req.query.chainId
     const responseData = await chainFetchData(wallet, chainId)
+    res.json(responseData)
+})
+
+apiRoutes.get('/nft', async (req, res) => {
+    const responseData = await nftData()
     res.json(responseData)
 })
 

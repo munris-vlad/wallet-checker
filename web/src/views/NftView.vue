@@ -1,7 +1,7 @@
 <template>
     <div class="pb-5">
         <div class="min-w-full text-center header pb-4 pt-4">
-            <h1 class="text-3xl">Rabby</h1>
+            <h1 class="text-3xl">NFT</h1>
         </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700"
             v-if="isDataLoaded && !isError">
@@ -16,31 +16,26 @@
                     <td :class="tdClass">{{ item['n'] }}</td>
                     <td :class="tdClass + ' text-left'">
                         <div class="flex space-x-2 pt-3 pb-2">
-                            <strong>{{ item['Wallet'] }}</strong>
+                            <strong>{{ item['wallet'] }}</strong>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'Total'">
-                                <a target="_blank" :href="'https://debank.com/profile/' + item['Wallet']"><img
+                                <a target="_blank" :href="'https://debank.com/profile/' + item['wallet']"><img
                                         class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
                             </div>
                         </div>
                     </td>
-                    <td :class="tdClass">${{ item['Total'] }}</td>
+                    <td :class="tdClass">${{ item['total'] }}</td>
                     <td :class="tdClass + ' text-left'">
-                        <div class="flex space-x-5 pt-2 pb-12 select-none" v-if="item['chains']" >
-                            <div class="w-7 h-7 text-center" v-for="(chain, index) in item['chains'].slice(0, 10)" :key="index" :title="chain.name">
+                        <div class="flex space-x-10 pt-2 pb-16 select-none text-center" v-if="item.data">
+                            <div class="w-7 h-7 text-center" v-for="(nft, index) in item.data" :key="index" :title="nft.name">
                                 <div class="relative pb-3">
-                                    <img class="rounded-full w-7 h-7 rounded-full chain cursor-pointer" ref="chains" @click="fetchChain(chain, item['Wallet'], $event)" :src="chain.logo_url" :alt="chain.name">
+                                    <img class="rounded-full w-7 h-7 rounded-full chain cursor-pointer" ref="nfts" :src="nft.logo_url ? nft.logo_url : '/nft.png'" :alt="nft.name">
+                                    <img class="absolute w-3.5 h-3.5 bottom-2 -right-1 rounded-full"
+                                        :src="nft.native_token.logo_url"
+                                        :alt="nft.native_token.symbol">
                                 </div>
-                                <span class="text-xs protocol-text">${{ parseInt(chain.usd_value) }}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex space-x-5 pt-2 pb-12 select-none border-t border-purple-300 pt-4" v-if="tokens[item['Wallet']]">
-                            <div class="w-7 h-7 text-center" v-for="(token, index) in tokens[item['Wallet']].slice(0, 10)" :key="index" :title="token.name">
-                                <div class="relative pb-3">
-                                    <img class="rounded-full w-7 h-7 rounded-full chain" :src="token.logo_url" :alt="token.name">
-                                </div>
-                                <span class="text-xs protocol-text">${{ parseInt(token.amount * token.price) }}</span> <br>
-                                <span class="text-xs token-font opacity-50">{{ processNumber(token.amount) }}</span>
+                                <span class="text-xs protocol-text">{{ nft.nft_list.length }} x {{ nft.floor_price.toFixed(2) }}</span> <br>
+                                <span class="text-xs token-font opacity-75">{{ parseFloat(nft.nft_list.length * nft.floor_price).toFixed(2) }} {{ nft.native_token.symbol }}</span> <br>
+                                <span class="text-xs token-font opacity-50">${{ parseInt((nft.floor_price * nft.nft_list.length) * nft.native_token.price) }}</span>
                             </div>
                         </div>
                     </td>
@@ -97,25 +92,16 @@ export default {
     },
     methods: {
         formatDate,
-        async fetchChain(chain, wallet, event) {
+        async showNft(event) {
             this.$refs.chains.forEach(element => {
                 element.classList.remove('border-purple-600')
                 element.classList.remove('border-2')
             })
             event.target.classList.toggle('border-2')
             event.target.classList.toggle('border-purple-600')
-
-            this.$axios.get('/api/rabby-chain', { 
-                params: { 
-                    wallet: wallet,
-                    chainId: chain.id
-                } 
-            }).then((response) => {
-                this.tokens[wallet] = response.data
-            }).catch()
         },
         loadData() {
-            this.$axios.get('/api/rabby').then((response) => {
+            this.$axios.get('/api/nft').then((response) => {
                 this.data = response.data.sort((a, b) => a.n - b.n)
                 this.isDataLoaded = true
             }).catch((error) => {

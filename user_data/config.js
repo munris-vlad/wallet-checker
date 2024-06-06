@@ -113,6 +113,10 @@ export const config = {
             enabled: true,
             addresses: './user_data/addresses/evm.txt',
         },        
+        nft: {
+            enabled: false,
+            addresses: './user_data/addresses/nft.txt',
+        },     
     },
     port: 80, // порт для запуска веб версии
     moralisApiKey: '',

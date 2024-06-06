@@ -203,7 +203,7 @@ export async function getTokenPrice(token) {
     let retry = 0
 
     while (!isFetched) {
-        const agent = getProxy()
+        const agent = getProxy(0, true)
         await axios.get(`https://min-api.cryptocompare.com/data/price?fsym=${token}&tsyms=USD`, {
             httpsAgent: agent
         }).then(response => {
@@ -610,3 +610,15 @@ export function generateFormattedString() {
     
     return `${part1}-${part2}-${part3}`
 }
+
+export let aptPrice = await getTokenPrice('APT')
+export let ethPrice = await getTokenPrice('ETH')
+export let maticPrice = await getTokenPrice('MATIC')
+export let bnbPrice = await getTokenPrice('BNB')
+export let avaxPrice = await getTokenPrice('AVAX')
+export let corePrice = await getTokenPrice('CORE')
+export let celoPrice = await getTokenPrice('CELO')
+export let klayPrice = await getTokenPrice('KLAY')
+export let ftmPrice = await getTokenPrice('FTM')
+export let glmrPrice = await getTokenPrice('GLMR')
+export let movrPrice = await getTokenPrice('MOVR')

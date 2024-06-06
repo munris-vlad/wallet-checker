@@ -16,7 +16,7 @@
                         <div class="flex space-x-2 pt-3 pb-2">
                             <strong>{{ item['wallet'] }}</strong>
                             <div class="h-4 w-4">
-                                <a target="_blank" :href="'https://aptoscan.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/aptos-scan.png'" alt=""></a>
+                                <a target="_blank" :href="'https://aptoscan.com/account/'+item['wallet']"><img class="rounded-full mb-1" :src="'/aptos-scan.png'" alt=""></a>
                             </div>
                         </div>
                     </td>

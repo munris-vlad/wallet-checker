@@ -4,7 +4,7 @@ import {
     readWallets,
     getBalance, getKeyByValue,
     newAbortSignal,
-    getTokenPrice
+    ethPrice
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -203,8 +203,6 @@ if (!args.includes('no-lite')) {
 
 
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
-
-let ethPrice = await getTokenPrice('ETH')
 
 let p
 let csvWriter

@@ -1,5 +1,5 @@
 import  '../utils/common.js'
-import { sleep, random, readWallets, getBalance, getKeyByValue, getTokenPrice, newAbortSignal, getProxy, multicallAbi, multicallAddress, erc20Abi } from '../utils/common.js'
+import { sleep, random, readWallets, ethPrice, getKeyByValue, getTokenPrice, newAbortSignal, getProxy, multicallAbi, multicallAddress, erc20Abi } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -74,7 +74,6 @@ let total = {
 }
 let stables = ['USDT', 'USDC', 'DAI']
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-let ethPrice = await getTokenPrice('ETH')
 
 async function fetchBalances(wallets) {
     wallets.map(wallet => {

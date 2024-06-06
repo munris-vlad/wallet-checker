@@ -5,7 +5,7 @@ import { sleep,
     getKeyByValue,
     getProxy,
     newAbortSignal,
-    getTokenPrice,
+    ethPrice,
     timestampToDate
 } from '../utils/common.js'
 import axios from "axios"
@@ -59,35 +59,6 @@ const headers = [
     { id: 'Total gas spent', title: 'Total gas spent'}
 ]
 
-const contracts = [
-    {
-        token: 'Linea XP',
-        address: '0xd83af4fbD77f3AB65C3B1Dc4B38D7e67AEcf599A',
-        decimals: 18    
-    },
-    {
-        token: 'USDC',
-        address: '0x176211869cA2b568f2A7D4EE941E073a821EE1ff',
-        decimals: 6
-    },
-    {
-        token: 'USDT',
-        address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
-        decimals: 6
-    },
-    {
-        token: 'DAI',
-        address: '0x4AF15ec2A0BD43Db75dd04E62FAA3B8EF36b00d5',
-        decimals: 18
-    },
-    {
-        token: 'BUSD',
-        address: '0x7d43AABC515C356145049227CeE54B608342c0ad',
-        decimals: 18
-    }
-]
-
-
 const apiUrl = "https://api.w3w.ai/linea/v1/explorer/address"
 let p
 let csvWriter
@@ -109,7 +80,6 @@ let total = {
 let stables = ['USDT', 'USDC', 'DAI']
 const cancelTimeout = 15000
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-let ethPrice = await getTokenPrice('ETH')
 
 async function getBalances(wallet) {
     let ethBalanceDone

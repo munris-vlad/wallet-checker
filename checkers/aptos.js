@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { readWallets, getBalance, timestampToDate, getProxy, getTokenPrice } from '../utils/common.js'
+import { readWallets, getBalance, timestampToDate, getProxy, aptPrice } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -69,7 +69,7 @@ let wallets = readWallets(config.modules.aptos.addresses)
 let iterations = wallets.length
 let iteration = 1
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
-let aptPrice = await getTokenPrice('APT')
+
 
 async function getBalances(wallet, index) {
     filterSymbol.forEach(symbol => {

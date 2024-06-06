@@ -1,4 +1,4 @@
-import { getNativeToken, random, readWallets, multicallAbi, multicallAddress, erc20Abi, redstone} from "../utils/common.js"
+import { getNativeToken, random, readWallets, multicallAbi, multicallAddress, erc20Abi, redstone, ethPrice, maticPrice, bnbPrice, avaxPrice, corePrice, celoPrice, klayPrice, ftmPrice, glmrPrice, movrPrice} from "../utils/common.js"
 import axios from "axios"
 import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
@@ -32,7 +32,7 @@ let headers = [
 const priceApi = 'https://min-api.cryptocompare.com/data/price'
 const networks = {
     'ETH': {
-        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD }),
+        'nativePrice': ethPrice,
         'USDT': {
             address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
             decimals: 6
@@ -47,7 +47,7 @@ const networks = {
         }
     },
     'Arbitrum': {
-        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD }),
+        'nativePrice': ethPrice,
         'USDT': {
             address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
             decimals: 6
@@ -66,7 +66,7 @@ const networks = {
         }
     },
     'Optimism': {
-        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD }),
+        'nativePrice': ethPrice,
         'USDT': {
             address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
             decimals: 6
@@ -93,7 +93,7 @@ const networks = {
             address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
             decimals: 18
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=MATIC&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': maticPrice
     },
     'BSC': {
         'USDT': {
@@ -108,7 +108,7 @@ const networks = {
             address: '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3',
             decimals: 18
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=BNB&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': bnbPrice
     },
     'Avalanche': {
         'USDT': {
@@ -127,7 +127,7 @@ const networks = {
             address: '0xd586E7F844cEa2F87f50152665BCbc2C279D8d70',
             decimals: 18
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=AVAX&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': avaxPrice
     },
     'Base': {
         'USDT': {
@@ -138,7 +138,7 @@ const networks = {
             address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': ethPrice
     },
     'Core': {
         'USDT': {
@@ -149,14 +149,14 @@ const networks = {
             address: '0xa4151b2b3e269645181dccf2d426ce75fcbdeca9',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=CORE&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': corePrice
     },
     'opBNB': {
         'USDT': {
             address: '0x9e5aac1ba1a2e6aed6b32689dfcf62a509ca96f3',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=BNB&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': bnbPrice
     },
     'Celo': {
         'USDT': {
@@ -167,14 +167,14 @@ const networks = {
             address: '0xef4229c8c3250c675f21bcefa42f58efbff6002a',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=CELO&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': celoPrice
     },
     'Klaytn': {
         'USDT': {
             address: '0xcee8faf64bb97a73bb51e115aa89c17ffa8dd167',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=KLAY&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': klayPrice
     },
     'Fantom': {
         'USDT': {
@@ -185,7 +185,7 @@ const networks = {
             address: '0x818ec0a7fe18ff94269904fced6ae3dae6d6dc0b',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=FTM&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': ftmPrice
     },
     'Moonbeam': {
         'USDT': {
@@ -196,7 +196,7 @@ const networks = {
             address: '0x818ec0a7fe18ff94269904fced6ae3dae6d6dc0b',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=GLMR&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': glmrPrice
     },
     'Moonriver': {
         'USDT': {
@@ -207,10 +207,10 @@ const networks = {
             address: '0xe3f5a90f9cb311505cd691a46596599aa1a0ad7d',
             decimals: 6
         },
-        'nativePrice': await axios.get(priceApi + '?fsym=MOVR&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': movrPrice
     },
     'Redstone': {
-        'nativePrice': await axios.get(priceApi + '?fsym=ETH&tsyms=USD').then(r => { return r.data.USD })
+        'nativePrice': ethPrice
     }
 }
 

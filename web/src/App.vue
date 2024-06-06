@@ -18,6 +18,7 @@
                 <router-link v-if="appconfig.modules.evm.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/evm"><img class="rounded-full w-6 h-6 mr-2" :src="'/eth.png'" alt=""> EVM</router-link>
                 <router-link v-if="appconfig.modules.clusters.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/clusters"><img class="rounded-full w-6 h-6 mr-2" :src="'/clusters.jfif'" alt=""> Clusters</router-link>
                 <router-link v-if="appconfig.modules.rabby.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/rabby"><img class="rounded-full w-6 h-6 mr-2" :src="'/rabby.png'" alt=""> Rabby</router-link>
+                <router-link v-if="appconfig.modules.nft.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/nft"><img class="rounded-full w-6 h-6 mr-2" :src="'/nft.png'" alt=""> NFT</router-link>
             </nav>
         </header>
         <router-view/>
