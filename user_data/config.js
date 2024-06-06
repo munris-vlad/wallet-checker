@@ -115,6 +115,7 @@ export const config = {
         },        
         nft: {
             enabled: false,
+            minCollectionPriceUSD: 10,
             addresses: './user_data/addresses/nft.txt',
         },     
     },

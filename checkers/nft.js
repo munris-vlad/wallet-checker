@@ -40,7 +40,7 @@ async function fetchWallet(address, index) {
 
     const filteredNfts = nfts.filter(nft => {
         const price = (nft.floor_price * nft.nft_list.length) * nft.native_token.price
-        return price > 10
+        return price > config.modules.nft.minCollectionPriceUSD
     })
 
     for (const nft of filteredNfts) {
