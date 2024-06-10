@@ -641,14 +641,14 @@ export function generateFormattedString() {
 
 
 const prices = await getTokensPrice('APT,ETH,MATIC,BNB,AVAX,CORE,CELO,KLAY,FTM,GLMR,MOVR')
-export const aptPrice = prices.APT.USD
-export const ethPrice = prices.ETH.USD
-export const maticPrice = prices.MATIC.USD
-export const bnbPrice = prices.BNB.USD
-export const avaxPrice = prices.AVAX.USD
-export const corePrice = prices.CORE.USD
-export const celoPrice = prices.CELO.USD
-export const klayPrice = prices.KLAY.USD
-export const ftmPrice = prices.FTM.USD
-export const glmrPrice = prices.GLMR.USD
-export const movrPrice = prices.MOVR.USD
+export const aptPrice = prices.APT ? prices.APT.USD : 0
+export const ethPrice = prices.ETH ? prices.ETH.USD : 0
+export const maticPrice = prices.MATIC ? prices.MATIC.USD : 0
+export const bnbPrice = prices.BNB ? prices.BNB.USD : 0
+export const avaxPrice = prices.AVAX ? prices.AVAX.USD : 0
+export const corePrice = prices.CORE ? prices.CORE.USD : 0
+export const celoPrice = prices.CELO ? prices.CELO.USD : 0
+export const klayPrice = prices.KLAY ? prices.KLAY.USD : 0
+export const ftmPrice = prices.FTM ? prices.FTM.USD : 0
+export const glmrPrice = prices.GLMR ? prices.GLMR.USD : 0
+export const movrPrice = prices.MOVR ? prices.MOVR.USD : 0
