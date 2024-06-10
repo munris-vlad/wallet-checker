@@ -8,6 +8,7 @@ import cliProgress from 'cli-progress'
 import { config, rpcs } from '../user_data/config.js'
 import { scroll } from 'viem/chains'
 import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
@@ -55,6 +56,11 @@ const headers = [
 
 const apiUrl = "https://api.scrollscan.com/api"
 const marksApi = "https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/scroll/bridge-balances?walletAddress="
+
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('scroll')
+}
 
 let p
 let csvWriter
@@ -180,9 +186,9 @@ async function fetchBalances(wallets) {
 
     wallets.map((wallet, index) => {
         let eth = formatEther(balanceResults[index].result)
-        let usdt = parseFloat(formatUnits(usdtResults[index].result, 6)).toFixed(1)
-        let usdc = parseFloat(formatUnits(usdcResults[index].result, 6)).toFixed(1)
-        let dai = parseFloat(formatUnits(daiResults[index].result, 18)).toFixed(1)
+        let usdt = usdtResults[index] ? parseFloat(formatUnits(usdtResults[index].result, 6)).toFixed(1) : 0
+        let usdc = usdcResults[index] ? parseFloat(formatUnits(usdcResults[index].result, 6)).toFixed(1) : 0
+        let dai = daiResults[index] ? parseFloat(formatUnits(daiResults[index].result, 18)).toFixed(1) : 0
         let origins = parseInt(originsResults[index].result)
 
         stats[wallet].balances = {
@@ -397,7 +403,7 @@ async function getTxs(wallet, index) {
     }
 }
 
-async function fetchWallet(wallet, index) {
+async function fetchWallet(wallet, index, isFetch = false) {
     stats[wallet].txcount = 0
     stats[wallet].volume = 0
     stats[wallet].bridge_to = 0
@@ -405,7 +411,13 @@ async function fetchWallet(wallet, index) {
     stats[wallet].marks = 0
 
     // await getBalances(wallet, index)
-    await getTxs(wallet, index)
+    const existingData = await getWalletFromDB(wallet, 'scroll')
+    if (existingData && !isFetch) {
+        stats[wallet] = JSON.parse(existingData)
+    } else {
+        await getTxs(wallet, index)
+    }
+
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
     total.eth += parseFloat(stats[wallet].balances['ETH'])
@@ -463,6 +475,10 @@ async function fetchWallet(wallet, index) {
         'Total gas spent USDVALUE': usdGasValue
     })
 
+    if (stats[wallet].txcount > 0) {
+        await saveWalletToDB(wallet, 'scroll', JSON.stringify(stats[wallet]))
+    }
+
     iteration++
 }
 
@@ -495,7 +511,16 @@ async function fetchWallets() {
         sort: (row1, row2) => +row1.n - +row2.n
     })
 
-    const batchSize = 7
+    let batchSize = 7
+    let timeout = 3000
+
+    const walletsInDB = await getCountByChecker('scroll')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -507,7 +532,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 3000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -566,4 +591,12 @@ export async function scrollData() {
     })
 
     return jsonData
+}
+
+export async function scrollFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function scrollClean() {
+    await cleanByChecker('scroll')
 }

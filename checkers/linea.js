@@ -14,6 +14,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right"},
@@ -58,6 +59,11 @@ const headers = [
     { id: 'Last tx', title: 'Last tx'},
     { id: 'Total gas spent', title: 'Total gas spent'}
 ]
+
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('linea')
+}
 
 const apiUrl = "https://api.w3w.ai/linea/v1/explorer/address"
 let p
@@ -275,18 +281,23 @@ async function getTxs(wallet) {
     }
 }
 
-async function fetchWallet(wallet, index) {
-    stats[wallet] = {
-        txcount: 0,
-        lxplpoints: 0,
-        volume: 0,
-        balances: [],
-        voyagenft: '',
-        poh: false
-    }
+async function fetchWallet(wallet, index, isFetch = false) {
+    const existingData = await getWalletFromDB(wallet, 'linea')
+    if (existingData && !isFetch) {
+        stats[wallet] = JSON.parse(existingData)
+    } else {
+        stats[wallet] = {
+            txcount: 0,
+            lxplpoints: 0,
+            volume: 0,
+            balances: { ETH: 0, USDT: 0, USDC: 0, DAI: 0, LXP: 0 },
+            voyagenft: '',
+            poh: false
+        }
 
-    await getBalances(wallet)
-    await getTxs(wallet)
+        await getBalances(wallet)
+        await getTxs(wallet)
+    }
     
     progressBar.update(iteration)
     total.gas += stats[wallet].total_gas
@@ -346,6 +357,10 @@ async function fetchWallet(wallet, index) {
         'Total gas spent USDVALUE': usdGasValue
     })
 
+    if (stats[wallet].txcount > 0) {
+        await saveWalletToDB(wallet, 'linea', JSON.stringify(stats[wallet]))
+    }
+
     iteration++
 }
 
@@ -379,7 +394,16 @@ async function fetchWallets() {
         sort: (row1, row2) => +row1.n - +row2.n
     })
 
-    const batchSize = 10
+    let batchSize = 10
+    let timeout = 2000
+
+    const walletsInDB = await getCountByChecker('linea')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -391,7 +415,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 2000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -450,4 +474,12 @@ export async function lineaData() {
     })
 
     return jsonData
+}
+
+export async function lineaFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function lineaClean() {
+    await cleanByChecker('linea')
 }

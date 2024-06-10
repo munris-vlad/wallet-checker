@@ -118,6 +118,11 @@ export const config = {
             minCollectionPriceUSD: 10,
             addresses: './user_data/addresses/nft.txt',
         },     
+        galxe: {
+            enabled: true,
+            addresses: './user_data/addresses/evm.txt',
+            spaces: ['Caldera', 'Babylon', 'Berachain', 'BOB']
+        }, 
     },
     port: 80, // порт для запуска веб версии
     moralisApiKey: '',

@@ -6,6 +6,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const headers = [
     { id: 'n', title: '№'},
@@ -41,8 +42,12 @@ const columns = [
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'}
 ]
 
-const apiUrl = "https://base.blockscout.com/api/v2"
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('base')
+}
 
+const apiUrl = "https://base.blockscout.com/api/v2"
 let csvWriter
 let p
 let stats = []
@@ -147,17 +152,23 @@ async function getTxs(wallet) {
     }
 }
 
-async function fetchWallet(wallet, index) {
-    stats[wallet] = {
-        balances: {
-            USDbC: 0,
-            DAI: 0
-        },
-        balance: 0
+async function fetchWallet(wallet, index, isFetch = false) {
+    const existingData = await getWalletFromDB(wallet, 'base')
+    if (existingData && !isFetch) {
+        stats[wallet] = JSON.parse(existingData)
+    } else {
+        stats[wallet] = {
+            balances: {
+                USDbC: 0,
+                DAI: 0
+            },
+            balance: 0
+        }
+    
+        await getBalances(wallet)
+        await getTxs(wallet)
     }
 
-    await getBalances(wallet)
-    await getTxs(wallet)
     progressBar.update(iteration)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let usdFeeEthValue = (stats[wallet].totalFee*ethPrice).toFixed(2)
@@ -204,10 +215,14 @@ async function fetchWallet(wallet, index) {
         'Total gas spent USDVALUE': stats[wallet].totalFee ? usdFeeEthValue : 0
     })
 
+    if (stats[wallet].txcount > 0) {
+        await saveWalletToDB(wallet, 'base', JSON.stringify(stats[wallet]))
+    }
+
     iteration++
 }
 
-function fetchWallets() {
+async function fetchWallets() {
     csvWriter = createObjectCsvWriter({
         path: './results/base.csv',
         header: headers
@@ -219,7 +234,17 @@ function fetchWallets() {
     })
 
     wallets = readWallets(config.modules.base.addresses)
-    const batchSize = 50
+
+    let batchSize = 50
+    let timeout = 3000
+
+    const walletsInDB = await getCountByChecker('base')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
     iterations = wallets.length
@@ -239,7 +264,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 3000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -261,8 +286,8 @@ async function addTotalRow() {
     p.addRow({
         wallet: 'Total',
         'ETH': totalEth.toFixed(4) + ` ($${(totalEth*ethPrice).toFixed(2)})`,
-        'USDC': totalUsdc,
-        'DAI': totalDai,
+        'USDC': totalUsdc.toFixed(0),
+        'DAI': totalDai.toFixed(0),
         'Total gas spent': totalGas.toFixed(4) + ` ($${(totalGas*ethPrice).toFixed(2)})`,
     })
 }
@@ -296,4 +321,12 @@ export async function baseData() {
     })
 
     return jsonData
+}
+
+export async function baseFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function baseClean() {
+    await cleanByChecker('base')
 }

@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import {readWallets, getBalance, getProxy, ethPrice} from '../utils/common.js'
+import {readWallets, getBalance, getProxy, ethPrice, newAbortSignal, getKeyByValue} from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -7,8 +7,7 @@ import moment from 'moment'
 import cliProgress from 'cli-progress'
 import { HttpsProxyAgent } from "https-proxy-agent"
 import { config } from '../user_data/config.js'
-
-const agent = getProxy(0)
+import { cleanByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const headers = [
     { id: 'n', title: '№'},
@@ -42,6 +41,11 @@ const columns = [
 
 const apiUrl = "https://explorer.zora.energy/api/v2"
 
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('zora')
+}
+
 let p
 let csvWriter
 let stats = []
@@ -54,7 +58,10 @@ let totalEth = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function getBalances(wallet) {
+    let agent = getProxy(0, true)
+
     await axios.get(apiUrl+'/addresses/'+wallet, {
+        signal: newAbortSignal(10000),
         httpsAgent: agent
     }).then(response => {
         stats[wallet].balance = getBalance(response.data.coin_balance, 18)
@@ -80,6 +87,7 @@ async function getTxs(wallet) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
+    let agent = getProxy(0, true)
 
     let txs = []
     let params = {
@@ -92,6 +100,7 @@ async function getTxs(wallet) {
     while (!isAllTxCollected) {
         await axios.get(apiUrl+'/addresses/'+wallet+'/transactions', {
             httpsAgent: agent,
+            signal: newAbortSignal(10000),
             params: params.block_number === '' ? {} : params
         }).then(response => {
             let items = response.data.items
@@ -137,15 +146,21 @@ async function getTxs(wallet) {
     }
 }
 
-async function fetchWallet(wallet, index) {
-    stats[wallet] = {
-        balance: 0,
-        collection_count: 0,
-        nft_count: 0
+async function fetchWallet(wallet, index, isFetch = false) {
+    const existingData = await getWalletFromDB(wallet, 'zora')
+    if (existingData && !isFetch) {
+        stats[wallet] = JSON.parse(existingData)
+    } else {
+        stats[wallet] = {
+            balance: 0,
+            collection_count: 0,
+            nft_count: 0
+        }
+
+        await getBalances(wallet)
+        await getTxs(wallet)
     }
 
-    await getBalances(wallet)
-    await getTxs(wallet)
     progressBar.update(iteration)
     let usdEthValue = (stats[wallet].balance*ethPrice).toFixed(2)
     let row
@@ -182,8 +197,11 @@ async function fetchWallet(wallet, index) {
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
     })
 
-    iteration++
+    if (stats[wallet].txcount > 0) {
+        await saveWalletToDB(wallet, 'zora', JSON.stringify(stats[wallet]))
+    }
 
+    iteration++
 }
 
 function fetchWallets() {
@@ -245,4 +263,12 @@ export async function zoraData() {
     })
 
     return jsonData
+}
+
+export async function zoraFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function zoraClean() {
+    await cleanByChecker('zora')
 }

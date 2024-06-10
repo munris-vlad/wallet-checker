@@ -12,6 +12,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import moment from 'moment'
 import cliProgress from 'cli-progress'
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 let headers = [
     { id: 'n', title: '№'},
@@ -201,6 +202,9 @@ if (!args.includes('no-lite')) {
     columns.push({ name: 'Lite last TX', alignment: 'right', color: 'cyan'})
 }
 
+if (args[1] === 'refresh') {
+    cleanByChecker('zksync')
+}
 
 const apiUrl = "https://block-explorer-api.mainnet.zksync.io"
 
@@ -410,19 +414,26 @@ async function lite(wallet) {
 
 }
 
-async function fetchWallet(wallet, index) {
-    stats[wallet] = {
-        balances: [],
-        txcount: 0
+async function fetchWallet(wallet, index, isFetch = false) {
+    const existingData = await getWalletFromDB(wallet, 'zksync')
+    if (existingData && !isFetch) {
+        stats[wallet] = JSON.parse(existingData)
+    } else {
+        stats[wallet] = {
+            balances: {ETH: 0, USDT: 0, USDC: 0, DAI: 0},
+            txcount: 0
+        }
+
+        await getBalances(wallet)
+        await getTxs(wallet)
+        if (!args.includes('no-lite')) {
+            await lite(wallet)
+        }
     }
 
-    await getBalances(wallet)
-    await getTxs(wallet)
-    if (!args.includes('no-lite')) {
-        await lite(wallet)
+    if (!isFetch) {
+        progressBar.update(iteration)
     }
-
-    progressBar.update(iteration)
 
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
     let usdLiteEthValue = (stats[wallet].lite_eth*ethPrice).toFixed(2)
@@ -485,13 +496,17 @@ async function fetchWallet(wallet, index) {
         'Protocols': stats[wallet].protocols
     })
 
+    if (stats[wallet].txcount > 0) {
+        await saveWalletToDB(wallet, 'zksync', JSON.stringify(stats[wallet]))
+    }
+
     iteration++
     if (iterations > 100) {
         await sleep(500)
     }
 }
 
-function fetchWallets() {
+async function fetchWallets() {
     wallets = readWallets(config.modules.zksync.addresses)
     iterations = wallets.length
     iteration = 1
@@ -516,7 +531,16 @@ function fetchWallets() {
         sort: (row1, row2) => +row1.n - +row2.n
     })
 
-    const batchSize = 50
+    let batchSize = 50
+    let timeout = 5000
+
+    const walletsInDB = await getCountByChecker('zksync')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -528,7 +552,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 5000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -599,4 +623,12 @@ export async function zkSyncData() {
 
     jsonData.push(row)
     return jsonData
+}
+
+export async function zkSyncFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function zkSyncClean() {
+    await cleanByChecker('zksync')
 }

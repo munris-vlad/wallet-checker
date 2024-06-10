@@ -5,6 +5,7 @@ import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -18,6 +19,10 @@ const headers = [
     { id: 'Total', title: 'Total' },
 ]
 
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('rabby')
+}
 
 let jsonData = []
 let p
@@ -29,38 +34,56 @@ let csvData = []
 let total = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
-async function fetchWallet(wallet, index) {
-    let agent = getProxy(index, true)
+async function fetchWallet(wallet, index, isFetch = false) {
+    let data
+    const existingData = await getWalletFromDB(wallet, 'rabby')
 
-    let data = {
-        wallet: wallet,
-        total: 0,
-        chains: []
-    }
+    if (existingData && !isFetch) {
+        data = JSON.parse(existingData)
+    } else {
+        let agent = getProxy(index, true)
 
-    let isTxParsed = false
-    let retry = 0
+        data = {
+            wallet: wallet,
+            total: 0,
+            chains: []
+        }
 
-    while (!isTxParsed) {
-        await axios.get(`https://api.rabby.io/v1/user/total_balance?id=${wallet}`, {
-            httpsAgent: agent,
-            signal: newAbortSignal(40000),
-            headers: {
-                "accept": "application/json, text/plain, */*",
-                "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
-                "priority": "u=1, i",
-                "sec-fetch-dest": "empty",
-                "sec-fetch-mode": "cors",
-                "sec-fetch-site": "none",
-                "x-client": "Rabby",
-                "x-version": "0.92.72"
-            }
-        }).then(async response => {
-            if (response.data) {
-                data.total = parseInt(response.data.total_usd_value)
-                data.chains = response.data.chain_list
-                isTxParsed = true
-            } else {
+        let isTxParsed = false
+        let retry = 0
+
+        while (!isTxParsed) {
+            await axios.get(`https://api.rabby.io/v1/user/total_balance?id=${wallet}`, {
+                httpsAgent: agent,
+                signal: newAbortSignal(40000),
+                headers: {
+                    "accept": "application/json, text/plain, */*",
+                    "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+                    "priority": "u=1, i",
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "none",
+                    "x-client": "Rabby",
+                    "x-version": "0.92.72"
+                }
+            }).then(async response => {
+                if (response.data) {
+                    data.total = parseInt(response.data.total_usd_value)
+                    data.chains = response.data.chain_list
+                    isTxParsed = true
+                } else {
+                    retry++
+
+                    agent = getProxy(index, true)
+
+                    if (retry >= 3) {
+                        isTxParsed = true
+                    }
+
+                    await sleep(1000)
+                }
+            }).catch(async error => {
+                if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
                 retry++
 
                 agent = getProxy(index, true)
@@ -70,20 +93,9 @@ async function fetchWallet(wallet, index) {
                 }
 
                 await sleep(1000)
-            }
-        }).catch(async error => {
-            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
-            retry++
 
-            agent = getProxy(index, true)
-
-            if (retry >= 3) {
-                isTxParsed = true
-            }
-
-            await sleep(1000)
-
-        })
+            })
+        }
     }
 
     progressBar.update(iteration)
@@ -106,6 +118,8 @@ async function fetchWallet(wallet, index) {
     p.addRow(row)
     jsonData.push(jsonRow)
 
+    await saveWalletToDB(wallet, 'rabby', JSON.stringify(data))
+
     iteration++
 }
 
@@ -127,7 +141,16 @@ async function fetchWallets() {
         header: headers
     })
 
-    const batchSize = 10
+    let batchSize = 10
+    let timeout = 5000
+
+    const walletsInDB = await getCountByChecker('rabby')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -139,7 +162,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 5000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -222,4 +245,12 @@ export async function chainFetchData(wallet, chainId) {
     }
     
     return data
+}
+
+export async function rabbyFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function rabbyClean() {
+    await cleanByChecker('rabby')
 }

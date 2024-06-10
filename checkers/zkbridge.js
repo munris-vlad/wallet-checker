@@ -6,6 +6,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import moment from "moment"
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -43,7 +44,10 @@ const headers = [
     { id: 'Last TX', title: 'Last TX' },
 ]
 
-
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('zkbridge')
+}
 
 let p
 let csvWriter
@@ -76,7 +80,7 @@ let prices = {
     'USDT': 1,
 }
 
-async function fetchWallet(wallet, index, isExtended) {
+async function fetchWallet(wallet, index, isFetch = false) {
 
     let agent = getProxy(index)
 
@@ -94,88 +98,98 @@ async function fetchWallet(wallet, index, isExtended) {
         weeks: 0,
         months: 0,
         first_tx: '',
-        last_tx: ''
+        last_tx: '',
+        uniqueSources: {},
+        uniqueDestinations: {},
     }
 
-    let txs = []
-    let isTxParsed = false
-    let retry = 0
-    let volume = 0
-    const uniqueDays = new Set()
-    const uniqueWeeks = new Set()
-    const uniqueMonths = new Set()
-    const uniqueSource = new Set()
-    const uniqueDestination = new Set()
+    const existingData = await getWalletFromDB(wallet, 'zkbridge')
 
-    await axios.post('https://graphigo.prd.galaxy.eco/query', {
-        operationName: 'SpaceAccessQuery',
-        variables: {
-            alias: 'polyhedra',
-            address: wallet.toLowerCase(),
-        },
-        query: 'query SpaceAccessQuery($id: Int, $alias: String, $address: String!) {\n  space(id: $id, alias: $alias) {\n    id\n    isFollowing\n    discordGuildID\n    discordGuildInfo\n    status\n    isAdmin(address: $address)\n    unclaimedBackfillLoyaltyPoints(address: $address)\n    addressLoyaltyPoints(address: $address) {\n      id\n      points\n      rank\n      __typename\n    }\n    __typename\n  }\n}\n',
-    }, {
-        httpsAgent: agent,
-        headers: {
-            'authority': 'graphigo.prd.galaxy.eco',
-            'accept': '*/*',
-            'accept-language': 'en-US,en;q=0.9',
-            'content-type': 'application/json',
-            'origin': 'https://galxe.com',
-            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-        }
-    }).then(response => {
-       data.galxepoints = response.data.data.space ? response.data.data.space.addressLoyaltyPoints.points : 0
-    }).catch(error => {
-        if (config.debug) console.log(error.toString())
-    })
+    if (existingData && !isFetch) {
+        data = JSON.parse(existingData)
+    } else {
+        let txs = []
+        let isTxParsed = false
+        let retry = 0
+        let volume = 0
+        const uniqueDays = new Set()
+        const uniqueWeeks = new Set()
+        const uniqueMonths = new Set()
+        const uniqueSource = new Set()
+        const uniqueDestination = new Set()
 
-    while (!isTxParsed) {
-        await axios.get(`https://api.zkbridgescan.io/api/scan?txOrAddress=${wallet}&pageStart=0&pageSize=1000`, {
-            headers: getQueryHeaders(),
+        await axios.post('https://graphigo.prd.galaxy.eco/query', {
+            operationName: 'SpaceAccessQuery',
+            variables: {
+                alias: 'polyhedra',
+                address: wallet.toLowerCase(),
+            },
+            query: 'query SpaceAccessQuery($id: Int, $alias: String, $address: String!) {\n  space(id: $id, alias: $alias) {\n    id\n    isFollowing\n    discordGuildID\n    discordGuildInfo\n    status\n    isAdmin(address: $address)\n    unclaimedBackfillLoyaltyPoints(address: $address)\n    addressLoyaltyPoints(address: $address) {\n      id\n      points\n      rank\n      __typename\n    }\n    __typename\n  }\n}\n',
+        }, {
             httpsAgent: agent,
-            signal: newAbortSignal(5000)
+            headers: {
+                'authority': 'graphigo.prd.galaxy.eco',
+                'accept': '*/*',
+                'accept-language': 'en-US,en;q=0.9',
+                'content-type': 'application/json',
+                'origin': 'https://galxe.com',
+                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+            }
         }).then(response => {
-            txs = response.data.data
-            data.tx_count = response.data.total
-            isTxParsed = true
+            data.galxepoints = response.data.data.space ? response.data.data.space.addressLoyaltyPoints.points : 0
         }).catch(error => {
-            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
-            retry++
-
-            agent = getProxy(index, true)
-
-            if (retry >= 3) {
-                isTxParsed = true
-            }
+            if (config.debug) console.log(error.toString())
         })
-    }
-    
-    if (txs.length) {
-        for (const tx of Object.values(txs)) {
-            if (tx.extra.erc20) {
-                let amount = parseInt(tx.extra.erc20.amount) / Math.pow(10, 18)
-                volume += parseFloat(amount*prices[tx.extra.erc20.symbol])
-            }
-            const date = new Date(timestampToDate(tx.sendTimestamp))
-            uniqueDays.add(date.toDateString())
-            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-            uniqueSource.add(tx.senderChainId)
-            uniqueDestination.add(tx.receiverChainId)
-        }
 
-        data.first_tx = new Date(timestampToDate(txs[txs.length - 1].sendTimestamp))
-        data.last_tx = new Date(timestampToDate(txs[0].sendTimestamp))
-        data.msg_count = txs.filter(tx => tx.txType === 'Msg').length
-        data.nft_count = txs.filter(tx => tx.txType === 'Nft').length
-        data.token_count = txs.filter(tx => tx.txType === 'Erc20Lightning').length
-        data.source_chain_count = uniqueSource.size
-        data.dest_chain_count = uniqueDestination.size
-        data.days = uniqueDays.size
-        data.weeks = uniqueWeeks.size
-        data.months = uniqueMonths.size
-        data.volume = parseInt(volume)
+        while (!isTxParsed) {
+            await axios.get(`https://api.zkbridgescan.io/api/scan?txOrAddress=${wallet}&pageStart=0&pageSize=1000`, {
+                headers: getQueryHeaders(),
+                httpsAgent: agent,
+                signal: newAbortSignal(5000)
+            }).then(response => {
+                txs = response.data.data
+                data.tx_count = response.data.total
+                isTxParsed = true
+            }).catch(error => {
+                if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
+                retry++
+
+                agent = getProxy(index, true)
+
+                if (retry >= 3) {
+                    isTxParsed = true
+                }
+            })
+        }
+        
+        if (txs.length) {
+            for (const tx of Object.values(txs)) {
+                if (tx.extra.erc20) {
+                    let amount = parseInt(tx.extra.erc20.amount) / Math.pow(10, 18)
+                    volume += parseFloat(amount*prices[tx.extra.erc20.symbol])
+                }
+                const date = new Date(timestampToDate(tx.sendTimestamp))
+                uniqueDays.add(date.toDateString())
+                uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+                uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+                uniqueSource.add(tx.senderChainId)
+                uniqueDestination.add(tx.receiverChainId)
+            }
+
+            data.first_tx = new Date(timestampToDate(txs[txs.length - 1].sendTimestamp))
+            data.last_tx = new Date(timestampToDate(txs[0].sendTimestamp))
+            data.msg_count = txs.filter(tx => tx.txType === 'Msg').length
+            data.nft_count = txs.filter(tx => tx.txType === 'Nft').length
+            data.token_count = txs.filter(tx => tx.txType === 'Erc20Lightning').length
+            data.source_chain_count = uniqueSource.size
+            data.dest_chain_count = uniqueDestination.size
+            data.days = uniqueDays.size
+            data.weeks = uniqueWeeks.size
+            data.months = uniqueMonths.size
+            data.volume = parseInt(volume)
+            data.uniqueSources = Array.from(uniqueSource)
+            data.uniqueDestinations = Array.from(uniqueDestination)
+        }
     }
 
     progressBar.update(iteration)
@@ -212,14 +226,18 @@ async function fetchWallet(wallet, index, isExtended) {
         'Days': data.days,
         'Weeks': data.weeks,
         'Months': data.months,
-        'sources': Array.from(uniqueSource),
-        'dests': Array.from(uniqueDestination),
+        'sources': data.uniqueSources,
+        'dests': data.uniqueDestinations,
         'First TX': data.tx_count ? data.first_tx : '—',
         'Last TX': data.tx_count ? data.last_tx : '—',
     })
 
     p.addRow(row)
     totalPoints += data.galxepoints
+
+    if (data.tx_count > 0) {
+        await saveWalletToDB(wallet, 'zkbridge', JSON.stringify(data))
+    }
 
     iteration++
 }
@@ -228,7 +246,7 @@ async function fetchBatch(batch, isExtended) {
     await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account), isExtended)))
 }
 
-function fetchWallets(isExtended) {
+async function fetchWallets(isExtended) {
     wallets = readWallets(config.modules.zkbridge.addresses)
     iterations = wallets.length
     iteration = 1
@@ -240,7 +258,16 @@ function fetchWallets(isExtended) {
         header: headers
     })
 
-    const batchSize = 30
+    let batchSize = 30
+    let timeout = 5000
+
+    const walletsInDB = await getCountByChecker('zkbridge')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -252,7 +279,7 @@ function fetchWallets(isExtended) {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch, isExtended))
-            }, i * 5000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -301,4 +328,12 @@ export async function zkbridgeData() {
     await saveToCsv()
 
     return jsonData
+}
+
+export async function zkbridgeFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function zkbridgeClean() {
+    await cleanByChecker('zkbridge')
 }

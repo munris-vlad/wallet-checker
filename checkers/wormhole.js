@@ -6,6 +6,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import moment from "moment"
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -33,7 +34,10 @@ const headers = [
     { id: 'Last TX', title: 'Last TX' },
 ]
 
-
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('wormhole')
+}
 
 let jsonData = []
 let p
@@ -59,8 +63,7 @@ function getQueryHeaders() {
     }
 }
 
-async function fetchWallet(wallet, index) {
-
+async function fetchWallet(wallet, index, isFetch = false) {
     let agent = getProxy(index)
 
     let data = {
@@ -84,46 +87,52 @@ async function fetchWallet(wallet, index) {
     const uniqueSource = new Set()
     const uniqueDestination = new Set()
 
-    while (!isTxParsed) {
-        await axios.get(`https://api.wormholescan.io/api/v1/transactions?address=${wallet}&page=0&pageSize=500&sortOrder=DESC`, {
-            headers: getQueryHeaders(),
-            httpsAgent: agent,
-            signal: newAbortSignal(5000)
-        }).then(response => {
-            txs = response.data.transactions
-            isTxParsed = true
-        }).catch(error => {
-            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
-            retry++
+    const existingData = await getWalletFromDB(wallet, 'wormhole')
 
-            agent = getProxy(index, true)
-
-            if (retry >= 3) {
+    if (existingData && !isFetch) {
+        data = JSON.parse(existingData)
+    } else {
+        while (!isTxParsed) {
+            await axios.get(`https://api.wormholescan.io/api/v1/transactions?address=${wallet}&page=0&pageSize=500&sortOrder=DESC`, {
+                headers: getQueryHeaders(),
+                httpsAgent: agent,
+                signal: newAbortSignal(5000)
+            }).then(response => {
+                txs = response.data.transactions
                 isTxParsed = true
-            }
-        })
-    }
-    
-    if (txs.length) {
-        data.tx_count = txs.length
-        for (const tx of Object.values(txs)) {
-            const date = new Date(tx.timestamp)
-            uniqueDays.add(date.toDateString())
-            uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
-            uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
-            uniqueSource.add(tx.emitterChain)
-            if (tx.payload) {
-                uniqueDestination.add(tx.payload.targetChainId)
-            }
-        }
+            }).catch(error => {
+                if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
+                retry++
 
-        data.first_tx = new Date(txs[txs.length - 1].timestamp)
-        data.last_tx = new Date(txs[0].timestamp)
-        data.source_chain_count = uniqueSource.size
-        data.dest_chain_count = uniqueDestination.size
-        data.days = uniqueDays.size
-        data.weeks = uniqueWeeks.size
-        data.months = uniqueMonths.size
+                agent = getProxy(index, true)
+
+                if (retry >= 3) {
+                    isTxParsed = true
+                }
+            })
+        }
+        
+        if (txs.length) {
+            data.tx_count = txs.length
+            for (const tx of Object.values(txs)) {
+                const date = new Date(tx.timestamp)
+                uniqueDays.add(date.toDateString())
+                uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
+                uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+                uniqueSource.add(tx.emitterChain)
+                if (tx.payload) {
+                    uniqueDestination.add(tx.payload.targetChainId)
+                }
+            }
+
+            data.first_tx = new Date(txs[txs.length - 1].timestamp)
+            data.last_tx = new Date(txs[0].timestamp)
+            data.source_chain_count = uniqueSource.size
+            data.dest_chain_count = uniqueDestination.size
+            data.days = uniqueDays.size
+            data.weeks = uniqueWeeks.size
+            data.months = uniqueMonths.size
+        }
     }
 
     progressBar.update(iteration)
@@ -157,6 +166,10 @@ async function fetchWallet(wallet, index) {
     p.addRow(row)
     jsonData.push(jsonRow)
 
+    if (data.tx_count > 0) {
+        await saveWalletToDB(wallet, 'wormhole', JSON.stringify(data))
+    }
+
     iteration++
 }
 
@@ -164,7 +177,7 @@ async function fetchBatch(batch) {
     await Promise.all(batch.map((account, index) => fetchWallet(account, getKeyByValue(wallets, account))))
 }
 
-function fetchWallets() {
+async function fetchWallets() {
     wallets = readWallets(config.modules.wormhole.addresses)
     iterations = wallets.length
     iteration = 1
@@ -176,7 +189,16 @@ function fetchWallets() {
         header: headers
     })
 
-    const batchSize = 50
+    let batchSize = 50
+    let timeout = 5000
+
+    const walletsInDB = await getCountByChecker('wormhole')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
+
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -188,7 +210,7 @@ function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 5000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -225,4 +247,12 @@ export async function wormholeData() {
     await saveToCsv()
 
     return jsonData
+}
+
+export async function wormholeFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function wormholeClean() {
+    await cleanByChecker('wormhole')
 }

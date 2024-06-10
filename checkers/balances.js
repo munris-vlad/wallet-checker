@@ -29,7 +29,6 @@ let headers = [
     { id: 'DAI', title: 'DAI' },
 ]
 
-const priceApi = 'https://min-api.cryptocompare.com/data/price'
 const networks = {
     'ETH': {
         'nativePrice': ethPrice,
@@ -213,7 +212,6 @@ const networks = {
         'nativePrice': ethPrice
     }
 }
-
 
 let wallets = readWallets(config.modules.evm.addresses)
 let walletsData = []

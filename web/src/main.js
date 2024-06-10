@@ -20,6 +20,7 @@ import ClustersView from './views/ClustersView.vue'
 import DebridgeView from './views/DebridgeView.vue'
 import RabbyView from './views/RabbyView.vue'
 import NftView from './views/NftView.vue'
+import GalxeView from './views/GalxeView.vue'
 
 const app = createApp(App)
 
@@ -46,6 +47,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$evm_count = data.evm_wallets.length
     app.config.globalProperties.$clusters_count = data.clusters_wallets.length
     app.config.globalProperties.$rabby_count = data.rabby_wallets.length
+    app.config.globalProperties.$galxe_count = data.galxe_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -152,6 +154,12 @@ const routes = [
         name: 'NFT',
         component: NftView,
         meta: { title: 'NFT' }
+    },
+    {
+        path: '/galxe',
+        name: 'Galxe',
+        component: GalxeView,
+        meta: { title: 'Galxe' }
     },
 ]
 

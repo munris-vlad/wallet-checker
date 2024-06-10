@@ -6,6 +6,7 @@ import { createObjectCsvWriter } from 'csv-writer'
 import cliProgress from 'cli-progress'
 import fs from "fs"
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -21,6 +22,10 @@ const headers = [
     { id: 'Total', title: 'Total' },
 ]
 
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('clusters')
+}
 
 let jsonData = []
 let p
@@ -31,7 +36,7 @@ let iteration = 1
 let csvData = []
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
-async function fetchWallet(walletData, index) {
+async function fetchWallet(walletData, index, isFetch = false) {
     const [cluster, wallet] = walletData.split(":")
     let agent = getProxy(index)
 
@@ -42,19 +47,35 @@ async function fetchWallet(walletData, index) {
         tokens: []
     }
 
-    let isTxParsed = false
-    let retry = 0
+    const existingData = await getWalletFromDB(wallet, 'clusters')
+    if (existingData && !isFetch) {
+        data = JSON.parse(existingData)
+    } else {
+        let isTxParsed = false
+        let retry = 0
 
-    while (!isTxParsed) {
-        await axios.get(`https://api.clusters.xyz/v0/portfolio/${cluster}/tokens`, {
-            httpsAgent: agent,
-            signal: newAbortSignal(40000)
-        }).then(async response => {
-            if (response.data) {
-                data.total = parseInt(response.data.totalUsd)
-                data.tokens = response.data.tokens
-                isTxParsed = true
-            } else {
+        while (!isTxParsed) {
+            await axios.get(`https://api.clusters.xyz/v0/portfolio/${cluster}/tokens`, {
+                httpsAgent: agent,
+                signal: newAbortSignal(40000)
+            }).then(async response => {
+                if (response.data) {
+                    data.total = parseInt(response.data.totalUsd)
+                    data.tokens = response.data.tokens
+                    isTxParsed = true
+                } else {
+                    retry++
+
+                    agent = getProxy(index, true)
+
+                    if (retry >= 3) {
+                        isTxParsed = true
+                    }
+
+                    await sleep(1000)
+                }
+            }).catch(async error => {
+                if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
                 retry++
 
                 agent = getProxy(index, true)
@@ -62,22 +83,11 @@ async function fetchWallet(walletData, index) {
                 if (retry >= 3) {
                     isTxParsed = true
                 }
-
+                
                 await sleep(1000)
-            }
-        }).catch(async error => {
-            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
-            retry++
 
-            agent = getProxy(index, true)
-
-            if (retry >= 3) {
-                isTxParsed = true
-            }
-            
-            await sleep(1000)
-
-        })
+            })
+        }
     }
 
     progressBar.update(iteration)
@@ -99,6 +109,10 @@ async function fetchWallet(walletData, index) {
 
     p.addRow(row)
     jsonData.push(jsonRow)
+
+    if (data.total > 0) {
+        await saveWalletToDB(wallet, 'clusters', JSON.stringify(data))
+    }
 
     iteration++
 }
@@ -159,7 +173,15 @@ async function fetchWallets() {
         header: headers
     })
 
-    const batchSize = 50
+    let batchSize = 50
+    let timeout = 5000
+
+    const walletsInDB = await getCountByChecker('clusters')
+
+    if (walletsInDB === wallets.length) {
+        batchSize = walletsInDB
+        timeout = 0
+    }
     const batchCount = Math.ceil(wallets.length / batchSize)
     const walletPromises = []
 
@@ -171,7 +193,7 @@ async function fetchWallets() {
         const promise = new Promise((resolve) => {
             setTimeout(() => {
                 resolve(fetchBatch(batch))
-            }, i * 5000)
+            }, i * timeout)
         })
 
         walletPromises.push(promise)
@@ -208,4 +230,12 @@ export async function clustersData() {
     await saveToCsv()
 
     return jsonData
+}
+
+export async function clustersFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function clustersClean() {
+    await cleanByChecker('clusters')
 }

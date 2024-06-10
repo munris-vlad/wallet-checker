@@ -1,18 +1,8 @@
 {
   "name": "wallet-checker",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "scripts": {
-    "start": "node utils/index.js",
-    "web": "node utils/index.js web",
-    "zksync": "node checkers/zksync.js",
-    "aptos": "node checkers/aptos.js",
-    "linea": "node checkers/linea.js",
-    "zora": "node checkers/zora.js",
-    "filter": "node checkers/filter.js",
-    "nft": "node checkers/nft.js",
-    "evm": "node checkers/evm.js",
-    "balances": "node checkers/balances.js",
-    "client": "cd web && npm run serve"
+    "start": "node utils/index.js"
   },
   "dependencies": {
     "@ankr.com/ankr.js": "^0.4.0",
@@ -32,6 +22,7 @@
     "moment": "^2.29.4",
     "moralis": "^2.22.5",
     "socks-proxy-agent": "^8.0.2",
+    "sqlite3": "^5.1.7",
     "viem": "^2.9.15",
     "vue": "^3.3.4"
   },

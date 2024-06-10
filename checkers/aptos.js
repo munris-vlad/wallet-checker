@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { readWallets, getBalance, timestampToDate, getProxy, aptPrice } from '../utils/common.js'
+import { readWallets, getBalance, timestampToDate, getProxy, aptPrice, getKeyByValue } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -7,6 +7,7 @@ import moment from 'moment'
 import cliProgress from 'cli-progress'
 import cloudscraper from 'cloudscraper'
 import { config } from '../user_data/config.js'
+import { cleanByChecker, getWalletFromDB, saveWalletToDB } from '../utils/db.js'
 
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
@@ -58,6 +59,10 @@ const reqheaders = {
 
 const apiUrl = "https://mainnet-aptos-api.nodereal.io/api"
 
+const args = process.argv.slice(2)
+if (args[1] === 'refresh') {
+    cleanByChecker('aptos')
+}
 
 let stats = []
 let jsonData = []
@@ -201,17 +206,24 @@ async function getTxs(wallet, index) {
     }
 }
 
-async function fetchWallet(wallet, index) {
+async function fetchWallet(wallet, index, isFetch = false) {
     wallet = wallet.replace('0x0', '0x')
 
-    stats[wallet] = {
-        balances: [],
-        aptosname: '-',
-        galxepoints: 0
+    const existingData = await getWalletFromDB(wallet, 'aptos')
+    if (existingData && !isFetch) {
+        const parsedData = JSON.parse(existingData)
+        stats[wallet] = parsedData
+    } else {
+        stats[wallet] = {
+            balances: { APT: 0, USDT: 0, USDC: 0, DAI: 0 },
+            aptosname: '-',
+            galxepoints: 0
+        }
+    
+        await getBalances(wallet, index)
+        await getTxs(wallet, index)
     }
 
-    await getBalances(wallet, index)
-    await getTxs(wallet, index)
     progressBar.update(iteration)
     let usdAptValue = (stats[wallet].balances['APT'] * aptPrice).toFixed(2)
     let row = {
@@ -232,7 +244,7 @@ async function fetchWallet(wallet, index) {
     }
 
     p.addRow(row)
-    jsonData.push({
+    const jsonRow = {
         n: index,
         wallet: wallet,
         'AptosName': stats[wallet].aptosname ? stats[wallet].aptosname : '-',
@@ -249,7 +261,10 @@ async function fetchWallet(wallet, index) {
         'First tx': stats[wallet].txcount ? stats[wallet].first_tx_date : '—',
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].total_gas ? stats[wallet].total_gas.toFixed(4) : 0,
-    })
+    }
+
+    jsonData.push(jsonRow)
+    await saveWalletToDB(wallet, 'aptos', JSON.stringify(stats[wallet]))
 
     iteration++
 }
@@ -296,4 +311,12 @@ export async function aptosData() {
     await saveToCsv()
 
     return jsonData
+}
+
+export async function aptosFetchWallet(wallet) {
+    return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
+}
+
+export async function aptosClean() {
+    await cleanByChecker('aptos')
 }

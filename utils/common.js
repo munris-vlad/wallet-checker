@@ -221,6 +221,30 @@ export async function getTokenPrice(token) {
     return price
 }
 
+export async function getTokensPrice(tokens) {
+    let prices = {}
+    let isFetched = false
+    let retry = 0
+
+    while (!isFetched) {
+        const agent = getProxy(0, true)
+        await axios.get(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tokens}&tsyms=USD`, {
+            httpsAgent: agent
+        }).then(response => {
+            prices = response.data
+            isFetched = true
+        }).catch(e => {
+            retry++
+
+            if (retry > 3) {
+                isFetched = true
+            }
+        })
+    }
+
+    return prices
+}
+
 export const entryPoint = async () => {
     const questions = [
         {
@@ -295,6 +319,10 @@ export const entryPoint = async () => {
                 {
                     name: "Rabby",
                     value: "rabby",
+                },
+                {
+                    name: "Galxe",
+                    value: "galxe",
                 }
             ],
             default: "web",
@@ -611,14 +639,16 @@ export function generateFormattedString() {
     return `${part1}-${part2}-${part3}`
 }
 
-export let aptPrice = await getTokenPrice('APT')
-export let ethPrice = await getTokenPrice('ETH')
-export let maticPrice = await getTokenPrice('MATIC')
-export let bnbPrice = await getTokenPrice('BNB')
-export let avaxPrice = await getTokenPrice('AVAX')
-export let corePrice = await getTokenPrice('CORE')
-export let celoPrice = await getTokenPrice('CELO')
-export let klayPrice = await getTokenPrice('KLAY')
-export let ftmPrice = await getTokenPrice('FTM')
-export let glmrPrice = await getTokenPrice('GLMR')
-export let movrPrice = await getTokenPrice('MOVR')
+
+const prices = await getTokensPrice('APT,ETH,MATIC,BNB,AVAX,CORE,CELO,KLAY,FTM,GLMR,MOVR')
+export const aptPrice = prices.APT.USD
+export const ethPrice = prices.ETH.USD
+export const maticPrice = prices.MATIC.USD
+export const bnbPrice = prices.BNB.USD
+export const avaxPrice = prices.AVAX.USD
+export const corePrice = prices.CORE.USD
+export const celoPrice = prices.CELO.USD
+export const klayPrice = prices.KLAY.USD
+export const ftmPrice = prices.FTM.USD
+export const glmrPrice = prices.GLMR.USD
+export const movrPrice = prices.MOVR.USD

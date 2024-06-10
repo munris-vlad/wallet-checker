@@ -19,6 +19,7 @@ import { debridgeFetchDataAndPrintTable } from "../checkers/debridge.js"
 import { pohFetchDataAndPrintTable } from "../checkers/linea-poh-checker.js"
 import { rabbyFetchDataAndPrintTable } from "../checkers/rabby.js"
 import { config } from '../user_data/config.js'
+import { galxeFetchDataAndPrintTable } from "../checkers/galxe.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -152,6 +153,10 @@ async function startMenu(menu) {
             break
         case "linea-poh":
             await pohFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
+            break
+        case "galxe":
+            await galxeFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
     }

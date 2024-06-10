@@ -18,7 +18,7 @@
                             <span v-if="module.enabled" class="text-green-500">Enabled</span>
                             <span v-else class="text-red-500">Disabled</span>
                         </td>
-                        <td class="whitespace-nowrap border-r px-3 py-2 font-regular text-xs dark:border-gray-700">{{ data[key + '_wallets'].length }}</td>
+                        <td class="whitespace-nowrap border-r px-3 py-2 font-regular text-xs dark:border-gray-700"><span v-if="data[key + '_wallets']">{{ data[key + '_wallets'].length }}</span></td>
                     </tr>
                 </tbody>
             </table>
