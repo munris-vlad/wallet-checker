@@ -10,12 +10,14 @@ import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } fr
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
+    { name: 'Points', color: 'green', alignment: "right" },
     { name: 'Total', color: 'green', alignment: "right" },
 ]
 
 const headers = [
     { id: 'n', title: '№' },
     { id: 'Wallet', title: 'Wallet' },
+    { id: 'Points', title: 'Points' },
     { id: 'Total', title: 'Total' },
 ]
 
@@ -32,6 +34,7 @@ let iterations = wallets.length
 let iteration = 1
 let csvData = []
 let total = 0
+let totalPoints = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function fetchWallet(wallet, index, isFetch = false) {
@@ -46,11 +49,15 @@ async function fetchWallet(wallet, index, isFetch = false) {
         data = {
             wallet: wallet,
             total: 0,
+            points: 0,
             chains: []
         }
 
         let isTxParsed = false
         let retry = 0
+
+        let isPointsParsed = false
+        let retryPoints = 0
 
         while (!isTxParsed) {
             await axios.get(`https://api.rabby.io/v1/user/total_balance?id=${wallet}`, {
@@ -96,6 +103,49 @@ async function fetchWallet(wallet, index, isFetch = false) {
 
             })
         }
+
+        while (!isPointsParsed) {
+            await axios.get(`https://api.rabby.io/v2/points/user?id=${wallet}`, {
+                httpsAgent: agent,
+                signal: newAbortSignal(40000),
+                headers: {
+                    "accept": "application/json, text/plain, */*",
+                    "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+                    "priority": "u=1, i",
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "none",
+                    "x-client": "Rabby",
+                    "x-version": "0.92.72"
+                }
+            }).then(async response => {
+                if (response.data) {
+                    data.points = parseInt(response.data.claimed_points)
+                    isPointsParsed = true
+                } else {
+                    retry++
+
+                    agent = getProxy(index, true)
+
+                    if (retry >= 3) {
+                        isPointsParsed = true
+                    }
+
+                    await sleep(1000)
+                }
+            }).catch(async error => {
+                if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
+                    retryPoints++
+
+                agent = getProxy(index, true)
+
+                if (retryPoints >= 3) {
+                    isPointsParsed = true
+                }
+
+                await sleep(1000)
+            })
+        }
     }
 
     progressBar.update(iteration)
@@ -103,15 +153,18 @@ async function fetchWallet(wallet, index, isFetch = false) {
     let row = {
         n: parseInt(index) + 1,
         Wallet: wallet,
-        Total: '$' + data.total
+        Total: '$' + data.total,
+        Points: data.points
     }
 
     total += data.total
+    totalPoints += data.points
 
     let jsonRow = {
         n: parseInt(index) + 1,
         Wallet: wallet,
         Total: data.total,
+        Points: data.points,
         chains: data.chains ? data.chains.sort((a, b) => b.usd_value - a.usd_value) : []
     }
 
@@ -135,6 +188,7 @@ async function fetchWallets() {
     csvData = []
     jsonData = []
     total = 0
+    totalPoints = 0
 
     csvWriter = createObjectCsvWriter({
         path: './results/rabby.csv',
@@ -188,6 +242,7 @@ async function addTotalRow() {
     p.addRow({})
     p.addRow({
         wallet: 'Total',
+        Points: totalPoints,
         'Total': '$' + total
     })
 }
@@ -209,6 +264,7 @@ export async function rabbyData() {
 
     jsonData.push({
         wallet: 'Total',
+        Points: totalPoints,
         'Total': total
     })
 

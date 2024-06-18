@@ -186,11 +186,11 @@ async function getBalances(wallet) {
     }
 
     while (!lxplpointsDone) {
-        await axios.get(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/starknet/getUserPointsSearch?user=${wallet.toLowerCase()}`, {
+        await axios.get(`https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/linea/getUserPointsSearch?user=${wallet.toLowerCase()}`, {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
         }).then(response => {
-            stats[wallet].lxplpoints = response.data.Items[0].xp
+            stats[wallet].lxplpoints = response.data[0].xp
 
             lxplpointsDone = true
         }).catch(function (error) {

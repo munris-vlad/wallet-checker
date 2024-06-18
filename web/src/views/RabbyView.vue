@@ -29,6 +29,7 @@
                             </div>
                         </div>
                     </td>
+                    <td :class="tdClass">{{ item['Points'] }}</td>
                     <td :class="tdClass">${{ item['Total'] }}</td>
                     <td :class="tdClass + ' text-left'">
                         <div class="flex space-x-5 pt-2 pb-12 select-none" v-if="item['chains']" >
@@ -90,6 +91,7 @@ export default {
             headers: [
                 'n',
                 'Wallet',
+                'Points',
                 'Total',
             ]
         }
