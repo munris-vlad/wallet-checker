@@ -105,6 +105,7 @@ export const config = {
                     enabled: false
                 },
                 'Redstone': {
+                'Blast': {
                     enabled: true
                 },
             }
@@ -261,5 +262,11 @@ export const rpcs = {
     ],
     'Scroll': [
         'https://rpc.scroll.io'
+    ],
+    'Blast': [
+        'https://rpc.envelop.is/blast',
+        'https://blast.din.dev/rpc',
+        'https://blastl2-mainnet.public.blastapi.io',
+        'https://blast.blockpi.network/v1/rpc/public'
     ],
 }

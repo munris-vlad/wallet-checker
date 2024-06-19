@@ -4,7 +4,7 @@ import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
 import { rpcs } from "../user_data/config.js"
 import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
-import { arbitrum, avalanche, base, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon } from "viem/chains"
+import { arbitrum, avalanche, base, blast, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon } from "viem/chains"
 import { config } from '../user_data/config.js'
 
 let columns = [
@@ -210,6 +210,13 @@ const networks = {
     },
     'Redstone': {
         'nativePrice': ethPrice
+    },
+    'Blast': {
+        'nativePrice': ethPrice,
+        'USDB': {
+            address: '0x4300000000000000000000000000000000000003',
+            decimals: 18
+        },
     }
 }
 
@@ -268,6 +275,9 @@ function getClient(network) {
         case 'Redstone':
             return createPublicClient({ chain: redstone, transport: http(rpc), batch: { multicall: true } })
             break
+        case 'Blast':
+            return createPublicClient({ chain: blast, transport: http(rpc), batch: { multicall: true } })
+            break
     }
 }
 
@@ -277,7 +287,7 @@ async function fetchWallets(network) {
     wallets = readWallets(config.modules.evm.addresses)
 
     let transactionCounts
-    let daiResults, balanceResults, usdtResults, usdcResults, usdceResults
+    let daiResults, balanceResults, usdtResults, usdcResults, usdceResults, usdbResults
 
     let isSuccess = false, retry = 0
 
@@ -368,6 +378,22 @@ async function fetchWallets(network) {
                 })
             }
 
+            if (networks[network]['USDB']) {
+                const usdbMuticall = wallets.map(wallet => {
+                    return {
+                        address: networks[network]['USDB'].address,
+                        abi: parseAbi(erc20Abi),
+                        functionName: 'balanceOf',
+                        args: [wallet]
+                    }
+                })
+
+                usdbResults = await client.multicall({
+                    contracts: usdbMuticall,
+                    multicallAddress: multicallAddress
+                })
+            }
+
             isSuccess = true
         } catch (e) {
             if (config.debug) console.log(e.toString())
@@ -381,10 +407,16 @@ async function fetchWallets(network) {
     }
 
     walletsData = wallets.map((wallet, index) => {
-        const eth = formatEther(balanceResults[index].result)
+        let eth = 0
         let usdt = 0
         let usdc = 0
         let dai = 0
+
+        if (balanceResults) {
+            eth = formatEther(balanceResults[index].result)
+        } else {
+            eth = 0
+        }
 
         if (networks[network]['USDC.e']) {
             usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals) + formatUnits(usdceResults[index].result, networks[network]['USDC.e'].decimals)).toFixed(1)
@@ -402,10 +434,14 @@ async function fetchWallets(network) {
             usdt = parseFloat(formatUnits(usdtResults[index].result, networks[network]['USDT'].decimals)).toFixed(1)
         }
 
+        if (networks[network]['USDB'] && usdbResults) {
+            usdt = parseFloat(formatUnits(usdbResults[index].result, networks[network]['USDB'].decimals)).toFixed(1)
+        }
+
         return {
             'n': index + 1,
             'wallet': wallet,
-            'Tx count': transactionCounts[index].count,
+            'Tx count': transactionCounts ? transactionCounts[index].count : 0,
             'Native': parseFloat(eth).toFixed(3),
             'NativeUSD': parseFloat(parseFloat(eth) * networks[network].nativePrice).toFixed(2),
             'USDT': usdt,
