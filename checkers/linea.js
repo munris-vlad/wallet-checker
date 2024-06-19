@@ -292,7 +292,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
             volume: 0,
             balances: { ETH: 0, USDT: 0, USDC: 0, DAI: 0, LXP: 0 },
             voyagenft: '',
-            poh: false
+            poh: null
         }
 
         await getBalances(wallet)

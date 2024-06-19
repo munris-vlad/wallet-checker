@@ -9,6 +9,7 @@ const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
     { name: 'PoH', color: 'green', alignment: "right" },
+    { name: 'Flagged', color: 'green', alignment: "right" },
     { name: 'A / Gitcoin', color: 'green', alignment: "right" },
     { name: 'A / PADO', color: 'green', alignment: "right" },
     { name: 'A / Trusta', color: 'green', alignment: "right" },
@@ -29,6 +30,7 @@ const headers = [
     { id: 'n', title: '№' },
     { id: 'Wallet', title: 'Wallet' },
     { id: 'PoH', title: 'PoH' },
+    { id: 'Flagged', title: 'Flagged' },
     { id: 'A / Gitcoin', title: 'A / Gitcoin'},
     { id: 'A / PADO', title: 'A / PADO'},
     { id: 'A / Trusta', title: 'A / Trusta'},
@@ -56,21 +58,22 @@ const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_cla
 async function fetchWallet(wallet, index) {
     let data = {
         wallet: wallet,
-        'PoH': false,
-        'A / Gitcoin': false,
-        'A / PADO': false,
-        'A / Trusta': false,
-        'A / Testnet Voyage': false,
-        'A / Coinbase': false,
-        'A / OKX': false,
-        'A / Uber': false,
-        'B / Clique': false,
-        'B / Openid': false,
-        'B / Nomis': false,
-        'B / Orange': false,
-        'B / Ruby': false,
-        'B / Trusta': false,
-        'B / 0xScore': false,
+        'PoH': null,
+        'Flagged': null,
+        'A / Gitcoin': null,
+        'A / PADO': null,
+        'A / Trusta': null,
+        'A / Testnet Voyage': null,
+        'A / Coinbase': null,
+        'A / OKX': null,
+        'A / Uber': null,
+        'B / Clique': null,
+        'B / Openid': null,
+        'B / Nomis': null,
+        'B / Orange': null,
+        'B / Ruby': null,
+        'B / Trusta': null,
+        'B / 0xScore': null,
     }
 
     let pohDone
@@ -82,6 +85,7 @@ async function fetchWallet(wallet, index) {
             httpsAgent: getProxy(0, true),
         }).then(response => {
             data['PoH'] = response.data.poh
+            data['Flagged'] = response.data.isFlagged
             data['A / Gitcoin'] = response.data.attestations.find(issuer => issuer.issuerName === 'Gitcoin Passport').validated
             data['A / PADO'] = response.data.attestations.find(issuer => issuer.issuerName === 'PADO Labs').validated
             data['A / Trusta'] = response.data.attestations.find(issuer => issuer.issuerName === 'Trusta POH Attestation').validated
@@ -113,6 +117,7 @@ async function fetchWallet(wallet, index) {
         n: parseInt(index) + 1,
         Wallet: wallet,
         'PoH': data['PoH'],
+        'Flagged': data['Flagged'],
         'A / Gitcoin': data['A / Gitcoin'],
         'A / PADO': data['A / PADO'],
         'A / Trusta': data['A / Trusta'],
