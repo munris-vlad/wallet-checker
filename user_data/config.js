@@ -105,6 +105,8 @@ export const config = {
                     enabled: false
                 },
                 'Redstone': {
+                    enabled: false
+                },
                 'Blast': {
                     enabled: true
                 },
