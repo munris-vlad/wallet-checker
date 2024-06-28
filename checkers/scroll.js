@@ -253,21 +253,19 @@ async function getTxs(wallet, index) {
     }
 
     while (!isMarksCollected) {
-        try {
-            await axios.get(marksApi+wallet, {
-                httpsAgent: agent,
-                signal: newAbortSignal(15000)
-            }).then(response => {
-                if (response.data) {
-                    Object.values(response.data).forEach(marksCategory => {
-                        marks += parseInt(marksCategory.points)
-                    })
-                }
+        await axios.get(marksApi+wallet, {
+            httpsAgent: agent,
+            signal: newAbortSignal(15000)
+        }).then(response => {
+            if (response.data) {
+                Object.values(response.data).forEach(marksCategory => {
+                    marks += marksCategory.points ? parseInt(marksCategory.points) : 0
+                })
+            }
 
-                isMarksCollected = true
-            })
-        } catch (error) {
-            if (config.debug) console.log(error)
+            isMarksCollected = true
+        }).catch(error => {
+            if (config.debug) console.log(error.toString())
             agent = getProxy(index, true)
 
             marksRetry++
@@ -275,7 +273,7 @@ async function getTxs(wallet, index) {
             if (marksRetry > 3) {
                 isMarksCollected = true
             }
-        }
+        })
     }
     
     let totalGasUsed = 0
