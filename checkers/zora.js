@@ -61,7 +61,7 @@ async function getBalances(wallet) {
     let agent = getProxy(0, true)
 
     await axios.get(apiUrl+'/addresses/'+wallet, {
-        signal: newAbortSignal(10000),
+        signal: newAbortSignal(30000),
         httpsAgent: agent
     }).then(response => {
         stats[wallet].balance = getBalance(response.data.coin_balance, 18)
@@ -100,7 +100,7 @@ async function getTxs(wallet) {
     while (!isAllTxCollected) {
         await axios.get(apiUrl+'/addresses/'+wallet+'/transactions', {
             httpsAgent: agent,
-            signal: newAbortSignal(10000),
+            signal: newAbortSignal(30000),
             params: params.block_number === '' ? {} : params
         }).then(response => {
             let items = response.data.items
@@ -114,6 +114,7 @@ async function getTxs(wallet) {
                 params = response.data.next_page_params
             }
         }).catch(function (e) {
+            if (config.debug) console.log(e.toString())
             isAllTxCollected = true
         })
     }
