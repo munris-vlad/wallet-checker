@@ -293,6 +293,10 @@ export const entryPoint = async () => {
                     value: "base",
                 },
                 {
+                    name: "Polygon ZK EVM",
+                    value: "polygonzkevm",
+                },
+                {
                     name: "Aptos",
                     value: "aptos",
                 },

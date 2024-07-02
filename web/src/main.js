@@ -21,6 +21,7 @@ import DebridgeView from './views/DebridgeView.vue'
 import RabbyView from './views/RabbyView.vue'
 import NftView from './views/NftView.vue'
 import GalxeView from './views/GalxeView.vue'
+import PolygonzkevmView from './views/PolygonzkevmView.vue'
 
 const app = createApp(App)
 
@@ -43,6 +44,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
     app.config.globalProperties.$linea_count = data.linea_wallets.length
     app.config.globalProperties.$scroll_count = data.scroll_wallets.length
+    app.config.globalProperties.$polygonzkevm_count = data.polygonzkevm_wallets.length
     app.config.globalProperties.$balance_count = data.balance_wallets.length
     app.config.globalProperties.$evm_count = data.evm_wallets.length
     app.config.globalProperties.$clusters_count = data.clusters_wallets.length
@@ -160,6 +162,12 @@ const routes = [
         name: 'Galxe',
         component: GalxeView,
         meta: { title: 'Galxe' }
+    },
+    {
+        path: '/polygonzkevm',
+        name: 'Polygonzkevm',
+        component: PolygonzkevmView,
+        meta: { title: 'Polygon ZKEVM' }
     },
 ]
 

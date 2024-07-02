@@ -21,6 +21,7 @@ import { config } from '../user_data/config.js'
 import { chainFetchData, rabbyClean, rabbyData, rabbyFetchWallet } from '../checkers/rabby.js'
 import { nftClean, nftData, nftFetchWallet } from '../checkers/nft.js'
 import { galxeData } from '../checkers/galxe.js'
+import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '../checkers/polygonzkevm.js'
 
 const app = express()
 const port = config.port
@@ -47,6 +48,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const aptosWallets = readWallets(config.modules.aptos.addresses)
     const lineaWallets = readWallets(config.modules.linea.addresses)
     const scrollWallets = readWallets(config.modules.scroll.addresses)
+    const polygonzkevmWallets = readWallets(config.modules.polygonzkevm.addresses)
     const clustersWallets = readWallets(config.modules.clusters.addresses)
     const rabbyWallets = readWallets(config.modules.rabby.addresses)
     const evmWallets = readWallets(config.modules.evm.addresses)
@@ -67,6 +69,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
         'scroll_wallets': scrollWallets,
+        'polygonzkevm_wallets': polygonzkevmWallets,
         'clusters_wallets': clustersWallets,
         'rabby_wallets': rabbyWallets,
         'evm_wallets': evmWallets,
@@ -261,6 +264,23 @@ apiRoutes.get('/scroll/refresh', async (req, res) => {
 
 apiRoutes.get('/scroll/clean', async (req, res) => {
     await scrollClean()
+    res.json(true)
+})
+
+// POLYGONZKEVM API
+apiRoutes.get('/polygonzkevm', async (req, res) => {
+    const responseData = await polygonzkevmData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/polygonzkevm/refresh', async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await polygonzkevmFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/polygonzkevm/clean', async (req, res) => {
+    await polygonzkevmClean()
     res.json(true)
 })
 

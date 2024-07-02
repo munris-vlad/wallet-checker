@@ -1,6 +1,6 @@
 {
   "name": "wallet-checker",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "scripts": {
     "start": "node utils/index.js"
   },

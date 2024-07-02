@@ -126,6 +126,11 @@ export const config = {
             addresses: './user_data/addresses/evm.txt',
             spaces: ['Caldera', 'Babylon', 'Berachain', 'BOB']
         }, 
+        polygonzkevm: {
+            enabled: false,
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.005
+        },
     },
     port: 80, // порт для запуска веб версии
     moralisApiKey: '',
@@ -270,5 +275,10 @@ export const rpcs = {
         'https://blast.din.dev/rpc',
         'https://blastl2-mainnet.public.blastapi.io',
         'https://blast.blockpi.network/v1/rpc/public'
+    ],
+    'Polygonzkevm': [
+        'https://zkevm-rpc.com',
+        'https://polygon-zkevm.drpc.org',
+        'https://1rpc.io/polygon/zkevm'
     ],
 }
