@@ -430,7 +430,7 @@ async function getTxs(wallet, index) {
         stats[wallet].total_gas = totalGasUsed
         stats[wallet].bridge_to = bridgeTo
         stats[wallet].bridge_from = bridgeFrom
-        stats[wallet].marks = marks.toFixed(2)
+        stats[wallet].marks = parseFloat(marks).toFixed(2)
     }
 }
 
@@ -455,7 +455,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     total.usdt += parseFloat(stats[wallet].balances['USDT'])
     total.usdc += parseFloat(stats[wallet].balances['USDC'])
     total.dai += parseFloat(stats[wallet].balances['DAI'])
-    total.marks += stats[wallet].marks.toFixed(2)
+    total.marks += parseInt(stats[wallet].marks)
 
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
