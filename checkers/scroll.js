@@ -56,6 +56,7 @@ const headers = [
 
 const apiUrl = "https://api.scrollscan.com/api"
 const marksApi = "https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/scroll/bridge-balances?walletAddress="
+const marksApiProjects = "https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/scroll/project-marks?walletAddress="
 
 const args = process.argv.slice(2)
 if (args[1] === 'refresh') {
@@ -259,7 +260,39 @@ async function getTxs(wallet, index) {
         }).then(response => {
             if (response.data) {
                 Object.values(response.data).forEach(marksCategory => {
-                    marks += marksCategory.points ? parseInt(marksCategory.points) : 0
+                    marks += marksCategory.points ? marksCategory.points : 0
+                })
+            }
+
+            isMarksCollected = true
+        }).catch(error => {
+            if (config.debug) console.log(error.toString())
+            agent = getProxy(index, true)
+
+            marksRetry++
+
+            if (marksRetry > 3) {
+                isMarksCollected = true
+            }
+        })
+
+        await axios.get(marksApiProjects+wallet, {
+            httpsAgent: agent,
+            signal: newAbortSignal(15000)
+        }).then(response => {
+            if (response.data) {
+                Object.values(response.data[0].dex).forEach(marksCategory => {
+                    if (marksCategory.project === 'Others') {
+                        Object.values(marksCategory.items).forEach(item => {
+                            marks += item.marks ? item.marks : 0
+                        })
+                    } else {
+                        marks += marksCategory.marks ? marksCategory.marks : 0
+                    }
+                })
+
+                Object.values(response.data[0].lending).forEach(marksCategory => {
+                    marks += marksCategory.marks ? marksCategory.marks : 0
                 })
             }
 
@@ -397,7 +430,7 @@ async function getTxs(wallet, index) {
         stats[wallet].total_gas = totalGasUsed
         stats[wallet].bridge_to = bridgeTo
         stats[wallet].bridge_from = bridgeFrom
-        stats[wallet].marks = marks
+        stats[wallet].marks = marks.toFixed(2)
     }
 }
 
@@ -422,7 +455,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     total.usdt += parseFloat(stats[wallet].balances['USDT'])
     total.usdc += parseFloat(stats[wallet].balances['USDC'])
     total.dai += parseFloat(stats[wallet].balances['DAI'])
-    total.marks += parseInt(stats[wallet].marks)
+    total.marks += stats[wallet].marks.toFixed(2)
 
     let usdGasValue = (stats[wallet].total_gas*ethPrice).toFixed(2)
     let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
