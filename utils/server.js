@@ -22,6 +22,7 @@ import { chainFetchData, rabbyClean, rabbyData, rabbyFetchWallet } from '../chec
 import { nftClean, nftData, nftFetchWallet } from '../checkers/nft.js'
 import { galxeData } from '../checkers/galxe.js'
 import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '../checkers/polygonzkevm.js'
+import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.js'
 
 const app = express()
 const port = config.port
@@ -55,6 +56,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const balanceWallets = readWallets(config.modules.balance.addresses)
     const nftWallets = readWallets(config.modules.nft.addresses)
     const galxeWallets = readWallets(config.modules.galxe.addresses)
+    const jumperWallets = readWallets(config.modules.jumper.addresses)
 
     res.json({
         'config': config,
@@ -76,9 +78,26 @@ apiRoutes.get('/stats', async (req, res) => {
         'balance_wallets': balanceWallets,
         'nft_wallets': nftWallets,
         'galxe_wallets': galxeWallets,
+        'jumper_wallets': jumperWallets,
     })
 })
 
+// JUMPER API
+apiRoutes.get('/jumper', async (req, res) => {
+    const responseData = await jumperData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/jumper/refresh', async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await jumperFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/jumper/clean', async (req, res) => {
+    await jumperClean()
+    res.json(true)
+})
 
 // ZKSYNC API
 apiRoutes.get('/zksync', async (req, res) => {

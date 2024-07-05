@@ -131,6 +131,10 @@ export const config = {
             addresses: './user_data/addresses/evm.txt',
             minBalanceHighlight: 0.005
         },
+        jumper: {
+            enabled: true,
+            addresses: './user_data/addresses/evm.txt'
+        },
     },
     port: 80, // порт для запуска веб версии
     moralisApiKey: '',

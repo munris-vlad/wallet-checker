@@ -21,6 +21,7 @@ import { rabbyFetchDataAndPrintTable } from "../checkers/rabby.js"
 import { config } from '../user_data/config.js'
 import { galxeFetchDataAndPrintTable } from "../checkers/galxe.js"
 import { polygonzkevmFetchDataAndPrintTable } from "../checkers/polygonzkevm.js"
+import { jumperFetchDataAndPrintTable } from "../checkers/jumper.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -85,6 +86,10 @@ async function startMenu(menu) {
     switch (mode) {
         case "web":
             startExpressServer()
+            break
+        case "jumper":
+            await jumperFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
             break
         case "rabby":
             await rabbyFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })

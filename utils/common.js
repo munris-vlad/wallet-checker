@@ -257,6 +257,10 @@ export const entryPoint = async () => {
                     value: "web",
                 },
                 {
+                    name: "Jumper",
+                    value: "jumper",
+                },
+                {
                     name: "ZkSync",
                     value: "zksync",
                 },

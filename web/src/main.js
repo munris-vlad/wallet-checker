@@ -22,6 +22,7 @@ import RabbyView from './views/RabbyView.vue'
 import NftView from './views/NftView.vue'
 import GalxeView from './views/GalxeView.vue'
 import PolygonzkevmView from './views/PolygonzkevmView.vue'
+import JumperView from './views/JumperView.vue'
 
 const app = createApp(App)
 
@@ -50,6 +51,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$clusters_count = data.clusters_wallets.length
     app.config.globalProperties.$rabby_count = data.rabby_wallets.length
     app.config.globalProperties.$galxe_count = data.galxe_wallets.length
+    app.config.globalProperties.$jumper_count = data.jumper_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -66,6 +68,12 @@ const routes = [
         name: 'ZkSync',
         component: ZksyncView,
         meta: { title: 'ZkSync' }
+    },
+    {
+        path: '/jumper',
+        name: 'Jumper',
+        component: JumperView,
+        meta: { title: 'Jumper' }
     },
     {
         path: '/layerzero',
