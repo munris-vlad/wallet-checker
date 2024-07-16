@@ -224,8 +224,8 @@ async function fetchWallets(isExtended) {
         header: headers
     })
 
-    let batchSize = 10
-    let timeout = 3000
+    let batchSize = 3
+    let timeout = 10000
 
     const walletsInDB = await getCountByChecker('jumper')
 
