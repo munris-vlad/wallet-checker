@@ -338,6 +338,7 @@ export async function baseData() {
         'DAI': totalDai,
         'Total gas spent': totalGas.toFixed(4),
         'Total gas spent USDVALUE': (totalGas*ethPrice).toFixed(2),
+        'OS Points': totalOSPoints.toFixed(0),
     })
 
     return jsonData
