@@ -65,6 +65,7 @@ let iterations = wallets.length
 let iteration = 1
 let csvData = []
 let totalEth = 0
+let totalOSPoints = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function getBalances(wallet) {
@@ -189,6 +190,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     totalEth += stats[wallet].balance
     totalUsdc += parseFloat(stats[wallet].balances['USDbC'])
     totalDai += parseFloat(stats[wallet].balances['DAI'])
+    totalOSPoints += stats[wallet].osPoints
 
     let row
     row = {
@@ -306,6 +308,7 @@ async function addTotalRow() {
         'USDC': totalUsdc.toFixed(0),
         'DAI': totalDai.toFixed(0),
         'Total gas spent': totalGas.toFixed(4) + ` ($${(totalGas*ethPrice).toFixed(2)})`,
+        'OS Points': totalOSPoints.toFixed(0),
     })
 }
 
