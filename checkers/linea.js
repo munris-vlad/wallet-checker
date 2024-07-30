@@ -381,7 +381,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     p.addRow({
         n: parseInt(index)+1,
         wallet: wallet,
-        'Linea XP': stats[wallet].balances['LXP'].toFixed(0),
+        'Linea XP': parseInt(stats[wallet].balances['LXP']),
         'LXP-L Points': stats[wallet].lxplpoints,
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
@@ -403,7 +403,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     jsonData.push({
         n: parseInt(index)+1,
         wallet: wallet,
-        'Linea XP': stats[wallet].balances['LXP'].toFixed(0),
+        'Linea XP': parseInt(stats[wallet].balances['LXP']),
         'LXP-L Points': stats[wallet].lxplpoints,
         'Voyage NFT': stats[wallet].voyagenft,
         'PoH': stats[wallet].poh,
