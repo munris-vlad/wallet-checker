@@ -169,7 +169,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     row = {
         n: index,
         wallet: wallet,
-        'ETH': stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})`,
+        'ETH': stats[wallet].balance ? stats[wallet].balance.toFixed(4) + ` ($${usdEthValue})` : 0,
         'TX Count': stats[wallet].txcount,
         'Collection count': stats[wallet].collection_count,
         'NFT count': stats[wallet].nft_count,
@@ -185,7 +185,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     jsonData.push({
         n: index,
         wallet: wallet,
-        'ETH': stats[wallet].balance.toFixed(4),
+        'ETH': stats[wallet].balance ? stats[wallet].balance.toFixed(4) : 0,
         'ETH USDVALUE': usdEthValue,
         'TX Count': stats[wallet].txcount,
         'Collection count': stats[wallet].collection_count ?? 0,

@@ -274,6 +274,7 @@ async function fetchWallets() {
     totalGas = 0
     totalUsdc = 0
     totalDai = 0
+    totalOSPoints = 0
 
     for (let i = 0; i < batchCount; i++) {
         const startIndex = i * batchSize

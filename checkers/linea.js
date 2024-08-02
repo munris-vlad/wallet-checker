@@ -291,8 +291,12 @@ async function getTxs(wallet) {
         
         totalGasUsed += formatEther(parseEther(tx.fee.value)) / Math.pow(10, 18)
 
-        if (tx.from.hash.toLowerCase() === wallet.toLowerCase()) {
-            uniqueContracts.add(tx.to.hash)
+        if (tx.from) {
+            if (tx.from.hash.toLowerCase() === wallet.toLowerCase()) {
+                if (tx.to) {
+                    uniqueContracts.add(tx.to.hash)
+                }
+            }
         }
 
         stats[wallet].volume += parseFloat(tx.value) * ethPrice
