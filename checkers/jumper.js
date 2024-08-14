@@ -11,6 +11,8 @@ import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } fr
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
+    { name: 'Points', color: 'green', alignment: "right" },
+    { name: 'Rank', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
     { name: 'Volume', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
@@ -26,6 +28,8 @@ const columns = [
 const headers = [
     { id: 'n', title: '№' },
     { id: 'Wallet', title: 'Wallet' },
+    { id: 'Points', title: 'Points' },
+    { id: 'Rank', title: 'Rank' },
     { id: 'TX Count', title: 'TX Count' },
     { id: 'Volume', title: 'Volume' },
     { id: 'Source chains', title: 'Source chains' },
@@ -58,6 +62,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
 
     let data = {
         wallet: wallet,
+        points: 0,
+        rank: 0,
         tx_count: 0,
         volume: 0,
         source_chain_count: 0,
@@ -78,6 +84,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
     let txs = []
     let isTxParsed = false
     let retry = 0
+    let isPointsParsed = false
+    let retryPoints = 0
 
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
@@ -110,6 +118,27 @@ async function fetchWallet(wallet, index, isFetch = false) {
 
                 if (retry >= 3) {
                     isTxParsed = true
+                }
+            })
+        }
+
+        while (!isPointsParsed) {
+            await axios.get(`https://api.jumper.exchange/v1/leaderboard/${wallet}`, {
+                httpsAgent: agent,
+                signal: newAbortSignal(15000)
+            }).then(response => {
+                data.points = parseInt(response.data.data.points)
+                data.rank = parseInt(response.data.data.position)
+                isPointsParsed = true
+            }).catch(async error => {
+                if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
+                retryPoints++
+
+                agent = getProxy(index, true)
+                await sleep(3000)
+
+                if (retryPoints >= 3) {
+                    isPointsParsed = true
                 }
             })
         }
@@ -166,6 +195,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
     let row = {
         n: parseInt(index) + 1,
         Wallet: wallet,
+        Points: data.points,
+        Rank: data.rank,
         'TX Count': data.tx_count,
         'Volume': '$'+data.volume.toFixed(0),
         'Source chains': data.source_chain_count,
@@ -181,6 +212,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
     let jsonRow = {
         n: parseInt(index) + 1,
         Wallet: wallet,
+        Points: data.points,
+        Rank: data.rank,
         'TX Count': data.tx_count,
         'Volume': data.volume.toFixed(0),
         'Source chains': data.source_chain_count,
