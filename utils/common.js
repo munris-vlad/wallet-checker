@@ -472,7 +472,7 @@ export function getProxy(index, isRandom = false) {
     if (proxies.length) {
         if (proxies[index]) {
             if (isRandom) {
-                proxy = proxies[random(0, proxies.length)]
+                proxy = proxies[random(0, Math.max(proxies.length - 1, 0))]
             } else {
                 proxy = proxies[index]
             }
