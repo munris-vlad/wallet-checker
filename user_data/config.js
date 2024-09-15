@@ -108,6 +108,8 @@ export const config = {
                     enabled: false
                 },
                 'Blast': {
+                    enabled: false,
+                },
                 'Taiko': {
                     enabled: true
                 },
