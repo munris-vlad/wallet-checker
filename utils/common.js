@@ -494,6 +494,23 @@ export function getProxy(index, isRandom = false) {
     return agent
 }
 
+export function getProxyAddress(index = 0, isRandom = false) {
+    let proxy = null
+    if (proxies.length) {
+        if (proxies[index]) {
+            if (isRandom) {
+                proxy = proxies[random(0, proxies.length)]
+            } else {
+                proxy = proxies[index]
+            }
+        } else {
+            proxy = proxies[0]
+        }
+    }
+
+    return proxy
+}
+
 export function sortObjectByKey(obj) {
     const sortedEntries = Object.entries(obj).sort((a, b) => a[0].localeCompare(b[0]))
     return Object.fromEntries(sortedEntries)

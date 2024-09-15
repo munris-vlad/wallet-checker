@@ -21,6 +21,7 @@
                 <button v-if="appconfig.modules.balance.networks['Moonriver'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Moonriver'}" @click="loadNetwork('Moonriver')">Moonriver</button>
                 <button v-if="appconfig.modules.balance.networks['Redstone'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Redstone'}" @click="loadNetwork('Redstone')">Redstone</button>
                 <button v-if="appconfig.modules.balance.networks['Blast'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Blast'}" @click="loadNetwork('Blast')">Blast</button>
+                <button v-if="appconfig.modules.balance.networks['Taiko'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Taiko'}" @click="loadNetwork('Taiko')">Taiko</button>
             </div>
         </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700" v-if="isDataLoaded && !isError">
@@ -88,6 +89,9 @@
                             </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Blast'">
                                 <a target="_blank" :href="'https://blastscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/blast.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Taiko'">
+                                <a target="_blank" :href="'https://taikoscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/taiko.svg'" alt=""></a>
                             </div>
                         </div>
                     </td>

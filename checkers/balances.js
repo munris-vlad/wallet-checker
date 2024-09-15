@@ -4,7 +4,7 @@ import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
 import { rpcs } from "../user_data/config.js"
 import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
-import { arbitrum, avalanche, base, blast, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon } from "viem/chains"
+import { arbitrum, avalanche, base, blast, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon, taiko } from "viem/chains"
 import { config } from '../user_data/config.js'
 
 let columns = [
@@ -217,6 +217,25 @@ const networks = {
             address: '0x4300000000000000000000000000000000000003',
             decimals: 18
         },
+    },
+    'Taiko': {
+        'nativePrice': ethPrice,
+        'USDT': {
+            address: '0x9c2dc7377717603eb92b2655c5f2e7997a4945bd',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0x07d83526730c7438048d55a4fc0b850e2aab6f0b',
+            decimals: 6
+        },
+        'USDC.e': {
+            address: '0x19e26B0638bf63aa9fa4d14c6baF8D52eBE86C5C',
+            decimals: 6
+        },
+        'DAI': {
+            address: '0x7d02A3E0180451B17e5D7f29eF78d06F8117106C',
+            decimals: 18
+        },
     }
 }
 
@@ -277,6 +296,9 @@ function getClient(network) {
             break
         case 'Blast':
             return createPublicClient({ chain: blast, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Taiko':
+            return createPublicClient({ chain: taiko, transport: http(rpc), batch: { multicall: true } })
             break
     }
 }
