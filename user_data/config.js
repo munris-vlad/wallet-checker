@@ -288,4 +288,9 @@ export const rpcs = {
         'https://polygon-zkevm.drpc.org',
         'https://1rpc.io/polygon/zkevm'
     ],
+    'Taiko': [
+        'https://rpc.taiko.xyz',
+        'https://rpc.taiko.tools',
+        'https://rpc.ankr.com/taiko'
+    ],
 }
