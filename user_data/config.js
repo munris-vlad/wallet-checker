@@ -61,6 +61,7 @@ export const config = {
         balance: {
             enabled: true,
             addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.004,
             networks: {
                 'ETH': {
                     enabled: true
@@ -111,6 +112,9 @@ export const config = {
                     enabled: false,
                 },
                 'Taiko': {
+                    enabled: true
+                },
+                'Manta': {
                     enabled: true
                 },
             }
@@ -292,5 +296,10 @@ export const rpcs = {
         'https://rpc.taiko.xyz',
         'https://rpc.taiko.tools',
         'https://rpc.ankr.com/taiko'
+    ],
+    'Manta': [
+        'https://pacific-rpc.manta.network/http',
+        'https://1rpc.io/manta',
+        'https://manta-pacific-gascap.calderachain.xyz/http'
     ],
 }

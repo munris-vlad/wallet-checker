@@ -4,7 +4,7 @@ import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
 import { rpcs } from "../user_data/config.js"
 import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
-import { arbitrum, avalanche, base, blast, bsc, celo, coreDao, fantom, klaytn, mainnet, moonbeam, moonriver, opBNB, optimism, polygon, taiko } from "viem/chains"
+import { arbitrum, avalanche, base, blast, bsc, celo, coreDao, fantom, klaytn, mainnet, manta, moonbeam, moonriver, opBNB, optimism, polygon, taiko } from "viem/chains"
 import { config } from '../user_data/config.js'
 
 let columns = [
@@ -236,6 +236,21 @@ const networks = {
             address: '0x7d02A3E0180451B17e5D7f29eF78d06F8117106C',
             decimals: 18
         },
+    },
+    'Manta': {
+        'nativePrice': ethPrice,
+        'USDT': {
+            address: '0xf417f5a458ec102b90352f697d6e2ac3a3d2851f',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0xb73603c5d87fa094b7314c74ace2e64d165016fb',
+            decimals: 6
+        },
+        'DAI': {
+            address: '0x1c466b9371f8aba0d7c458be10a62192fcb8aa71',
+            decimals: 18
+        },
     }
 }
 
@@ -299,6 +314,9 @@ function getClient(network) {
             break
         case 'Taiko':
             return createPublicClient({ chain: taiko, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Manta':
+            return createPublicClient({ chain: manta, transport: http(rpc), batch: { multicall: true } })
             break
     }
 }
