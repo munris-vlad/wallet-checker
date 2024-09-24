@@ -27,8 +27,9 @@ export const config = {
             addresses: './user_data/addresses/evm.txt'
         },
         layerzero: {
-            enabled: false,
-            addresses: './user_data/addresses/evm.txt'
+            enabled: true,
+            addresses: './user_data/addresses/evm.txt',
+            fromDate: '2024-05-01'
         },
         linea: {
             enabled: true,

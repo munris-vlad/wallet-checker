@@ -13,7 +13,6 @@ const columns = [
     { name: 'Wallet', color: 'green', alignment: "right" },
     { name: 'Clusters', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
-    { name: 'Bad protocols %', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
     { name: 'Contracts', alignment: 'right', color: 'cyan' },
@@ -29,7 +28,6 @@ const headers = [
     { id: 'Wallet', title: 'Wallet' },
     { id: 'Clusters', title: 'Clusters' },
     { id: 'TX Count', title: 'TX Count' },
-    { id: 'Bad protocols %', title: 'Bad protocols %' },
     { id: 'Source chains', title: 'Source chains' },
     { id: 'Dest chains', title: 'Dest chains' },
     { id: 'Contracts', title: 'Contracts' },
@@ -156,7 +154,23 @@ async function fetchWallet(wallet, index, isExtended, isFetch = false) {
         data = JSON.parse(existingData)
     } else {
         while (!isTxParsed) {
-            await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(`{"filters":{"address":"${wallet}","stage":"mainnet","created":{}}}`)}`, {
+            let created = {}
+            if (config.modules.layerzero.fromDate) {
+                created = { 
+                    'lte': new Date().toISOString(),
+                    'gte': new Date(`${config.modules.layerzero.fromDate}T00:00:00.000Z`).toISOString(),
+                }
+            }
+
+            const input = JSON.stringify({
+                filters: {
+                    address: wallet,
+                    stage: 'mainnet',
+                    created: created
+                }
+            })
+
+            await axios.get(`https://layerzeroscan.com/api/trpc/messages.list?input=${encodeURIComponent(input)}`, {
                 headers: getQueryHeaders(wallet),
                 httpsAgent: agent,
                 signal: newAbortSignal(15000)
@@ -254,7 +268,6 @@ async function fetchWallet(wallet, index, isExtended, isFetch = false) {
         Wallet: wallet,
         Clusters: data.clusters,
         'TX Count': data.tx_count,
-        'Bad protocols %': ((data.badProtocolsCount / data.tx_count) * 100).toFixed(0) + '%',
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Contracts': data.contracts,
@@ -270,7 +283,6 @@ async function fetchWallet(wallet, index, isExtended, isFetch = false) {
         Wallet: wallet,
         Clusters: data.clusters,
         'TX Count': data.tx_count,
-        'Bad protocols %': ((data.badProtocolsCount / data.tx_count) * 100).toFixed(0),
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
         'Contracts': data.contracts,

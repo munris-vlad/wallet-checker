@@ -31,7 +31,6 @@
                     </td>
                     <td :class="tdClass">{{ item['Clusters'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
-                    <td :class="tdClass">{{ item['Bad protocols %'] }}%</td>
                     <td :class="tdClass">{{ item['Source chains'] }}</td>
                     <td :class="tdClass + ' text-left'">
                         <div class="flex space-x-2 pt-3 pb-4 select-none max-w-sm">
@@ -99,7 +98,6 @@ export default {
                 'Wallet',
                 'Clusters',
                 'TX Count',
-                'Bad protocols %',
                 'Source chains',
                 'Source chains list',
                 'Protocols',
