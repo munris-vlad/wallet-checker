@@ -446,50 +446,54 @@ async function fetchWallets(network) {
         }
     }
 
-    walletsData = wallets.map((wallet, index) => {
-        let eth = 0
-        let usdt = 0
-        let usdc = 0
-        let dai = 0
+    try {
+        walletsData = wallets.map((wallet, index) => {
+            let eth = 0
+            let usdt = 0
+            let usdc = 0
+            let dai = 0
 
-        if (balanceResults) {
-            eth = formatEther(balanceResults[index].result)
-        } else {
-            eth = 0
-        }
-
-        if (networks[network]['USDC.e']) {
-            usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals) + formatUnits(usdceResults[index].result, networks[network]['USDC.e'].decimals)).toFixed(1)
-        } else {
-            if (networks[network]['USDC']) {
-                usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals)).toFixed(1)
+            if (balanceResults) {
+                eth = formatEther(balanceResults[index].result)
+            } else {
+                eth = 0
             }
-        }
 
-        if (networks[network]['DAI']) {
-            dai = parseFloat(formatUnits(daiResults[index].result, networks[network]['DAI'].decimals)).toFixed(1)
-        }
+            if (networks[network]['USDC.e']) {
+                usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals) + formatUnits(usdceResults[index].result, networks[network]['USDC.e'].decimals)).toFixed(1)
+            } else {
+                if (networks[network]['USDC']) {
+                    usdc = parseFloat(formatUnits(usdcResults[index].result, networks[network]['USDC'].decimals)).toFixed(1)
+                }
+            }
 
-        if (networks[network]['USDT']) {
-            usdt = parseFloat(formatUnits(usdtResults[index].result, networks[network]['USDT'].decimals)).toFixed(1)
-        }
+            if (networks[network]['DAI']) {
+                dai = parseFloat(formatUnits(daiResults[index].result, networks[network]['DAI'].decimals)).toFixed(1)
+            }
 
-        if (networks[network]['USDB'] && usdbResults) {
-            usdt = parseFloat(formatUnits(usdbResults[index].result, networks[network]['USDB'].decimals)).toFixed(1)
-        }
+            if (networks[network]['USDT']) {
+                usdt = parseFloat(formatUnits(usdtResults[index].result, networks[network]['USDT'].decimals)).toFixed(1)
+            }
 
-        return {
-            'n': index + 1,
-            'wallet': wallet,
-            'Tx count': transactionCounts ? transactionCounts[index].count : 0,
-            'Native': parseFloat(eth).toFixed(3),
-            'NativeUSD': parseFloat(parseFloat(eth) * networks[network].nativePrice).toFixed(2),
-            'USDT': usdt,
-            'USDC': usdc,
-            'DAI': dai,
-        }
-    })
+            if (networks[network]['USDB'] && usdbResults) {
+                usdt = parseFloat(formatUnits(usdbResults[index].result, networks[network]['USDB'].decimals)).toFixed(1)
+            }
 
+            return {
+                'n': index + 1,
+                'wallet': wallet,
+                'Tx count': transactionCounts ? transactionCounts[index].count : 0,
+                'Native': parseFloat(eth).toFixed(3),
+                'NativeUSD': parseFloat(parseFloat(eth) * networks[network].nativePrice).toFixed(2),
+                'USDT': usdt,
+                'USDC': usdc,
+                'DAI': dai,
+            }
+        })
+    } catch (e) {
+        if (config.debug) console.log(e.toString())
+    }
+    
     p = new Table({
         columns: columns
     })
