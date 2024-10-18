@@ -57,8 +57,7 @@ const headers = [
 ]
 
 const apiUrl = "https://api.scrollscan.com/api"
-const marksApi = "https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/scroll/bridge-balances?walletAddress="
-const marksApiProjects = "https://kx58j6x5me.execute-api.us-east-1.amazonaws.com/scroll/project-marks?walletAddress="
+const marksApi = "https://www.data-openblocklabs.com/scroll/wallet-points?walletAddress="
 
 const args = process.argv.slice(2)
 if (args[1] === 'refresh') {
@@ -266,38 +265,6 @@ async function getTxs(wallet, index) {
             if (response.data) {
                 Object.values(response.data).forEach(marksCategory => {
                     marks += marksCategory.points ? marksCategory.points : 0
-                })
-            }
-
-            isMarksCollected = true
-        }).catch(error => {
-            if (config.debug) console.log(error.toString())
-            agent = getProxy(index, true)
-
-            marksRetry++
-
-            if (marksRetry > 3) {
-                isMarksCollected = true
-            }
-        })
-
-        await axios.get(marksApiProjects+wallet, {
-            httpsAgent: agent,
-            signal: newAbortSignal(15000)
-        }).then(response => {
-            if (response.data) {
-                Object.values(response.data[0].dex).forEach(marksCategory => {
-                    if (marksCategory.project === 'Others') {
-                        Object.values(marksCategory.items).forEach(item => {
-                            marks += item.marks ? item.marks : 0
-                        })
-                    } else {
-                        marks += marksCategory.marks ? marksCategory.marks : 0
-                    }
-                })
-
-                Object.values(response.data[0].lending).forEach(marksCategory => {
-                    marks += marksCategory.marks ? marksCategory.marks : 0
                 })
             }
 
