@@ -57,7 +57,7 @@ const headers = [
 ]
 
 const apiUrl = "https://api.scrollscan.com/api"
-const marksApi = "https://www.data-openblocklabs.com/scroll/wallet-points?walletAddress="
+const marksApi = "https://www.data-openblocklabs.com/scroll/wallet-points-s2?walletAddress="
 
 const args = process.argv.slice(2)
 if (args[1] === 'refresh') {

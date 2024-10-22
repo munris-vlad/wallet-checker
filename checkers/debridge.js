@@ -102,7 +102,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         multiplier: 1
     }
 
-    let txs = []
+    let txsData = []
     let isTxParsed = false
     let isPointsParse = false
     let retry = 0
@@ -154,11 +154,10 @@ async function fetchWallet(wallet, index, isFetch = false) {
                 httpsAgent: agent,
                 signal: newAbortSignal(15000)
             }).then(response => {
-                txs = response.data.orders
-                data.tx_count = response.data.orders.length
+                txsData = response.data.orders
                 isTxParsed = true
             }).catch(error => {
-                if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
+                if (config.debug) console.error(wallet, error, '| Get random proxy')
                 retry++
 
                 agent = getProxy(index, true)
@@ -168,6 +167,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
                 }
             })
         }
+
+        const txs = txsData.filter(tx => tx.creationTimestamp > 1721682000)
 
         if (txs.length) {
             for (const tx of Object.values(txs)) {
@@ -194,6 +195,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
                 uniqueDestination.add(tx.takeOfferWithMetadata.chainId.bigIntegerValue)
             }
 
+            data.tx_count = txs.length
             data.first_tx = new Date(timestampToDate(txs[txs.length - 1].creationTimestamp))
             data.last_tx = new Date(timestampToDate(txs[0].creationTimestamp))
             data.source_chain_count = uniqueSource.size
@@ -274,7 +276,7 @@ async function fetchWallets() {
         header: headers
     })
 
-    let batchSize = 30
+    let batchSize = 10
     let timeout = 5000
 
     const walletsInDB = await getCountByChecker('debridge')

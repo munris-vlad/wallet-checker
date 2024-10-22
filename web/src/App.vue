@@ -1,5 +1,5 @@
 <template>
-    <div class="container mx-auto">
+    <div class="container w-full max-w-none px-48">
         <header class="p-3 text-center border-b dark:border-neutral-500">
             <nav class="flex justify-center items-center space-x-3">
                 <router-link class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/"><img class="rounded-full w-6 h-6 mr-2" :src="'/munrisik.png'" alt=""> Home</router-link>

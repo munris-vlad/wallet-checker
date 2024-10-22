@@ -128,7 +128,7 @@ async function getTxs(wallet) {
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
 
-        if (parseInt(tx.value) === 777000000000000) {
+        if (parseInt(tx.value) === 777000000000000 || parseInt(tx.value) === 111000000000000) {
             zoraNftCount++
         }
     })
