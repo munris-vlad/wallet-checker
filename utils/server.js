@@ -5,6 +5,7 @@ import express from 'express'
 import cors from 'cors'
 import { zkSyncClean, zkSyncData, zkSyncFetchWallet } from "../checkers/zksync.js"
 import { zoraClean, zoraData, zoraFetchWallet } from "../checkers/zora.js"
+import { solanaClean, solanaData, solanaFetchWallet } from "../checkers/solana.js"
 import { baseClean, baseData, baseFetchWallet } from "../checkers/base.js"
 import { aptosClean, aptosData, aptosFetchWallet } from "../checkers/aptos.js"
 import { lineaClean, lineaData, lineaFetchWallet } from "../checkers/linea.js"
@@ -71,6 +72,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const zkbridgeWallets = readWallets(config.modules.zkbridge.addresses)
     const hyperlaneWallets = readWallets(config.modules.hyperlane.addresses)
     const zoraWallets = readWallets(config.modules.zora.addresses)
+    const solanaWallets = readWallets(config.modules.solana.addresses)
     const baseWallets = readWallets(config.modules.base.addresses)
     const aptosWallets = readWallets(config.modules.aptos.addresses)
     const lineaWallets = readWallets(config.modules.linea.addresses)
@@ -93,6 +95,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'wormhole_wallets': wormholeWallets,
         'debridge_wallets': debridgeWallets,
         'zora_wallets': zoraWallets,
+        'solana_wallets': solanaWallets,
         'base_wallets': baseWallets,
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
@@ -241,6 +244,23 @@ apiRoutes.get('/zora/refresh', async (req, res) => {
 
 apiRoutes.get('/zora/clean', async (req, res) => {
     await zoraClean()
+    res.json(true)
+})
+
+// SOLANA API
+apiRoutes.get('/solana', async (req, res) => {
+    const responseData = await solanaData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/solana/refresh', async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await solanaFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/solana/clean', async (req, res) => {
+    await solanaClean()
     res.json(true)
 })
 

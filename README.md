@@ -27,6 +27,7 @@ AUTH_PASSWORD=<пароль>
 * Zkbridge
 * Hyperlane
 * Zora
+* Solana
 * Base
 * Aptos
 * Linea
