@@ -1,4 +1,5 @@
 import { dirname } from 'path'
+import path from 'path';
 import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
@@ -23,19 +24,44 @@ import { nftClean, nftData, nftFetchWallet } from '../checkers/nft.js'
 import { galxeData } from '../checkers/galxe.js'
 import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '../checkers/polygonzkevm.js'
 import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.js'
+import dotenv from 'dotenv';
 
 const app = express()
 const port = config.port
 const apiRoutes = express.Router()
 
+dotenv.config();
+
+const auth = {
+    login: process.env.AUTH_LOGIN,
+    password: process.env.AUTH_PASSWORD
+};
+
 app.use(cors())
+// Basic Authentication Middleware
+app.use((req, res, next) => {
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+    if (login === auth.login && password === auth.password) {
+        return next();
+    }
+
+    // Запрашиваем авторизацию
+    res.set('WWW-Authenticate', 'Basic realm="401"');
+    return res.status(401).send('Authentication required.');
+});
+
+app.use('', apiRoutes);
+
 app.use('/api', apiRoutes)
 
 app.use(express.static('./web/dist'))
 
 app.get('*', (req, res) => {
-    res.sendFile('./web/dist/index.html')
-})
+   res.sendFile('index.html', { root: path.join(process.cwd(), 'web', 'dist') });
+});
+
 
 apiRoutes.get('/stats', async (req, res) => {
     const zksyncWallets = readWallets(config.modules.zksync.addresses)
