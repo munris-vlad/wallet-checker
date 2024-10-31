@@ -139,7 +139,7 @@ function fetchWallets() {
 
     const walletPromises = wallets.map(async (account, index) => {
         // Добавляем задержку перед вызовом функции для создания интервала между запросами
-        await wait(500 * index); // 1 секунда на каждом шаге
+        await wait(500 * index); // Интервал между запросами, без него RPC отказывается работать при кол-ве кошельков более 40
         return fetchWallet(account, index + 1);
     });
 
