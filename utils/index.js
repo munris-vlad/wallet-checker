@@ -2,6 +2,7 @@ import { chooiceNetwork, compareVersions, entryPoint, evmNetwork, sleep } from "
 import { zkSyncFetchDataAndPrintTable } from "../checkers/zksync.js"
 import { aptosFetchDataAndPrintTable } from "../checkers/aptos.js"
 import { zoraFetchDataAndPrintTable } from "../checkers/zora.js"
+import { solanaFetchDataAndPrintTable } from "../checkers/solana.js"
 import { lineaFetchDataAndPrintTable } from "../checkers/linea.js"
 import { scrollFetchDataAndPrintTable } from "../checkers/scroll.js"
 import { balancesFetchDataAndPrintTable } from "../checkers/balances.js"
@@ -129,6 +130,10 @@ async function startMenu(menu) {
             break
         case "zora":
             await zoraFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
+            break
+        case "solana":
+            await solanaFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "base":

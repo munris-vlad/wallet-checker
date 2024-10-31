@@ -289,6 +289,10 @@ export const entryPoint = async () => {
                     value: "zora",
                 },
                 {
+                    name: "Solana",
+                    value: "solana",
+                },
+                {
                     name: "Base",
                     value: "base",
                 },
@@ -661,6 +665,38 @@ export function generateFormattedString() {
 }
 
 
+let cachedPrice = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 минут в миллисекундах
+
+export async function getSolusdtPrice() {
+  const now = Date.now();
+
+  if (cachedPrice !== null && (now - lastFetchTime) < CACHE_DURATION) {
+    console.log("Возвращение кэшированного курса SOLUSDT =", cachedPrice);
+    return cachedPrice;
+  }
+
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+    if (!response.ok) {
+      throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
+    }
+    const data = await response.json();
+    const price = data.solana.usd;
+    console.log("Обновление курса с сервера: SOLUSDT =", price);
+
+    // Обновляем кэш
+    cachedPrice = price;
+    lastFetchTime = now;
+
+    return price;
+  } catch (error) {
+    console.error('Ошибка при получении курса SOL/USD:', error);
+    throw error;
+  }
+}
+
 const prices = await getTokensPrice('APT,ETH,MATIC,BNB,AVAX,CORE,CELO,KLAY,FTM,GLMR,MOVR')
 export const aptPrice = prices.APT ? prices.APT.USD : 0
 export const ethPrice = prices.ETH ? prices.ETH.USD : 0
@@ -673,3 +709,4 @@ export const klayPrice = prices.KLAY ? prices.KLAY.USD : 0
 export const ftmPrice = prices.FTM ? prices.FTM.USD : 0
 export const glmrPrice = prices.GLMR ? prices.GLMR.USD : 0
 export const movrPrice = prices.MOVR ? prices.MOVR.USD : 0
+export const solPrice = await getSolusdtPrice()

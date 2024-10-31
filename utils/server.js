@@ -1,9 +1,11 @@
 import { dirname } from 'path'
+import path from 'path';
 import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
 import { zkSyncClean, zkSyncData, zkSyncFetchWallet } from "../checkers/zksync.js"
 import { zoraClean, zoraData, zoraFetchWallet } from "../checkers/zora.js"
+import { solanaClean, solanaData, solanaFetchWallet } from "../checkers/solana.js"
 import { baseClean, baseData, baseFetchWallet } from "../checkers/base.js"
 import { aptosClean, aptosData, aptosFetchWallet } from "../checkers/aptos.js"
 import { lineaClean, lineaData, lineaFetchWallet } from "../checkers/linea.js"
@@ -23,19 +25,44 @@ import { nftClean, nftData, nftFetchWallet } from '../checkers/nft.js'
 import { galxeData } from '../checkers/galxe.js'
 import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '../checkers/polygonzkevm.js'
 import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.js'
+import dotenv from 'dotenv';
 
 const app = express()
 const port = config.port
 const apiRoutes = express.Router()
 
+dotenv.config();
+
+const auth = {
+    login: process.env.AUTH_LOGIN,
+    password: process.env.AUTH_PASSWORD
+};
+
 app.use(cors())
+// Basic Authentication Middleware
+app.use((req, res, next) => {
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+    if (login === auth.login && password === auth.password) {
+        return next();
+    }
+
+    // Запрашиваем авторизацию
+    res.set('WWW-Authenticate', 'Basic realm="401"');
+    return res.status(401).send('Authentication required.');
+});
+
+app.use('', apiRoutes);
+
 app.use('/api', apiRoutes)
 
 app.use(express.static('./web/dist'))
 
 app.get('*', (req, res) => {
-    res.sendFile('./web/dist/index.html')
-})
+   res.sendFile('index.html', { root: path.join(process.cwd(), 'web', 'dist') });
+});
+
 
 apiRoutes.get('/stats', async (req, res) => {
     const zksyncWallets = readWallets(config.modules.zksync.addresses)
@@ -45,6 +72,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const zkbridgeWallets = readWallets(config.modules.zkbridge.addresses)
     const hyperlaneWallets = readWallets(config.modules.hyperlane.addresses)
     const zoraWallets = readWallets(config.modules.zora.addresses)
+    const solanaWallets = readWallets(config.modules.solana.addresses)
     const baseWallets = readWallets(config.modules.base.addresses)
     const aptosWallets = readWallets(config.modules.aptos.addresses)
     const lineaWallets = readWallets(config.modules.linea.addresses)
@@ -67,6 +95,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'wormhole_wallets': wormholeWallets,
         'debridge_wallets': debridgeWallets,
         'zora_wallets': zoraWallets,
+        'solana_wallets': solanaWallets,
         'base_wallets': baseWallets,
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
@@ -215,6 +244,23 @@ apiRoutes.get('/zora/refresh', async (req, res) => {
 
 apiRoutes.get('/zora/clean', async (req, res) => {
     await zoraClean()
+    res.json(true)
+})
+
+// SOLANA API
+apiRoutes.get('/solana', async (req, res) => {
+    const responseData = await solanaData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/solana/refresh', async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await solanaFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/solana/clean', async (req, res) => {
+    await solanaClean()
     res.json(true)
 })
 

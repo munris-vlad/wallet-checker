@@ -6,6 +6,7 @@ import './assets/tailwind.css'
 import ZksyncView from "@/views/ZksyncView"
 import HomeView from "@/views/HomeView"
 import ZoraView from "@/views/ZoraView"
+import SolanaView from "@/views/SolanaView"
 import AptosView from "@/views/AptosView"
 import LineaView from "@/views/LineaView"
 import ScrollView from "@/views/ScrollView"
@@ -41,6 +42,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$hyperlane_count = data.hyperlane_wallets.length
     app.config.globalProperties.$debridge_count = data.debridge_wallets.length
     app.config.globalProperties.$zora_count = data.zora_wallets.length
+    app.config.globalProperties.$solana_count = data.solana_wallets.length
     app.config.globalProperties.$base_count = data.base_wallets.length
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
     app.config.globalProperties.$linea_count = data.linea_wallets.length
@@ -110,6 +112,12 @@ const routes = [
         name: 'Zora',
         component: ZoraView,
         meta: { title: 'Zora' }
+    },
+        {
+        path: '/solana',
+        name: 'Solana',
+        component: SolanaView,
+        meta: { title: 'Solana' }
     },
     {
         path: '/base',

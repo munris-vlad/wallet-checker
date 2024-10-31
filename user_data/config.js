@@ -59,6 +59,11 @@ export const config = {
             addresses: './user_data/addresses/evm.txt',
             minBalanceHighlight: 0.05
         },
+        solana: {
+            enabled: true,
+            addresses: './user_data/addresses/sol.txt',
+            minBalanceHighlight: 0.05
+        },
         balance: {
             enabled: true,
             addresses: './user_data/addresses/evm.txt',
