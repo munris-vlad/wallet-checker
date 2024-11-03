@@ -1,4 +1,9 @@
 export const config = {
+    auth: {
+        enabled: true,
+        login: 'test',
+        password: 'test',
+    },
     modules: {
         aptos: {
             enabled: true,

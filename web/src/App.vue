@@ -1,6 +1,6 @@
 <template>
     <div class="container w-full max-w-none px-48">
-        <header class="p-3 text-center border-b dark:border-neutral-500">
+        <header class="p-3 text-center border-b dark:border-neutral-500" v-if="isAuthenticated">
             <nav class="flex justify-center items-center space-x-3">
                 <router-link class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/"><img class="rounded-full w-6 h-6 mr-2" :src="'/munrisik.png'" alt=""> Home</router-link>
                 <router-link v-if="appconfig.modules.zksync.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/zksync"><img class="rounded-full w-6 h-6 mr-2" :src="'/zksync-scan.png'" alt=""> ZkSync</router-link>
@@ -24,6 +24,10 @@
                 <router-link v-if="appconfig.modules.galxe.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/galxe"><img class="rounded-full w-6 h-6 mr-2" :src="'/galxe.png'" alt=""> Galxe</router-link>
             </nav>
         </header>
+
+        <header class="p-3 text-center border-b dark:border-neutral-500" v-if="!isAuthenticated">
+            <nav class="flex justify-center items-center space-x-3 text-gray-500 hover:text-gray-600">Wallet checker by <img class="rounded-full w-6 h-6 ml-2" :src="'/munrisik.png'" alt=""> <a href="https://t.me/by_munris" target="_blank" class="text-gray-500 hover:text-gray-600">Munris</a></nav>
+        </header>
         <router-view/>
     </div>
 </template>
@@ -34,8 +38,18 @@ export default {
     data() {
         return {
             appconfig: this.$appconfig,
+            isAuthenticated: JSON.parse(localStorage.getItem('isAuthenticated')) || false
         }
     },
+    mounted() {
+        this.fetchAuth()
+        this.intervalId = setInterval(this.fetchAuth, 1000)
+    },
+    methods: {
+        fetchAuth() {
+            this.isAuthenticated = JSON.parse(localStorage.getItem('isAuthenticated')) || false
+        }
+    }
 }
 </script>
 

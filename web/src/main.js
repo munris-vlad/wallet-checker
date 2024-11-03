@@ -23,6 +23,7 @@ import NftView from './views/NftView.vue'
 import GalxeView from './views/GalxeView.vue'
 import PolygonzkevmView from './views/PolygonzkevmView.vue'
 import JumperView from './views/JumperView.vue'
+import AuthView from './views/AuthView.vue'
 
 const app = createApp(App)
 
@@ -58,124 +59,130 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
 
 const routes = [
     {
+        path: '/login',
+        name: 'Login',
+        component: AuthView,
+        meta: { title: 'Login' }
+    },
+    {
         path: '/',
         name: 'Home',
         component: HomeView,
-        meta: { title: 'Wallet checker' }
+        meta: { requiresAuth: true, title: 'Wallet checker' }
     },
     {
         path: '/zksync',
         name: 'ZkSync',
         component: ZksyncView,
-        meta: { title: 'ZkSync' }
+        meta: { requiresAuth: true, title: 'ZkSync' }
     },
     {
         path: '/jumper',
         name: 'Jumper',
         component: JumperView,
-        meta: { title: 'Jumper' }
+        meta: { requiresAuth: true, title: 'Jumper' }
     },
     {
         path: '/layerzero',
         name: 'Layerzero',
         component: LayerzeroView,
-        meta: { title: 'Layerzero' }
+        meta: { requiresAuth: true, title: 'Layerzero' }
     },
     {
         path: '/wormhole',
         name: 'Wormhole',
         component: WormholeView,
-        meta: { title: 'Wormhole' }
+        meta: { requiresAuth: true, title: 'Wormhole' }
     },
     {
         path: '/zkbridge',
         name: 'Zkbridge',
         component: ZkbridgeView,
-        meta: { title: 'Zkbridge' }
+        meta: { requiresAuth: true, title: 'Zkbridge' }
     },
     {
         path: '/hyperlane',
         name: 'Hyperlane',
         component: HyperlaneView,
-        meta: { title: 'Hyperlane' }
+        meta: { requiresAuth: true, title: 'Hyperlane' }
     },
     {
         path: '/debridge',
         name: 'Debridge',
         component: DebridgeView,
-        meta: { title: 'Debridge' }
+        meta: { requiresAuth: true, title: 'Debridge' }
     },
     {
         path: '/zora',
         name: 'Zora',
         component: ZoraView,
-        meta: { title: 'Zora' }
+        meta: { requiresAuth: true, title: 'Zora' }
     },
     {
         path: '/base',
         name: 'Base',
         component: BaseView,
-        meta: { title: 'Base' }
+        meta: { requiresAuth: true, title: 'Base' }
     },
     {
         path: '/scroll',
         name: 'Scroll',
         component: ScrollView,
-        meta: { title: 'Scroll' }
+        meta: { requiresAuth: true, title: 'Scroll' }
     },
     {
         path: '/aptos',
         name: 'Aptos',
         component: AptosView,
-        meta: { title: 'Aptos' }
+        meta: { requiresAuth: true, title: 'Aptos' }
     },
     {
         path: '/linea',
         name: 'Linea',
         component: LineaView,
-        meta: { title: 'Linea' }
+        meta: { requiresAuth: true, title: 'Linea' }
     },
     {
         path: '/balances',
         name: 'Balances',
         component: BalancesView,
-        meta: { title: 'Balances' }
+        meta: { requiresAuth: true, title: 'Balances' }
     },
     {
         path: '/evm',
         name: 'EVM',
         component: EvmView,
-        meta: { title: 'EVM' }
+        meta: { requiresAuth: true, title: 'EVM' }
     },
     {
         path: '/clusters',
         name: 'Clusters',
         component: ClustersView,
-        meta: { title: 'Clusters' }
+        meta: { requiresAuth: true, title: 'Clusters' }
     },
     {
         path: '/rabby',
         name: 'Rabby',
         component: RabbyView,
-        meta: { title: 'Rabby' }
+        meta: { requiresAuth: true, title: 'Rabby' }
     },
     {
         path: '/nft',
         name: 'NFT',
         component: NftView,
-        meta: { title: 'NFT' }
+        meta: { requiresAuth: true, title: 'NFT' }
     },
     {
         path: '/galxe',
         name: 'Galxe',
         component: GalxeView,
-        meta: { title: 'Galxe' }
+        meta: { requiresAuth: true, title: 'Galxe' }
     },
     {
         path: '/polygonzkevm',
         name: 'Polygonzkevm',
         component: PolygonzkevmView,
-        meta: { title: 'Polygon ZKEVM' }
+        meta: { requiresAuth: true, title: 'Polygon ZKEVM' }
     },
 ]
 
@@ -184,9 +191,16 @@ const router = new createRouter({
     history: createWebHashHistory(),
 })
 
+
 router.beforeEach((to, from, next) => {
     document.title = to.meta.title
-    next()
+    const isAuthenticated = JSON.parse(localStorage.getItem('isAuthenticated')) || false
+  
+    if (app.config.globalProperties.$appconfig.auth.enabled && to.meta.requiresAuth && !isAuthenticated) {
+        next({ name: 'Login' })
+    } else {
+        next()
+    }
 })
 
 app.use(router)
