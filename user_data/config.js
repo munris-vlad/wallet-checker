@@ -1,6 +1,6 @@
 export const config = {
     auth: {
-        enabled: true,
+        enabled: false,
         login: 'test',
         password: 'test',
     },
