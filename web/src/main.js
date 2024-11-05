@@ -57,6 +57,8 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     console.error('Ошибка при загрузке данных:', error)
 })
 
+
+
 const routes = [
     {
         path: '/login',
@@ -195,11 +197,16 @@ const router = new createRouter({
 router.beforeEach((to, from, next) => {
     document.title = to.meta.title
     const isAuthenticated = JSON.parse(localStorage.getItem('isAuthenticated')) || false
-  
-    if (app.config.globalProperties.$appconfig.auth.enabled && to.meta.requiresAuth && !isAuthenticated) {
-        next({ name: 'Login' })
-    } else {
+
+    if (!app.config.globalProperties.$appconfig.auth.enabled) {
+        localStorage.setItem('isAuthenticated', true)
         next()
+    } else {
+        if (to.meta.requiresAuth && !isAuthenticated) {
+            next({ name: 'Login' })
+        } else {
+            next()
+        }
     }
 })
 
