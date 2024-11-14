@@ -24,6 +24,7 @@ import GalxeView from './views/GalxeView.vue'
 import PolygonzkevmView from './views/PolygonzkevmView.vue'
 import JumperView from './views/JumperView.vue'
 import AuthView from './views/AuthView.vue'
+import StoryView from './views/StoryView.vue'
 
 const app = createApp(App)
 
@@ -53,6 +54,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$rabby_count = data.rabby_wallets.length
     app.config.globalProperties.$galxe_count = data.galxe_wallets.length
     app.config.globalProperties.$jumper_count = data.jumper_wallets.length
+    app.config.globalProperties.$story_count = data.story_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -77,6 +79,12 @@ const routes = [
         name: 'ZkSync',
         component: ZksyncView,
         meta: { requiresAuth: true, title: 'ZkSync' }
+    },
+    {
+        path: '/story',
+        name: 'Story',
+        component: StoryView,
+        meta: { requiresAuth: true, title: 'Story' }
     },
     {
         path: '/jumper',

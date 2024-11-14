@@ -3,6 +3,7 @@
         <header class="p-3 text-center border-b dark:border-neutral-500" v-if="isAuthenticated">
             <nav class="flex justify-center items-center space-x-3">
                 <router-link class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/"><img class="rounded-full w-6 h-6 mr-2" :src="'/munrisik.png'" alt=""> Home</router-link>
+                <router-link v-if="appconfig.modules.story.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/story"><img class="rounded-full w-6 h-6 mr-2" :src="'/story.svg'" alt=""> Story</router-link>
                 <router-link v-if="appconfig.modules.zksync.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/zksync"><img class="rounded-full w-6 h-6 mr-2" :src="'/zksync-scan.png'" alt=""> ZkSync</router-link>
                 <router-link v-if="appconfig.modules.layerzero.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/layerzero"><img class="rounded-full w-6 h-6 mr-2" :src="'/layerzero.png'" alt=""> Layerzero</router-link>
                 <router-link v-if="appconfig.modules.jumper.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/jumper"><img class="rounded-full w-6 h-6 mr-2" :src="'/jumper.svg'" alt=""> Jumper</router-link>

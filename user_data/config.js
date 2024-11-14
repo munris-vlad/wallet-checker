@@ -5,6 +5,10 @@ export const config = {
         password: 'test',
     },
     modules: {
+        story: {
+            enabled: true,
+            addresses: './user_data/addresses/evm.txt',
+        },
         aptos: {
             enabled: true,
             addresses: './user_data/addresses/aptos.txt',

@@ -25,6 +25,7 @@ import { nftClean, nftData, nftFetchWallet } from '../checkers/nft.js'
 import { galxeData } from '../checkers/galxe.js'
 import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '../checkers/polygonzkevm.js'
 import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.js'
+import { storyClean, storyData, storyFetchWallet } from '../checkers/story.js'
 
 const app = express()
 const port = config.port
@@ -93,6 +94,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const nftWallets = readWallets(config.modules.nft.addresses)
     const galxeWallets = readWallets(config.modules.galxe.addresses)
     const jumperWallets = readWallets(config.modules.jumper.addresses)
+    const storyWallets = readWallets(config.modules.story.addresses)
 
     res.json({
         'config': config,
@@ -115,6 +117,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'nft_wallets': nftWallets,
         'galxe_wallets': galxeWallets,
         'jumper_wallets': jumperWallets,
+        'story_wallets': storyWallets,
     })
 })
 
@@ -353,6 +356,23 @@ apiRoutes.get('/clusters/refresh', isAuthenticated, async (req, res) => {
 
 apiRoutes.get('/clusters/clean', isAuthenticated, async (req, res) => {
     await clustersClean()
+    res.json(true)
+})
+
+// STORY API
+apiRoutes.get('/story', isAuthenticated, async (req, res) => {
+    const responseData = await storyData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/story/refresh', isAuthenticated, async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await storyFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/story/clean', isAuthenticated, async (req, res) => {
+    await storyClean()
     res.json(true)
 })
 
