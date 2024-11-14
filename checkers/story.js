@@ -26,6 +26,9 @@ const columns = [
     { name: 'Badge Count', alignment: 'right', color: 'cyan' },
     { name: 'Main', alignment: 'right', color: 'cyan' },
     { name: 'Wand', alignment: 'right', color: 'cyan' },
+    { name: 'Solo', alignment: 'right', color: 'cyan' },
+    { name: 'Color', alignment: 'right', color: 'cyan' },
+    { name: 'Unleash', alignment: 'right', color: 'cyan' },
     { name: 'Nightly', alignment: 'right', color: 'cyan' },
     { name: 'D3X', alignment: 'right', color: 'cyan' },
     { name: 'Satori', alignment: 'right', color: 'cyan' },
@@ -50,6 +53,9 @@ const headers = [
     { id: 'Badge Count', title: 'TX Count' },
     { id: 'Main', title: 'Main' },
     { id: 'Wand', title: 'Wand' },
+    { id: 'Solo', title: 'Solo' },
+    { id: 'Color', title: 'Color' },
+    { id: 'Unleash', title: 'Unleash' },
     { id: 'Nightly', title: 'Nightly' },
     { id: 'D3X', title: 'D3X' },
     { id: 'Satori', title: 'Satori' },
@@ -230,6 +236,9 @@ async function fetchWallet(wallet, index, isFetch = false) {
 
     badgeCount += stats[wallet].balances['OTCIPA'] ? 1 : 0
     badgeCount += stats[wallet].balances['WAND'] ? 1 : 0
+    badgeCount += stats[wallet].balances['SOLOXSSB'] ? 1 : 0
+    badgeCount += stats[wallet].balances['COLB'] ? 1 : 0
+    badgeCount += stats[wallet].balances['UPB'] ? 1 : 0
     badgeCount += stats[wallet].balances['NIGHTLY'] ? 1 : 0
     badgeCount += stats[wallet].balances['D3XBadge'] ? 1 : 0
     badgeCount += stats[wallet].balances['SatoriBadge'] ? 1 : 0
@@ -250,6 +259,9 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Badge Count': stats[wallet].badgecount,
         'Main': stats[wallet].balances['OTCIPA'] ? 'Yes' : 'No',
         'Wand': stats[wallet].balances['WAND'] ? 'Yes' : 'No',
+        'Solo': stats[wallet].balances['SOLOXSSB'] ? 'Yes' : 'No',
+        'Color': stats[wallet].balances['COLB'] ? 'Yes' : 'No',
+        'Unleash': stats[wallet].balances['UPB'] ? 'Yes' : 'No',
         'Nightly': stats[wallet].balances['NIGHTLY'] ? 'Yes' : 'No',
         'D3X': stats[wallet].balances['D3XBadge'] ? 'Yes' : 'No',
         'Satori': stats[wallet].balances['SatoriBadge'] ? 'Yes' : 'No',
@@ -274,6 +286,9 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Badge Count': stats[wallet].badgecount,
         'Main': stats[wallet].balances['OTCIPA'] ? 1 : 0,
         'Wand': stats[wallet].balances['WAND'] ? 1 : 0,
+        'Solo': stats[wallet].balances['SOLOXSSB'] ? 1 : 0,
+        'Color': stats[wallet].balances['COLB'] ? 1 : 0,
+        'Unleash': stats[wallet].balances['UPB'] ? 1 : 0,
         'Nightly': stats[wallet].balances['NIGHTLY'] ? 1 : 0,
         'D3X': stats[wallet].balances['D3XBadge'] ? 1 : 0,
         'Satori': stats[wallet].balances['SatoriBadge'] ? 1 : 0,

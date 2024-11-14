@@ -34,6 +34,9 @@
                     <td :class="tdClass">{{ item['Badge Count'] }}</td>
                     <td :class="tdClass">{{ item['Main'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Wand'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Solo'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Color'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Unleash'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Nightly'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['D3X'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Satori'] ? '✅' : '❌' }}</td>
@@ -93,6 +96,9 @@ export default {
                 'Badge Count',
                 'Main',
                 'Wand',
+                'Solo',
+                'Color',
+                'Unleash',
                 'Nightly',
                 'D3X',
                 'Satori',
