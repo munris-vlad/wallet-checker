@@ -405,6 +405,14 @@ export const chooiceNetwork = async () => {
                 {
                     name: "Moonriver",
                     value: "Moonriver",
+                },
+                {
+                    name: "Manta",
+                    value: "Manta",
+                },
+                {
+                    name: "Zero",
+                    value: "Zero",
                 }
             ],
             default: "web",

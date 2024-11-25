@@ -27,17 +27,23 @@ const columns = [
     { name: 'Main', alignment: 'right', color: 'cyan' },
     { name: 'Wand', alignment: 'right', color: 'cyan' },
     { name: 'Solo', alignment: 'right', color: 'cyan' },
+    { name: 'Satori', alignment: 'right', color: 'cyan' },
+    { name: 'MahojinIP', alignment: 'right', color: 'cyan' },
+    { name: 'StandartProtocol', alignment: 'right', color: 'cyan' },
+    { name: 'D3X', alignment: 'right', color: 'cyan' },
+    { name: 'Impossible', alignment: 'right', color: 'cyan' },
+    { name: 'Combo', alignment: 'right', color: 'cyan' },
     { name: 'Color', alignment: 'right', color: 'cyan' },
     { name: 'Unleash', alignment: 'right', color: 'cyan' },
     { name: 'Nightly', alignment: 'right', color: 'cyan' },
-    { name: 'D3X', alignment: 'right', color: 'cyan' },
-    { name: 'Satori', alignment: 'right', color: 'cyan' },
-    { name: 'MahojinIP', alignment: 'right', color: 'cyan' },
     { name: 'ArtStory', alignment: 'right', color: 'cyan' },
     { name: 'PunkgaMe', alignment: 'right', color: 'cyan' },
-    { name: 'StandartProtocol', alignment: 'right', color: 'cyan' },
     { name: 'Rightsfually', alignment: 'right', color: 'cyan' },
+    { name: 'PiperX', alignment: 'right', color: 'cyan' },
+    { name: 'Spotlight', alignment: 'right', color: 'cyan' },
+    { name: 'Playarts', alignment: 'right', color: 'cyan' },
     { name: 'Contracts', alignment: 'right', color: 'cyan' },
+    { name: 'Singular', alignment: 'right', color: 'cyan' },
     { name: 'Days', alignment: 'right', color: 'cyan' },
     { name: 'Weeks', alignment: 'right', color: 'cyan' },
     { name: 'Months', alignment: 'right', color: 'cyan' },
@@ -54,16 +60,22 @@ const headers = [
     { id: 'Main', title: 'Main' },
     { id: 'Wand', title: 'Wand' },
     { id: 'Solo', title: 'Solo' },
+    { id: 'Satori', title: 'Satori' },
+    { id: 'MahojinIP', title: 'MahojinIP' },
+    { id: 'StandartProtocol', title: 'StandartProtocol' },
+    { id: 'D3X', title: 'D3X' },
+    { id: 'Impossible', title: 'Impossible' },
+    { id: 'Combo', title: 'Combo' },
     { id: 'Color', title: 'Color' },
     { id: 'Unleash', title: 'Unleash' },
     { id: 'Nightly', title: 'Nightly' },
-    { id: 'D3X', title: 'D3X' },
-    { id: 'Satori', title: 'Satori' },
-    { id: 'MahojinIP', title: 'MahojinIP' },
     { id: 'ArtStory', title: 'ArtStory' },
     { id: 'PunkgaMe', title: 'PunkgaMe' },
-    { id: 'StandartProtocol', title: 'StandartProtocol' },
     { id: 'Rightsfually', title: 'Rightsfually' },
+    { id: 'PiperX', title: 'PiperX' },
+    { id: 'Spotlight', title: 'Spotlight' },
+    { id: 'Playarts', title: 'Playarts' },
+    { id: 'Singular', title: 'Singular' },
     { id: 'Contracts', title: 'Contracts' },
     { id: 'Days', title: 'Days' },
     { id: 'Weeks', title: 'Weeks' },
@@ -243,10 +255,15 @@ async function fetchWallet(wallet, index, isFetch = false) {
     badgeCount += stats[wallet].balances['D3XBadge'] ? 1 : 0
     badgeCount += stats[wallet].balances['SatoriBadge'] ? 1 : 0
     badgeCount += stats[wallet].balances['$MahojinIPBadge'] ? 1 : 0
-    badgeCount += stats[wallet].balances['ARTSTORYBADGE'] ? 1 : 0
     badgeCount += stats[wallet].balances['PunkgaMeBadge'] ? 1 : 0
     badgeCount += stats[wallet].balances['STND-STORYBADGE'] ? 1 : 0
     badgeCount += stats[wallet].balances['rfally'] ? 1 : 0
+    badgeCount += stats[wallet].balances['PIPERX'] ? 1 : 0
+    badgeCount += stats[wallet].balances['IF'] ? 1 : 0
+    badgeCount += stats[wallet].balances['1CSB'] ? 1 : 0
+    badgeCount += stats[wallet].balances['SPOT'] ? 1 : 0
+    badgeCount += stats[wallet].balances['ARTSTORYBADGE'] ? 1 : 0
+    badgeCount += stats[wallet].balances['SNGLR'] ? 1 : 0
 
     stats[wallet].badgecount = badgeCount
     progressBar.update(iteration)
@@ -264,12 +281,17 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Unleash': stats[wallet].balances['UPB'] ? 'Yes' : 'No',
         'Nightly': stats[wallet].balances['NIGHTLY'] ? 'Yes' : 'No',
         'D3X': stats[wallet].balances['D3XBadge'] ? 'Yes' : 'No',
+        'Impossible': stats[wallet].balances['IF'] ? 'Yes' : 'No',
+        'Combo': stats[wallet].balances['1CSB'] ? 'Yes' : 'No',
         'Satori': stats[wallet].balances['SatoriBadge'] ? 'Yes' : 'No',
         'MahojinIP': stats[wallet].balances['$MahojinIPBadge'] ? 'Yes' : 'No',
         'ArtStory': stats[wallet].balances['ARTSTORYBADGE'] ? 'Yes' : 'No',
         'PunkgaMe': stats[wallet].balances['PunkgaMeBadge'] ? 'Yes' : 'No',
         'StandartProtocol': stats[wallet].balances['STND-STORYBADGE'] ? 'Yes' : 'No',
         'Rightsfually': stats[wallet].balances['rfally'] ? 'Yes' : 'No',
+        'PiperX': stats[wallet].balances['PIPERX'] ? 'Yes' : 'No',
+        'Spotlight': stats[wallet].balances['SPOT'] ? 'Yes' : 'No',
+        'Singular': stats[wallet].balances['SNGLR'] ? 'Yes' : 'No',
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
@@ -291,12 +313,17 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Unleash': stats[wallet].balances['UPB'] ? 1 : 0,
         'Nightly': stats[wallet].balances['NIGHTLY'] ? 1 : 0,
         'D3X': stats[wallet].balances['D3XBadge'] ? 1 : 0,
+        'Impossible': stats[wallet].balances['IF'] ? 1 : 0,
+        'Combo': stats[wallet].balances['1CSB'] ? 1 : 0,
         'Satori': stats[wallet].balances['SatoriBadge'] ? 1 : 0,
         'MahojinIP': stats[wallet].balances['$MahojinIPBadge'] ? 1 : 0,
         'ArtStory': stats[wallet].balances['ARTSTORYBADGE'] ? 1 : 0,
         'PunkgaMe': stats[wallet].balances['PunkgaMeBadge'] ? 1 : 0,
         'StandartProtocol': stats[wallet].balances['STND-STORYBADGE'] ? 1 : 0,
         'Rightsfually': stats[wallet].balances['rfally'] ? 1 : 0,
+        'PiperX': stats[wallet].balances['PIPERX'] ? 1 : 0,
+        'Spotlight': stats[wallet].balances['SPOT'] ? 1 : 0,
+        'Singular': stats[wallet].balances['SNGLR'] ? 1 : 0,
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,

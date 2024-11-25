@@ -35,16 +35,21 @@
                     <td :class="tdClass">{{ item['Main'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Wand'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Solo'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Satori'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['MahojinIP'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['StandartProtocol'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['D3X'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Impossible'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Combo'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Color'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Unleash'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Nightly'] ? '✅' : '❌' }}</td>
-                    <td :class="tdClass">{{ item['D3X'] ? '✅' : '❌' }}</td>
-                    <td :class="tdClass">{{ item['Satori'] ? '✅' : '❌' }}</td>
-                    <td :class="tdClass">{{ item['MahojinIP'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['ArtStory'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['PunkgaMe'] ? '✅' : '❌' }}</td>
-                    <td :class="tdClass">{{ item['StandartProtocol'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Rightsfually'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['PiperX'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Spotlight'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Singular'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
@@ -97,16 +102,21 @@ export default {
                 'Main',
                 'Wand',
                 'Solo',
+                'Satori',
+                'MahojinIP',
+                'StandartProtocol',
+                'D3X',
+                'Impossible',
+                'Combo',
                 'Color',
                 'Unleash',
                 'Nightly',
-                'D3X',
-                'Satori',
-                'MahojinIP',
                 'ArtStory',
                 'PunkgaMe',
-                'StandartProtocol',
                 'Rightsfually',
+                'PiperX',
+                'Spotlight',
+                'Singular',
                 'Contracts',
                 'Days',
                 'Weeks',

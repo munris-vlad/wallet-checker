@@ -3,7 +3,7 @@ import axios from "axios"
 import { Table } from "console-table-printer"
 import { createObjectCsvWriter } from "csv-writer"
 import { rpcs } from "../user_data/config.js"
-import { createPublicClient, http, formatEther, parseAbi, formatUnits } from 'viem'
+import { createPublicClient, http, formatEther, parseAbi, formatUnits, defineChain } from 'viem'
 import { arbitrum, avalanche, base, blast, bsc, celo, coreDao, fantom, klaytn, mainnet, manta, moonbeam, moonriver, opBNB, optimism, polygon, taiko } from "viem/chains"
 import { config } from '../user_data/config.js'
 
@@ -28,6 +28,28 @@ let headers = [
     { id: 'USDC', title: 'USDC' },
     { id: 'DAI', title: 'DAI' },
 ]
+
+export const zero = defineChain({
+    id: 543210,
+    name: 'Zero',
+    network: 'zero',
+    nativeCurrency: {
+        decimals: 18,
+        name: 'Ether',
+        symbol: 'ETH',
+    },
+    rpcUrls: {
+        default: {
+            http: ['https://rpc.zerion.io/v1/zero'],
+        },
+        public: {
+            http: ['https://rpc.zerion.io/v1/zero'],
+        },
+    },
+    blockExplorers: {
+        default: { name: 'Explorer', url: 'https://explorer.zero.network' },
+    }
+})
 
 const networks = {
     'ETH': {
@@ -251,7 +273,10 @@ const networks = {
             address: '0x1c466b9371f8aba0d7c458be10a62192fcb8aa71',
             decimals: 18
         },
-    }
+    },
+    'Zero': {
+        'nativePrice': ethPrice
+    },
 }
 
 let wallets = readWallets(config.modules.evm.addresses)
@@ -317,6 +342,9 @@ function getClient(network) {
             break
         case 'Manta':
             return createPublicClient({ chain: manta, transport: http(rpc), batch: { multicall: true } })
+            break
+        case 'Zero':
+            return createPublicClient({ chain: zero, transport: http(rpc), batch: { multicall: true } })
             break
     }
 }
@@ -436,7 +464,7 @@ async function fetchWallets(network) {
 
             isSuccess = true
         } catch (e) {
-            if (config.debug) console.log(e.toString())
+            if (config.debug) console.log(e)
 
             retry++
 
@@ -453,8 +481,8 @@ async function fetchWallets(network) {
             let usdc = 0
             let dai = 0
 
-            if (balanceResults) {
-                eth = formatEther(balanceResults[index].result)
+            if (balanceResults[index]) {
+                eth = balanceResults[index].result ? formatEther(balanceResults[index].result) : 0
             } else {
                 eth = 0
             }
@@ -491,7 +519,7 @@ async function fetchWallets(network) {
             }
         })
     } catch (e) {
-        if (config.debug) console.log(e.toString())
+        if (config.debug) console.log(e)
     }
     
     p = new Table({
