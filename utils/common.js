@@ -257,6 +257,10 @@ export const entryPoint = async () => {
                     value: "web",
                 },
                 {
+                    name: "Eclipse",
+                    value: "eclipse",
+                },
+                {
                     name: "Story",
                     value: "story",
                 },

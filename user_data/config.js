@@ -5,6 +5,11 @@ export const config = {
         password: 'test',
     },
     modules: {
+        eclipse: {
+            enabled: false,
+            addresses: './user_data/addresses/eclipse.txt',
+            minBalanceHighlight: 0.005
+        },
         story: {
             enabled: true,
             addresses: './user_data/addresses/evm.txt',

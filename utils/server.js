@@ -26,6 +26,7 @@ import { galxeData } from '../checkers/galxe.js'
 import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '../checkers/polygonzkevm.js'
 import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.js'
 import { storyClean, storyData, storyFetchWallet } from '../checkers/story.js'
+import { eclipseClean, eclipseData, eclipseFetchWallet } from '../checkers/eclipse.js'
 
 const app = express()
 const port = config.port
@@ -95,6 +96,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const galxeWallets = readWallets(config.modules.galxe.addresses)
     const jumperWallets = readWallets(config.modules.jumper.addresses)
     const storyWallets = readWallets(config.modules.story.addresses)
+    const eclipseWallets = readWallets(config.modules.eclipse.addresses)
 
     res.json({
         'config': config,
@@ -118,6 +120,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'galxe_wallets': galxeWallets,
         'jumper_wallets': jumperWallets,
         'story_wallets': storyWallets,
+        'eclipse_wallets': eclipseWallets,
     })
 })
 
@@ -373,6 +376,23 @@ apiRoutes.get('/story/refresh', isAuthenticated, async (req, res) => {
 
 apiRoutes.get('/story/clean', isAuthenticated, async (req, res) => {
     await storyClean()
+    res.json(true)
+})
+
+// ECLIPSE API
+apiRoutes.get('/eclipse', isAuthenticated, async (req, res) => {
+    const responseData = await eclipseData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/eclipse/refresh', isAuthenticated, async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await eclipseFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/eclipse/clean', isAuthenticated, async (req, res) => {
+    await eclipseClean()
     res.json(true)
 })
 

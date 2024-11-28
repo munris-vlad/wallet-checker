@@ -25,6 +25,7 @@ import PolygonzkevmView from './views/PolygonzkevmView.vue'
 import JumperView from './views/JumperView.vue'
 import AuthView from './views/AuthView.vue'
 import StoryView from './views/StoryView.vue'
+import EclipseView from './views/EclipseView.vue'
 
 const app = createApp(App)
 
@@ -55,6 +56,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$galxe_count = data.galxe_wallets.length
     app.config.globalProperties.$jumper_count = data.jumper_wallets.length
     app.config.globalProperties.$story_count = data.story_wallets.length
+    app.config.globalProperties.$eclipse_count = data.eclipse_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -73,6 +75,12 @@ const routes = [
         name: 'Home',
         component: HomeView,
         meta: { requiresAuth: true, title: 'Wallet checker' }
+    },
+    {
+        path: '/eclipse',
+        name: 'Eclipse',
+        component: EclipseView,
+        meta: { requiresAuth: true, title: 'Eclipse' }
     },
     {
         path: '/zksync',

@@ -23,6 +23,7 @@ import { galxeFetchDataAndPrintTable } from "../checkers/galxe.js"
 import { polygonzkevmFetchDataAndPrintTable } from "../checkers/polygonzkevm.js"
 import { jumperFetchDataAndPrintTable } from "../checkers/jumper.js"
 import { storyFetchDataAndPrintTable } from "../checkers/story.js"
+import { eclipseFetchDataAndPrintTable } from "../checkers/eclipse.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -87,6 +88,10 @@ async function startMenu(menu) {
     switch (mode) {
         case "web":
             startExpressServer()
+            break
+        case "eclipse":
+            await eclipseFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
             break
         case "story":
             await storyFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
