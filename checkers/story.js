@@ -26,6 +26,7 @@ const columns = [
     { name: 'Badge Count', alignment: 'right', color: 'cyan' },
     { name: 'Main', alignment: 'right', color: 'cyan' },
     { name: 'OKX', alignment: 'right', color: 'cyan' },
+    { name: 'Verio', alignment: 'right', color: 'cyan' },
     { name: 'Wand', alignment: 'right', color: 'cyan' },
     { name: 'Poster', alignment: 'right', color: 'cyan' },
     { name: 'Solo', alignment: 'right', color: 'cyan' },
@@ -61,6 +62,7 @@ const headers = [
     { id: 'Badge Count', title: 'TX Count' },
     { id: 'Main', title: 'Main' },
     { id: 'OKX', title: 'OKX' },
+    { id: 'Verio', title: 'Verio' },
     { id: 'Wand', title: 'Wand' },
     { id: 'Poster', title: 'Poster' },
     { id: 'Solo', title: 'Solo' },
@@ -270,6 +272,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     badgeCount += stats[wallet].balances['SNGLR'] ? 1 : 0
     badgeCount += stats[wallet].balances['PSTR'] ? 1 : 0
     badgeCount += stats[wallet].balances['okx_story_odyssey'] ? 1 : 0
+    badgeCount += stats[wallet].balances['VERIO'] ? 1 : 0
 
     stats[wallet].badgecount = badgeCount
     progressBar.update(iteration)
@@ -282,6 +285,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Badge Count': stats[wallet].badgecount,
         'Main': stats[wallet].balances['OTCIPA'] ? 'Yes' : 'No',
         'OKX': stats[wallet].balances['okx_story_odyssey'] ? 'Yes' : 'No',
+        'Verio': stats[wallet].balances['VERIO'] ? 'Yes' : 'No',
         'Wand': stats[wallet].balances['WAND'] ? 'Yes' : 'No',
         'Poster': stats[wallet].balances['PSTR'] ? 'Yes' : 'No',
         'Solo': stats[wallet].balances['SOLOXSSB'] ? 'Yes' : 'No',
@@ -316,6 +320,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Badge Count': stats[wallet].badgecount,
         'Main': stats[wallet].balances['OTCIPA'] ? 1 : 0,
         'OKX': stats[wallet].balances['okx_story_odyssey'] ? 1 : 0,
+        'Verio': stats[wallet].balances['VERIO'] ? 1 : 0,
         'Wand': stats[wallet].balances['WAND'] ? 1 : 0,
         'Poster': stats[wallet].balances['PSTR'] ? 1 : 0,
         'Solo': stats[wallet].balances['SOLOXSSB'] ? 1 : 0,
