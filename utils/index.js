@@ -52,7 +52,7 @@ async function checkVersion() {
         let actualVersion = 0
 
         
-        await axios.get('https://munris.tech/checker-version.json').then(response => {
+        await axios.get('http://91.107.194.133/checker-version.json').then(response => {
             actualVersion = response.data
         }).catch(error => {
             if (config.debug) console.log(error.toString())
@@ -186,6 +186,8 @@ const args = process.argv.slice(2)
 let mode = args[0]
 
 if (mode === 'web') {
+    await checkVersion()
+    await sleep(1000)
     startExpressServer()
 } else {
     await startMenu(mode)
