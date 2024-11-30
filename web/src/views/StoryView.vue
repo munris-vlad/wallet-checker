@@ -35,6 +35,7 @@
                     <td :class="tdClass">{{ item['Main'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['OKX'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Verio'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Styreal'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Wand'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Poster'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Solo'] ? '✅' : '❌' }}</td>
@@ -105,6 +106,7 @@ export default {
                 'Main',
                 'OKX',
                 'Verio',
+                'Styreal',
                 'Wand',
                 'Poster',
                 'Solo',
