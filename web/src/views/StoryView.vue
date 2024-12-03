@@ -34,6 +34,7 @@
                     <td :class="tdClass">{{ item['Badge Count'] }}</td>
                     <td :class="tdClass">{{ item['Main'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['OKX'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['StoryHunt'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Verio'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Styreal'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Wand'] ? '✅' : '❌' }}</td>
@@ -105,6 +106,7 @@ export default {
                 'Badge Count',
                 'Main',
                 'OKX',
+                'StoryHunt',
                 'Verio',
                 'Styreal',
                 'Wand',
