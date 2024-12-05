@@ -35,6 +35,7 @@ const columns = [
     { name: 'Satori', alignment: 'right', color: 'cyan' },
     { name: 'MahojinIP', alignment: 'right', color: 'cyan' },
     { name: 'StandartProtocol', alignment: 'right', color: 'cyan' },
+    { name: 'BlockBook', alignment: 'right', color: 'cyan' },
     { name: 'D3X', alignment: 'right', color: 'cyan' },
     { name: 'Impossible', alignment: 'right', color: 'cyan' },
     { name: 'Combo', alignment: 'right', color: 'cyan' },
@@ -73,6 +74,7 @@ const headers = [
     { id: 'Satori', title: 'Satori' },
     { id: 'MahojinIP', title: 'MahojinIP' },
     { id: 'StandartProtocol', title: 'StandartProtocol' },
+    { id: 'BlockBook', title: 'BlockBook' },
     { id: 'D3X', title: 'D3X' },
     { id: 'Impossible', title: 'Impossible' },
     { id: 'Combo', title: 'Combo' },
@@ -279,6 +281,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     badgeCount += stats[wallet].balances['VERIO'] ? 1 : 0
     badgeCount += stats[wallet].balances['STYREALBadge'] ? 1 : 0
     badgeCount += stats[wallet].balances['SHB'] ? 1 : 0
+    badgeCount += stats[wallet].balances['BlockBook'] ? 1 : 0
 
     stats[wallet].badgecount = badgeCount
     progressBar.update(iteration)
@@ -308,6 +311,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'ArtStory': stats[wallet].balances['ARTSTORYBADGE'] ? 'Yes' : 'No',
         'PunkgaMe': stats[wallet].balances['PunkgaMeBadge'] ? 'Yes' : 'No',
         'StandartProtocol': stats[wallet].balances['STND-STORYBADGE'] ? 'Yes' : 'No',
+        'BlockBook': stats[wallet].balances['BlockBook'] ? 'Yes' : 'No',
         'Rightsfually': stats[wallet].balances['rfally'] ? 'Yes' : 'No',
         'PiperX': stats[wallet].balances['PIPERX'] ? 'Yes' : 'No',
         'Spotlight': stats[wallet].balances['SPOT'] ? 'Yes' : 'No',
@@ -345,6 +349,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'ArtStory': stats[wallet].balances['ARTSTORYBADGE'] ? 1 : 0,
         'PunkgaMe': stats[wallet].balances['PunkgaMeBadge'] ? 1 : 0,
         'StandartProtocol': stats[wallet].balances['STND-STORYBADGE'] ? 1 : 0,
+        'BlockBook': stats[wallet].balances['BlockBook'] ? 1 : 0,
         'Rightsfually': stats[wallet].balances['rfally'] ? 1 : 0,
         'PiperX': stats[wallet].balances['PIPERX'] ? 1 : 0,
         'Spotlight': stats[wallet].balances['SPOT'] ? 1 : 0,

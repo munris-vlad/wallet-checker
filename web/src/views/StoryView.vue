@@ -41,17 +41,18 @@
                     <td :class="tdClass">{{ item['Poster'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Solo'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Satori'] ? '✅' : '❌' }}</td>
-                    <td :class="tdClass">{{ item['MahojinIP'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['ArtStory'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['StandartProtocol'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['Rightsfually'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['D3X'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Impossible'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Combo'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Color'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['BlockBook'] ? '✅' : '❌' }}</td>
+                    <td :class="tdClass">{{ item['MahojinIP'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Unleash'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Nightly'] ? '✅' : '❌' }}</td>
-                    <td :class="tdClass">{{ item['ArtStory'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['PunkgaMe'] ? '✅' : '❌' }}</td>
-                    <td :class="tdClass">{{ item['Rightsfually'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['PiperX'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Spotlight'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Singular'] ? '✅' : '❌' }}</td>
@@ -113,17 +114,18 @@ export default {
                 'Poster',
                 'Solo',
                 'Satori',
-                'MahojinIP',
+                'ArtStory',
                 'StandartProtocol',
+                'Rightsfually',
                 'D3X',
                 'Impossible',
                 'Combo',
                 'Color',
+                'BlockBook',
+                'MahojinIP',
                 'Unleash',
                 'Nightly',
-                'ArtStory',
                 'PunkgaMe',
-                'Rightsfually',
                 'PiperX',
                 'Spotlight',
                 'Singular',
