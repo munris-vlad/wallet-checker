@@ -1,13 +1,10 @@
 import '../utils/common.js'
 import {
-    sleep,
     readWallets,
-    getBalance,
     getKeyByValue,
     getProxy,
     newAbortSignal,
     ethPrice,
-    timestampToDate
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -24,6 +21,7 @@ const columns = [
     { name: 'Domain', color: 'green', alignment: "right" },
     { name: 'ETH', alignment: 'right', color: 'cyan' },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
+    { name: 'Volume', alignment: 'right', color: 'cyan' },
     { name: 'Days', alignment: 'right', color: 'cyan' },
     { name: 'Weeks', alignment: 'right', color: 'cyan' },
     { name: 'Months', alignment: 'right', color: 'cyan' },
@@ -37,6 +35,7 @@ const headers = [
     { id: 'Domain', title: 'Domain' },
     { id: 'ETH', title: 'ETH' },
     { id: 'TX Count', title: 'TX Count' },
+    { id: 'Volume', title: 'Volume' },
     { id: 'Days', title: 'Days' },
     { id: 'Weeks', title: 'Weeks' },
     { id: 'Months', title: 'Months' },
@@ -104,10 +103,13 @@ async function getTxs(wallet) {
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
+    let volume = 0
 
     let txs = []
+    let uniqueTxs = []
     let params = {
-        page_size: 40
+        page_size: 10,
+        page: 1
     }
     let isAllTxCollected = false, retry = 0
 
@@ -119,14 +121,22 @@ async function getTxs(wallet) {
             headers: reqHeaders
         }).then(async response => {
             let items = response.data.data.transactions
-
+           
             Object.values(items).forEach(tx => {
                 txs.push(tx)
             })
 
             const firstKey = Object.keys(response.data.metadata.accounts)[0]
             stats[wallet].domain = response.data.metadata.accounts[firstKey] ? response.data.metadata.accounts[firstKey].account_domain : ''
-            isAllTxCollected = true
+
+            if (items.length < params.page_size || items[items.length - 1].txHash === params.before) {
+                isAllTxCollected = true
+            }
+
+            if (items.length) {
+                params.before = items[items.length - 1].txHash
+            }
+            params.page++
         }).catch(function (error) {
             if (config.debug) console.log(error)
 
@@ -134,24 +144,33 @@ async function getTxs(wallet) {
         })
     }
 
-    stats[wallet].txcount = txs.length
+    if (txs.length > 0) {
+        uniqueTxs = Array.from(
+            new Map(txs.map(obj => [obj.txHash, obj])).values()
+        )
+    }
 
-    Object.values(txs).forEach(tx => {
+    stats[wallet].txcount = uniqueTxs.length
+
+    Object.values(uniqueTxs).forEach(tx => {
         const date = new Date(tx.blockTime * 1000)
         uniqueDays.add(date.toDateString())
         uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
+
+        volume += parseInt(tx.sol_value)
     })
 
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
     const numUniqueMonths = uniqueMonths.size
-    if (txs.length) {
-        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].blockTime * 1000)
-        stats[wallet].last_tx_date = new Date(txs[0].blockTime * 1000)
+    if (uniqueTxs.length) {
+        stats[wallet].first_tx_date = new Date(uniqueTxs[uniqueTxs.length - 1].blockTime * 1000)
+        stats[wallet].last_tx_date = new Date(uniqueTxs[0].blockTime * 1000)
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
+        stats[wallet].volume = parseFloat(formatUnits(volume, 9)) * ethPrice
     }
 }
 
@@ -162,6 +181,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     } else {
         stats[wallet] = {
             txcount: 0,
+            volume: 0,
             balances: { ETH: 0 },
         }
 
@@ -179,6 +199,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Domain': stats[wallet].domain,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'TX Count': stats[wallet].txcount,
+        'Volume': stats[wallet].volume.toFixed(2),
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,
@@ -193,6 +214,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'TX Count': stats[wallet].txcount,
+        'Volume': stats[wallet].volume.toFixed(2),
         'Days': stats[wallet].unique_days ?? 0,
         'Weeks': stats[wallet].unique_weeks ?? 0,
         'Months': stats[wallet].unique_months ?? 0,

@@ -8,7 +8,7 @@
                 <span v-if="isShowProtocols">Hide</span>
                 <span v-if="!isShowProtocols">Show</span> protocols
             </div>
-            <div class="text-gray-500 hover:text-gray-600 cursor-pointer select-none pr-0" @click="refreshData">
+            <div class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded cursor-pointer select-none mb-2" @click="refreshData">
                 Refresh data
             </div>
         </div>

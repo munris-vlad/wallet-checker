@@ -3,6 +3,8 @@
         <header class="p-3 text-center border-b dark:border-neutral-500" v-if="isAuthenticated">
             <nav class="flex justify-center items-center space-x-3">
                 <router-link class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/"><img class="rounded-full w-6 h-6 mr-2" :src="'/munrisik.png'" alt=""> Home</router-link>
+                <router-link v-if="appconfig.modules.airdrop.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/airdrop"><img class="rounded-full w-6 h-6 mr-2" :src="'/airdrop.png'" alt=""> Airdrops</router-link>
+                <router-link v-if="appconfig.modules.points.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/points"><img class="rounded-full w-6 h-6 mr-2" :src="'/points.png'" alt=""> Points</router-link>
                 <router-link v-if="appconfig.modules.story.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/story"><img class="rounded-full w-6 h-6 mr-2" :src="'/story.svg'" alt=""> Story</router-link>
                 <router-link v-if="appconfig.modules.eclipse.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/eclipse"><img class="rounded-full w-6 h-6 mr-2" :src="'/eclipse-scan.png'" alt=""> Eclipse</router-link>
                 <router-link v-if="appconfig.modules.zksync.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/zksync"><img class="rounded-full w-6 h-6 mr-2" :src="'/zksync-scan.png'" alt=""> ZkSync</router-link>

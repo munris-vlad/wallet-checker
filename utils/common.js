@@ -4,6 +4,7 @@ import inquirer from "inquirer"
 import { HttpsProxyAgent } from "https-proxy-agent"
 import { SocksProxyAgent } from "socks-proxy-agent"
 import { defineChain } from 'viem'
+import crypto from "crypto"
 
 export const wait = ms => new Promise(r => setTimeout(r, ms))
 export const sleep = async (millis) => new Promise(resolve => setTimeout(resolve, millis))
@@ -257,6 +258,14 @@ export const entryPoint = async () => {
                     value: "web",
                 },
                 {
+                    name: "Airdrop",
+                    value: "airdrop",
+                },
+                {
+                    name: "Points",
+                    value: "points",
+                },
+                {
                     name: "Eclipse",
                     value: "eclipse",
                 },
@@ -351,7 +360,7 @@ export const chooiceNetwork = async () => {
         {
             name: "choice",
             type: "list",
-            message: "Сеть:",
+            message: "Network:",
             choices: [
                 {
                     name: "Ethereum",
@@ -433,7 +442,7 @@ export const evmNetwork = async () => {
         {
             name: "choice",
             type: "list",
-            message: "Сеть:",
+            message: "Network:",
             choices: [
                 {
                     name: "Ethereum",
@@ -465,6 +474,48 @@ export const evmNetwork = async () => {
     return answers.choice
 }
 
+export const pointsChecker = async () => {
+    const questions = [
+        {
+            name: "choice",
+            type: "list",
+            message: "Project:",
+            choices: [
+                {
+                    name: "Zerion",
+                    value: "zerion",
+                },
+            ],
+            default: "zerion",
+            loop: false,
+        },
+    ]
+
+    const answers = await inquirer.prompt(questions)
+    return answers.choice
+}
+
+export const airdropChecker = async () => {
+    const questions = [
+        {
+            name: "choice",
+            type: "list",
+            message: "Project:",
+            choices: [
+                {
+                    name: "Jupiter",
+                    value: "jupiter",
+                },
+            ],
+            default: "jupiter",
+            loop: false,
+        },
+    ]
+
+    const answers = await inquirer.prompt(questions)
+    return answers.choice
+}
+
 export function getKeyByValue(object, value) {
     return Object.keys(object).find((key) => object[key] === value)
 }
@@ -478,7 +529,7 @@ export function newAbortSignal(timeoutMs) {
 
 let proxies = readWallets('./user_data/proxies.txt')
 
-export function getProxy(index, isRandom = false) {
+export function getProxy(index = 0, isRandom = true) {
     let agent
     let proxy = null
     if (proxies.length) {
@@ -672,8 +723,34 @@ export function generateFormattedString() {
     const part1 = generateRandomString(32)
     const part2 = generateRandomString(16)
     const part3 = generateRandomString(1)
-    
+
     return `${part1}-${part2}-${part3}`
+}
+
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+export function base58ToBuffer(base58) {
+    let result = BigInt(0);
+    for (const char of base58) {
+        const index = BASE58_ALPHABET.indexOf(char);
+        if (index === -1) {
+            throw new Error(`Invalid Base58 character: ${char}`);
+        }
+        result = result * BigInt(58) + BigInt(index);
+    }
+
+    const hex = result.toString(16);
+    const hexPadded = hex.length % 2 === 0 ? hex : '0' + hex;
+    return Buffer.from(hexPadded, 'hex');
+}
+
+export function isEvmAddress(address) {
+    if (!address.startsWith('0x') || address.length !== 42) {
+        return false;
+    }
+
+    const hexPattern = /^[0-9a-fA-F]+$/
+    return hexPattern.test(address.slice(2))
 }
 
 

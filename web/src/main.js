@@ -26,6 +26,8 @@ import JumperView from './views/JumperView.vue'
 import AuthView from './views/AuthView.vue'
 import StoryView from './views/StoryView.vue'
 import EclipseView from './views/EclipseView.vue'
+import PointsView from './views/PointsView.vue'
+import AirdropView from './views/AirdropView.vue'
 
 const app = createApp(App)
 
@@ -57,6 +59,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$jumper_count = data.jumper_wallets.length
     app.config.globalProperties.$story_count = data.story_wallets.length
     app.config.globalProperties.$eclipse_count = data.eclipse_wallets.length
+    app.config.globalProperties.$points_count = data.points_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -201,6 +204,18 @@ const routes = [
         name: 'Polygonzkevm',
         component: PolygonzkevmView,
         meta: { requiresAuth: true, title: 'Polygon ZKEVM' }
+    },
+    {
+        path: '/points',
+        name: 'Points',
+        component: PointsView,
+        meta: { requiresAuth: true, title: 'Points' }
+    },
+    {
+        path: '/airdrop',
+        name: 'Airdrop',
+        component: AirdropView,
+        meta: { requiresAuth: true, title: 'Airdrop' }
     },
 ]
 

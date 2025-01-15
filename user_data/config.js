@@ -5,6 +5,24 @@ export const config = {
         password: 'test',
     },
     modules: {
+        airdrop: {
+            enabled: true,
+            addresses: './user_data/addresses/solana.txt',
+            projects: {
+                'jupiter': {
+                    addresses: './user_data/addresses/solana.txt',
+                },
+            }
+        },
+        points: {
+            enabled: true,
+            projects: {
+                'zerion': {
+                    enabled: true,
+                    addresses: './user_data/addresses/evm.txt',
+                },
+            }
+        },
         eclipse: {
             enabled: false,
             addresses: './user_data/addresses/eclipse.txt',

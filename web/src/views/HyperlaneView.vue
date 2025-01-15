@@ -5,7 +5,7 @@
         </div>
         <div class="flex justify-between items-center pb-1 pt-4 pl-0" v-if="isDataLoaded && !isError">
             <div class="text-gray-500 hover:text-gray-600 px-2 cursor-pointer select-none pl-0 w-32"></div>
-            <div class="text-gray-500 hover:text-gray-600 cursor-pointer select-none pr-0" @click="refreshData">
+            <div class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded cursor-pointer select-none mb-2" @click="refreshData">
                 Refresh data
             </div>
         </div>
@@ -122,6 +122,11 @@ export default {
                 3441005: "https://metaid.zkbridge.com/ipfs/QmekQvuJeEjpArjUh2LaUk4HD8prrpUu4387A1fxqUnGuW",
                 9000: "https://metaid.zkbridge.com/ipfs/QmVkNAq7AcZZBoWCjZNJz1xNBpRDC3NucL9LycydCP7CQL",
                 42261: "https://metaid.zkbridge.com/ipfs/QmdqJYRFxUoCTkLoYKz2AKxj6CjQZ89jfmNuxpTrkjTPTv",
+                7777777: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/zoramainnet/logo.svg",
+                57073: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/ink/logo.svg",
+                167000: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/taiko/logo.svg",
+                2818: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/morph/logo.svg",
+                690: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/redstone/logo.svg"
             },
             names: {
                 56: "BNB Chain",

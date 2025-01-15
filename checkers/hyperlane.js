@@ -1,5 +1,5 @@
 import '../utils/common.js'
-import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey, getTokenPrice } from '../utils/common.js'
+import { getKeyByValue, newAbortSignal, readWallets, sleep, timestampToDate, random, getProxy, sortObjectByKey, getTokenPrice, isEvmAddress, base58ToBuffer } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
 import { createObjectCsvWriter } from 'csv-writer'
@@ -66,6 +66,12 @@ async function fetchWallet(wallet, index, isFetch = false) {
     let txs = []
     let isTxParsed = false
     let retry = 0
+    let walletFormatted = wallet.toLowerCase().slice(2)
+
+    if (!isEvmAddress(wallet)) {
+        walletFormatted = base58ToBuffer(wallet).toString('hex')
+    }
+
     const uniqueDays = new Set()
     const uniqueWeeks = new Set()
     const uniqueMonths = new Set()
@@ -80,7 +86,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         while (!isTxParsed) {
             await axios.post('https://explorer4.hasura.app/v1/graphql', {
                 variables: {
-                    search: "\\x"+wallet.toLowerCase().slice(2),
+                    search: "\\x"+walletFormatted,
                 },
                 query: "query ($search: bytea, $originChains: [bigint!], $destinationChains: [bigint!], $startTime: timestamp, $endTime: timestamp) {\n  q0: message_view(\n    where: {_and: [{sender: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n  q1: message_view(\n    where: {_and: [{recipient: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n  q2: message_view(\n    where: {_and: [{origin_tx_sender: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n  q3: message_view(\n    where: {_and: [{destination_tx_sender: {_eq: $search}}]}\n    order_by: {id: desc}\n    limit: 50\n  ) {\n    id\n    msg_id\n    nonce\n    sender\n    recipient\n    is_delivered\n    send_occurred_at\n    delivery_occurred_at\n    delivery_latency\n    origin_chain_id\n    origin_domain_id\n    origin_tx_id\n    origin_tx_hash\n    origin_tx_sender\n    destination_chain_id\n    destination_domain_id\n    destination_tx_id\n    destination_tx_hash\n    destination_tx_sender\n    __typename\n  }\n}"
             }, {

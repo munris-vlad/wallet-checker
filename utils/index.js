@@ -1,4 +1,4 @@
-import { chooiceNetwork, compareVersions, entryPoint, evmNetwork, sleep } from "./common.js"
+import { airdropChecker, chooiceNetwork, compareVersions, entryPoint, evmNetwork, pointsChecker, sleep } from "./common.js"
 import { zkSyncFetchDataAndPrintTable } from "../checkers/zksync.js"
 import { aptosFetchDataAndPrintTable } from "../checkers/aptos.js"
 import { zoraFetchDataAndPrintTable } from "../checkers/zora.js"
@@ -24,6 +24,8 @@ import { polygonzkevmFetchDataAndPrintTable } from "../checkers/polygonzkevm.js"
 import { jumperFetchDataAndPrintTable } from "../checkers/jumper.js"
 import { storyFetchDataAndPrintTable } from "../checkers/story.js"
 import { eclipseFetchDataAndPrintTable } from "../checkers/eclipse.js"
+import { pointsFetchDataAndPrintTable } from "../checkers/points.js"
+import { airdropFetchDataAndPrintTable } from "../checkers/airdrop.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -52,7 +54,7 @@ async function checkVersion() {
         let actualVersion = 0
 
         
-        await axios.get('http://91.107.194.133/checker-version.json').then(response => {
+        await axios.get('https://munris.tech/checker-version.json').then(response => {
             actualVersion = response.data
         }).catch(error => {
             if (config.debug) console.log(error.toString())
@@ -165,6 +167,16 @@ async function startMenu(menu) {
         case "balances":
             let network = await chooiceNetwork()
             await balancesFetchDataAndPrintTable(network).catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
+            break
+        case "points":
+            let project = await pointsChecker()
+            await pointsFetchDataAndPrintTable(project).catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
+            break
+        case "airdrop":
+            let airdropProject = await airdropChecker()
+            await airdropFetchDataAndPrintTable(airdropProject).catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "linea-poh":

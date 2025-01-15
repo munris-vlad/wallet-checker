@@ -23,8 +23,6 @@ const headers = [
     { id: 'First tx', title: 'First tx'},
     { id: 'Last tx', title: 'Last tx'},
     { id: 'Total gas spent', title: 'Total gas spent'},
-    { id: 'OS Points', title: 'OS Points'},
-    { id: 'OS Rank', title: 'OS Rank'}
 ]
 
 const columns = [
@@ -42,8 +40,6 @@ const columns = [
     { name: 'First tx', alignment: 'right', color: 'cyan'},
     { name: 'Last tx', alignment: 'right', color: 'cyan'},
     { name: 'Total gas spent', alignment: 'right', color: 'cyan'},
-    { name: 'OS Points', alignment: 'right', color: 'cyan'},
-    { name: 'OS Rank', alignment: 'right', color: 'cyan'}
 ]
 
 const args = process.argv.slice(2)
@@ -65,7 +61,6 @@ let iterations = wallets.length
 let iteration = 1
 let csvData = []
 let totalEth = 0
-let totalOSPoints = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function getBalances(wallet) {
@@ -125,7 +120,7 @@ async function getTxs(wallet) {
     }
 
     stats[wallet].txcount = txs.length
-    let totalFee = 0, volume = 0, osPoints = 0, osRank = 0
+    let totalFee = 0, volume = 0
     Object.values(txs).forEach(tx => {
         const date = new Date(tx.timestamp)
         uniqueDays.add(date.toDateString())
@@ -143,14 +138,6 @@ async function getTxs(wallet) {
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
     const numUniqueMonths = uniqueMonths.size
-    let agent = getProxy(0, true)
-    
-    await axios.get(`https://basehunt.xyz/api/leaderboard/rank?userAddress=${wallet}&gameId=2`, {httpsAgent: agent}).then(response => {
-        osPoints = response.data.currentScore
-        osRank = response.data.rank
-    }).catch(e => {
-        if (config.debug) console.log(e.toString())
-    })
 
     if (txs.length) {
         stats[wallet].first_tx_date = new Date(txs[txs.length - 1].timestamp)
@@ -161,8 +148,6 @@ async function getTxs(wallet) {
         stats[wallet].unique_contracts = uniqueContracts.size
         stats[wallet].totalFee = totalFee
         stats[wallet].volume = volume
-        stats[wallet].osPoints = osPoints
-        stats[wallet].osRank = osRank
     }
 }
 
@@ -190,7 +175,6 @@ async function fetchWallet(wallet, index, isFetch = false) {
     totalEth += stats[wallet].balance
     totalUsdc += parseFloat(stats[wallet].balances['USDbC'])
     totalDai += parseFloat(stats[wallet].balances['DAI'])
-    totalOSPoints += stats[wallet].osPoints
 
     let row
     row = {
@@ -208,8 +192,6 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'First tx': stats[wallet].first_tx_date ? moment(stats[wallet].first_tx_date).format("DD.MM.YY") : '-',
         'Last tx': stats[wallet].last_tx_date ? moment(stats[wallet].last_tx_date).format("DD.MM.YY") : '-',
         'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) + ` ($${usdFeeEthValue})` : 0,
-        'OS Points': stats[wallet].osPoints ?? 0,
-        'OS Rank': stats[wallet].osRank ?? 0
     }
 
     p.addRow(row)
@@ -230,8 +212,6 @@ async function fetchWallet(wallet, index, isFetch = false) {
         'Last tx': stats[wallet].txcount ? stats[wallet].last_tx_date : '—',
         'Total gas spent': stats[wallet].totalFee ? stats[wallet].totalFee.toFixed(4) : 0,
         'Total gas spent USDVALUE': stats[wallet].totalFee ? usdFeeEthValue : 0,
-        'OS Points': stats[wallet].osPoints ?? 0,
-        'OS Rank': stats[wallet].osRank ?? 0
     })
 
     if (stats[wallet].txcount > 0) {
@@ -274,7 +254,6 @@ async function fetchWallets() {
     totalGas = 0
     totalUsdc = 0
     totalDai = 0
-    totalOSPoints = 0
 
     for (let i = 0; i < batchCount; i++) {
         const startIndex = i * batchSize
@@ -309,7 +288,6 @@ async function addTotalRow() {
         'USDC': totalUsdc.toFixed(0),
         'DAI': totalDai.toFixed(0),
         'Total gas spent': totalGas.toFixed(4) + ` ($${(totalGas*ethPrice).toFixed(2)})`,
-        'OS Points': totalOSPoints.toFixed(0),
     })
 }
 
@@ -339,7 +317,6 @@ export async function baseData() {
         'DAI': totalDai,
         'Total gas spent': totalGas.toFixed(4),
         'Total gas spent USDVALUE': (totalGas*ethPrice).toFixed(2),
-        'OS Points': totalOSPoints.toFixed(0),
     })
 
     return jsonData

@@ -5,7 +5,7 @@
         </div>
         <div class="flex justify-between items-center pb-1 pt-4 pl-0" v-if="isDataLoaded && !isError">
             <div class="text-gray-500 hover:text-gray-600 px-2 cursor-pointer select-none pl-0 w-32"></div>
-            <div class="text-gray-500 hover:text-gray-600 cursor-pointer select-none pr-0" @click="refreshData">
+            <div class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded cursor-pointer select-none mb-2" @click="refreshData">
                 Refresh data
             </div>
         </div>
@@ -29,6 +29,7 @@
                     <td :class="tdClass">{{ item['Domain'] }}</td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.eclipse.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
+                    <td :class="tdClass">${{ item['Volume'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
                     <td :class="tdClass">{{ item['Weeks'] }}</td>
                     <td :class="tdClass">{{ item['Months'] }}</td>
@@ -77,6 +78,7 @@ export default {
                 'Domain',
                 'ETH',
                 'TX Count',
+                'Volume',
                 'Days',
                 'Weeks',
                 'Months',

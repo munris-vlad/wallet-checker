@@ -27,6 +27,8 @@ import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '..
 import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.js'
 import { storyClean, storyData, storyFetchWallet } from '../checkers/story.js'
 import { eclipseClean, eclipseData, eclipseFetchWallet } from '../checkers/eclipse.js'
+import { pointsClean, pointsData, pointsFetchWallet } from '../checkers/points.js'
+import { airdropClean, airdropData, airdropFetchDataAndPrintTable } from '../checkers/airdrop.js'
 
 const app = express()
 const port = config.port
@@ -97,6 +99,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const jumperWallets = readWallets(config.modules.jumper.addresses)
     const storyWallets = readWallets(config.modules.story.addresses)
     const eclipseWallets = readWallets(config.modules.eclipse.addresses)
+    const pointsWallets = readWallets(config.modules.points.addresses)
 
     res.json({
         'config': config,
@@ -121,6 +124,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'jumper_wallets': jumperWallets,
         'story_wallets': storyWallets,
         'eclipse_wallets': eclipseWallets,
+        'points_wallets': pointsWallets,
     })
 })
 
@@ -449,6 +453,46 @@ apiRoutes.get('/evm', isAuthenticated, async (req, res) => {
     const network = req.query.network ? req.query.network : 'eth'
     const responseData = await evmData(network)
     res.json(responseData)
+})
+
+// POINTS API
+apiRoutes.get('/points', isAuthenticated, async (req, res) => {
+    const project = req.query.project ? req.query.project : 'zerion'
+    const responseData = await pointsData(project)
+    res.json(responseData)
+})
+
+apiRoutes.get('/points/refresh', isAuthenticated, async (req, res) => {
+    const project = req.query.project ? req.query.project : 'zerion'
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await pointsFetchWallet(wallet, project)
+    res.json(true)
+})
+
+apiRoutes.get('/points/clean', isAuthenticated, async (req, res) => {
+    const project = req.query.project ? req.query.project : 'zerion'
+    await pointsClean(project)
+    res.json(true)
+})
+
+// AIRDROP API
+apiRoutes.get('/airdrop', isAuthenticated, async (req, res) => {
+    const project = req.query.project ? req.query.project : 'jupiter'
+    const responseData = await airdropData(project)
+    res.json(responseData)
+})
+
+apiRoutes.get('/airdrop/refresh', isAuthenticated, async (req, res) => {
+    const project = req.query.project ? req.query.project : 'jupiter'
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await airdropFetchDataAndPrintTable(wallet, project)
+    res.json(true)
+})
+
+apiRoutes.get('/airdrop/clean', isAuthenticated, async (req, res) => {
+    const project = req.query.project ? req.query.project : 'jupiter'
+    await airdropClean(project)
+    res.json(true)
 })
 
 // GALXE API
