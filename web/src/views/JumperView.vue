@@ -138,6 +138,12 @@ export default {
                 3441005: "https://metaid.zkbridge.com/ipfs/QmekQvuJeEjpArjUh2LaUk4HD8prrpUu4387A1fxqUnGuW",
                 9000: "https://metaid.zkbridge.com/ipfs/QmVkNAq7AcZZBoWCjZNJz1xNBpRDC3NucL9LycydCP7CQL",
                 42261: "https://metaid.zkbridge.com/ipfs/QmdqJYRFxUoCTkLoYKz2AKxj6CjQZ89jfmNuxpTrkjTPTv",
+                7777777: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/zoramainnet/logo.svg",
+                57073: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/ink/logo.svg",
+                167000: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/taiko/logo.svg",
+                2818: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/morph/logo.svg",
+                690: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/redstone/logo.svg",
+                1625: "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/gravity.svg",
                 81457: "/blast.png"
             },
             names: {
