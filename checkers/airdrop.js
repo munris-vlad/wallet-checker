@@ -77,6 +77,7 @@ async function fetchWallet(wallet, index, project, isFetch = false) {
     const existingData = await getWalletFromDB(wallet, project)
     if (existingData && !isFetch) {
         stats[wallet] = JSON.parse(existingData)
+        total += stats[wallet].airdrop
     } else {
         stats[wallet] = {
             airdrop: 0,
