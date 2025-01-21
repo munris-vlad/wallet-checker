@@ -73,6 +73,21 @@ export const chains = {
             decimals: 18
         }
     },
+    'Linea': {
+        'nativePrice': ethPrice,
+        'USDT': {
+            address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
+            decimals: 6
+        },
+        'USDC': {
+            address: '0x176211869cA2b568f2A7D4EE941E073a821EE1ff',
+            decimals: 6
+        },
+        'DAI': {
+            address: '0x4AF15ec2A0BD43Db75dd04E62FAA3B8EF36b00d5',
+            decimals: 18
+        }
+    },
     'Polygon': {
         'USDT': {
             address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',

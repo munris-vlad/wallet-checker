@@ -101,7 +101,7 @@ class EVMBalanceChecker {
 
     formatBalance(balance, decimals) {
         if (!balance?.result) return '0'
-        return parseFloat(formatUnits(balance.result, decimals)).toFixed(decimals === 18 ? 3 : 1)
+        return parseFloat(formatUnits(balance.result, decimals)).toFixed(decimals === 18 ? 4 : 1)
     }
 
     processWalletData(balanceResults, txCounts, network) {

@@ -72,6 +72,32 @@ async function jupiter(wallet) {
     }
 }
 
+async function plume(wallet) {
+    let isFetched = false
+    let retries = 0
+
+    stats[wallet].airdrop = 0
+
+    while (!isFetched) {
+        await axios.get(`https://claim-api.plumenetwork.xyz/airdrop/credentials?walletAddress=${wallet}`, {
+            timeout: 5000,
+            httpsAgent: getProxy()
+        }).then(async response => {
+            stats[wallet].airdrop = response.data.tokenQualified ? parseInt(response.data.tokenQualified) : 0
+            total += parseInt(stats[wallet].airdrop)
+            isFetched = true
+        }).catch(e => {
+            if (config.debug) console.log('plume', e.toString())
+
+            retries++
+
+            if (retries >= 3) {
+                isFetched = true
+            }
+        })
+    }
+}
+
 async function fetchWallet(wallet, index, project, isFetch = false) {
 
     const existingData = await getWalletFromDB(wallet, project)
@@ -83,9 +109,8 @@ async function fetchWallet(wallet, index, project, isFetch = false) {
             airdrop: 0,
         }
 
-        if (project === 'jupiter') {
-            await jupiter(wallet)
-        }
+        if (project === 'jupiter') await jupiter(wallet)
+        if (project === 'plume') await plume(wallet)
     }
 
     p.addRow({
@@ -114,7 +139,9 @@ async function fetchBatch(batch, project) {
 }
 
 async function fetchWallets(project) {
-    wallets = readWallets(config.modules.airdrop.projects[project].addresses)
+    if (project === 'jupiter') wallets = readWallets('./user_data/addresses/solana.txt')
+    if (project === 'plume') wallets = readWallets('./user_data/addresses/evm.txt')
+    
     jsonData = []
     iteration = 1
     total = 0
@@ -170,7 +197,8 @@ async function saveToCsv() {
 }
 
 export async function airdropFetchDataAndPrintTable(project) {
-    wallets = readWallets(config.modules.airdrop.projects[project].addresses)
+    if (project === 'jupiter') wallets = readWallets('./user_data/addresses/solana.txt')
+    if (project === 'plume') wallets = readWallets('./user_data/addresses/evm.txt')
     iterations = wallets.length
     progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
     progressBar.start(iterations, 0)

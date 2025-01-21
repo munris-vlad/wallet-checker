@@ -375,6 +375,10 @@ export const chooiceNetwork = async () => {
                     value: "Optimism",
                 },
                 {
+                    name: "Linea",
+                    value: "Linea",
+                },
+                {
                     name: "Polygon",
                     value: "Polygon",
                 },
@@ -503,7 +507,11 @@ export const airdropChecker = async () => {
             message: "Project:",
             choices: [
                 {
-                    name: "Jupiter",
+                    name: "Plume (addresses/evm.txt)",
+                    value: "plume",
+                },
+                {
+                    name: "Jupiter (addresses/solana.txt)",
                     value: "jupiter",
                 },
             ],

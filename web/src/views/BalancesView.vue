@@ -8,11 +8,12 @@
                 <button v-if="appconfig.modules.balance.networks['ETH'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'ETH'}" @click="loadNetwork('ETH')">Ethereum</button>
                 <button v-if="appconfig.modules.balance.networks['Arbitrum'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Arbitrum'}" @click="loadNetwork('Arbitrum')">Arbitrum</button>
                 <button v-if="appconfig.modules.balance.networks['Optimism'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Optimism'}" @click="loadNetwork('Optimism')">Optimism</button>
+                <button v-if="appconfig.modules.balance.networks['Base'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Base'}" @click="loadNetwork('Base')">Base</button>
+                <button v-if="appconfig.modules.balance.networks['Linea'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Linea'}" @click="loadNetwork('Linea')">Linea</button>
                 <button v-if="appconfig.modules.balance.networks['Polygon'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Polygon'}" @click="loadNetwork('Polygon')">Polygon</button>
                 <button v-if="appconfig.modules.balance.networks['BSC'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'BSC'}" @click="loadNetwork('BSC')">BNB</button>
                 <button v-if="appconfig.modules.balance.networks['opBNB'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'opBNB'}" @click="loadNetwork('opBNB')">opBNB</button>
                 <button v-if="appconfig.modules.balance.networks['Avalanche'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Avalanche'}" @click="loadNetwork('Avalanche')">Avalanche</button>
-                <button v-if="appconfig.modules.balance.networks['Base'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Base'}" @click="loadNetwork('Base')">Base</button>
                 <button v-if="appconfig.modules.balance.networks['Core'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Core'}" @click="loadNetwork('Core')">Core</button>
                 <button v-if="appconfig.modules.balance.networks['Celo'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Celo'}" @click="loadNetwork('Celo')">Celo</button>
                 <button v-if="appconfig.modules.balance.networks['Klaytn'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Klaytn'}" @click="loadNetwork('Klaytn')">Klaytn</button>
@@ -53,6 +54,12 @@
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Optimism'">
                                 <a target="_blank" :href="'https://optimistic.etherscan.io/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/op-scan.png'" alt=""></a>
                             </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Base'">
+                                <a target="_blank" :href="'https://basescan.org/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/base-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Linea'">
+                                <a target="_blank" :href="'https://lineascan.build/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/linea-scan.png'" alt=""></a>
+                            </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Polygon'">
                                 <a target="_blank" :href="'https://polygonscan.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/polygon-scan.png'" alt=""></a>
                             </div>
@@ -67,9 +74,6 @@
                             </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Core'">
                                 <a target="_blank" :href="'https://scan.coredao.org/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/core-scan.png'" alt=""></a>
-                            </div>
-                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Base'">
-                                <a target="_blank" :href="'https://basescan.org/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/base-scan.png'" alt=""></a>
                             </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Celo'">
                                 <a target="_blank" :href="'https://explorer.celo.org/mainnet/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/celo-scan.png'" alt=""></a>

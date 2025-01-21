@@ -5,7 +5,8 @@
         </div>
         <div class="min-w-full pb-4 pt-4">
             <div class="flex space-x-4 content-center items-center place-content-center">
-                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeProject === 'jupiter'}" @click="loadProject('jupiter')">Jupiter</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeProject === 'plume'}" @click="loadProject('plume')">Plume (evm.txt)</button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeProject === 'jupiter'}" @click="loadProject('jupiter')">Jupiter (solana.txt)</button>
             </div>
         </div>
         <div class="flex justify-between items-center pb-1 pt-4 pl-0" v-if="isDataLoaded && !isError">
@@ -61,7 +62,7 @@ export default {
     data() {
         return {
             appconfig: this.$appconfig,
-            activeProject: 'jupiter',
+            activeProject: 'plume',
             isDataLoaded: false,
             isError: false,
             error: '',
@@ -98,7 +99,7 @@ export default {
     },
     methods: {
         loadData() {
-            this.$axios.get('/api/airdrop?project=jupiter').then((response) => {
+            this.$axios.get('/api/airdrop?project=plume').then((response) => {
                 this.data = response.data.sort((a, b) => a.n - b.n)
                 this.isDataLoaded = true
             }).catch((error) => {
