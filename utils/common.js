@@ -270,6 +270,10 @@ export const entryPoint = async () => {
                     value: "eclipse",
                 },
                 {
+                    name: "Morph",
+                    value: "morph",
+                },
+                {
                     name: "Story",
                     value: "story",
                 },

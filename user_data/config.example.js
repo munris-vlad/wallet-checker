@@ -175,6 +175,11 @@ export const config = {
             enabled: true,
             addresses: './user_data/addresses/evm.txt'
         },
+        morph: {
+            enabled: true,
+            addresses: './user_data/addresses/morph.txt',
+            minBalanceHighlight: 0.005
+        },
     },
     port: 80, // порт для запуска веб версии
     moralisApiKey: '',

@@ -28,7 +28,8 @@ import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.j
 import { storyClean, storyData, storyFetchWallet } from '../checkers/story.js'
 import { eclipseClean, eclipseData, eclipseFetchWallet } from '../checkers/eclipse.js'
 import { pointsClean, pointsData, pointsFetchWallet } from '../checkers/points.js'
-import { airdropClean, airdropData, airdropFetchDataAndPrintTable } from '../checkers/airdrop.js'
+import { airdropClean, airdropData, airdropFetchDataAndPrintTable, airdropFetchWallet } from '../checkers/airdrop.js'
+import { morphClean, morphData, morphFetchDataAndPrintTable, morphFetchWallet } from '../checkers/morph.js'
 
 const app = express()
 const port = config.port
@@ -99,6 +100,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const jumperWallets = readWallets(config.modules.jumper.addresses)
     const storyWallets = readWallets(config.modules.story.addresses)
     const eclipseWallets = readWallets(config.modules.eclipse.addresses)
+    const morphWallets = readWallets(config.modules.morph.addresses)
     const pointsWallets = readWallets(config.modules.points.addresses)
 
     res.json({
@@ -125,6 +127,7 @@ apiRoutes.get('/stats', async (req, res) => {
         'story_wallets': storyWallets,
         'eclipse_wallets': eclipseWallets,
         'points_wallets': pointsWallets,
+        'morph_wallets': morphWallets,
     })
 })
 
@@ -485,13 +488,30 @@ apiRoutes.get('/airdrop', isAuthenticated, async (req, res) => {
 apiRoutes.get('/airdrop/refresh', isAuthenticated, async (req, res) => {
     const project = req.query.project ? req.query.project : 'jupiter'
     const wallet = req.query.wallet ? req.query.wallet : ''
-    await airdropFetchDataAndPrintTable(wallet, project)
+    await airdropFetchWallet(wallet, project)
     res.json(true)
 })
 
 apiRoutes.get('/airdrop/clean', isAuthenticated, async (req, res) => {
     const project = req.query.project ? req.query.project : 'jupiter'
     await airdropClean(project)
+    res.json(true)
+})
+
+// MORPH API
+apiRoutes.get('/morph', isAuthenticated, async (req, res) => {
+    const responseData = await morphData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/morph/refresh', isAuthenticated, async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await morphFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/morph/clean', isAuthenticated, async (req, res) => {
+    await morphClean()
     res.json(true)
 })
 

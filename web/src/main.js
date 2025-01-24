@@ -28,6 +28,7 @@ import StoryView from './views/StoryView.vue'
 import EclipseView from './views/EclipseView.vue'
 import PointsView from './views/PointsView.vue'
 import AirdropView from './views/AirdropView.vue'
+import MorphView from './views/MorphView.vue'
 
 const app = createApp(App)
 
@@ -59,6 +60,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$jumper_count = data.jumper_wallets.length
     app.config.globalProperties.$story_count = data.story_wallets.length
     app.config.globalProperties.$eclipse_count = data.eclipse_wallets.length
+    app.config.globalProperties.$morph_count = data.morph_wallets.length
     app.config.globalProperties.$points_count = data.points_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
@@ -84,6 +86,12 @@ const routes = [
         name: 'Eclipse',
         component: EclipseView,
         meta: { requiresAuth: true, title: 'Eclipse' }
+    },
+    {
+        path: '/morph',
+        name: 'Morph',
+        component: MorphView,
+        meta: { requiresAuth: true, title: 'Morph' }
     },
     {
         path: '/zksync',
