@@ -434,6 +434,10 @@ export const chooiceNetwork = async () => {
                 {
                     name: "Zero",
                     value: "Zero",
+                },
+                {
+                    name: "Ink",
+                    value: "Ink",
                 }
             ],
             default: "web",

@@ -150,6 +150,9 @@ export const config = {
                 'Zero': {
                     enabled: false,
                 },
+                'Ink': {
+                    enabled: false,
+                },
             }
         },
         rabby: {
@@ -299,5 +302,9 @@ export const rpcs = {
     ],
     'Zero': [
         'https://rpc.zerion.io/v1/zero'
+    ],
+    'Ink': [
+        'https://rpc-qnd.inkonchain.com',
+        'https://rpc-gel.inkonchain.com'
     ]
 }

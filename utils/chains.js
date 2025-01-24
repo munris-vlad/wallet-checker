@@ -264,4 +264,7 @@ export const chains = {
     'Zero': {
         'nativePrice': ethPrice
     },
+    'Ink': {
+        'nativePrice': ethPrice
+    },
 }

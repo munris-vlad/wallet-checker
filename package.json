@@ -1,6 +1,6 @@
 {
   "name": "wallet-checker",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "scripts": {
     "start": "node utils/index.js"
   },
@@ -22,7 +22,7 @@
     "moralis": "^2.7.4",
     "socks-proxy-agent": "^8.0.2",
     "sqlite3": "^5.1.7",
-    "viem": "^2.21.7",
+    "viem": "^2.22.13",
     "vue": "^3.3.4"
   },
   "type": "module"
