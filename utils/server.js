@@ -100,7 +100,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const jumperWallets = readWallets(config.modules.jumper.addresses)
     const storyWallets = readWallets(config.modules.story.addresses)
     const eclipseWallets = readWallets(config.modules.eclipse.addresses)
-    const morphWallets = readWallets(config.modules.morph.addresses)
+    const morphWallets = config.modules.morph ? readWallets(config.modules.morph.addresses) : []
     const pointsWallets = readWallets(config.modules.points.addresses)
 
     res.json({

@@ -61,7 +61,7 @@ if (args[1] === 'refresh') {
 let p
 let csvWriter
 let stats = []
-let wallets = readWallets(config.modules.morph.addresses)
+let wallets = config.modules.morph ? readWallets(config.modules.morph.addresses) : []
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
@@ -326,7 +326,7 @@ async function fetchBatch(batch) {
 }
 
 async function fetchWallets() {
-    wallets = readWallets(config.modules.morph.addresses)
+    wallets = config.modules.morph ? readWallets(config.modules.morph.addresses) : []
     iterations = wallets.length
     csvData = []
     jsonData = []
