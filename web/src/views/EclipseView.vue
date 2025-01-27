@@ -28,6 +28,7 @@
                     </td>
                     <td :class="tdClass">{{ item['Domain'] }}</td>
                     <td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.eclipse.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
+                    <td :class="tdClass">{{ item['TurboTap'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">${{ item['Volume'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
@@ -77,6 +78,7 @@ export default {
                 'Wallet',
                 'Domain',
                 'ETH',
+                'TurboTap',
                 'TX Count',
                 'Volume',
                 'Days',

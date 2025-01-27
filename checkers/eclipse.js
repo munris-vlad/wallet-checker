@@ -20,6 +20,7 @@ const columns = [
     { name: 'wallet', color: 'green', alignment: "right" },
     { name: 'Domain', color: 'green', alignment: "right" },
     { name: 'ETH', alignment: 'right', color: 'cyan' },
+    { name: 'TurboTap', alignment: 'right', color: 'cyan' },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
     { name: 'Volume', alignment: 'right', color: 'cyan' },
     { name: 'Days', alignment: 'right', color: 'cyan' },
@@ -34,6 +35,7 @@ const headers = [
     { id: 'wallet', title: 'wallet' },
     { id: 'Domain', title: 'Domain' },
     { id: 'ETH', title: 'ETH' },
+    { id: 'TurboTap', title: 'TurboTap' },
     { id: 'TX Count', title: 'TX Count' },
     { id: 'Volume', title: 'Volume' },
     { id: 'Days', title: 'Days' },
@@ -85,7 +87,7 @@ async function getBalances(wallet) {
     while (!ethBalanceDone) {
         await axios.get(`${apiUrl}/account?address=${wallet}`, {
             signal: newAbortSignal(cancelTimeout),
-            httpsAgent: getProxy(0, true),
+            httpsAgent: getProxy(),
         }).then(async response => {
             stats[wallet].balances['ETH'] = response.data.data.lamports ? formatUnits(response.data.data.lamports, 9) : 0
             ethBalanceDone = true
@@ -117,7 +119,7 @@ async function getTxs(wallet) {
         await axios.get(`${apiUrl}/account/transaction?address=${wallet}`, {
             params: params,
             signal: newAbortSignal(cancelTimeout),
-            httpsAgent: getProxy(0, true),
+            httpsAgent: getProxy(),
             headers: reqHeaders
         }).then(async response => {
             let items = response.data.data.transactions
@@ -125,9 +127,6 @@ async function getTxs(wallet) {
             Object.values(items).forEach(tx => {
                 txs.push(tx)
             })
-
-            const firstKey = Object.keys(response.data.metadata.accounts)[0]
-            stats[wallet].domain = response.data.metadata.accounts[firstKey] ? response.data.metadata.accounts[firstKey].account_domain : ''
 
             if (items.length < params.page_size || items[items.length - 1].txHash === params.before) {
                 isAllTxCollected = true
@@ -144,6 +143,12 @@ async function getTxs(wallet) {
         })
     }
 
+    stats[wallet].domain = await axios.get(`https://api.eclipsescan.xyz/v1/account/domain?address=${wallet}`, {
+        signal: newAbortSignal(cancelTimeout),
+        httpsAgent: getProxy(),
+        headers: reqHeaders
+    }).then(response => response.data.data.favorite).catch(error => console.log(error))
+
     if (txs.length > 0) {
         uniqueTxs = Array.from(
             new Map(txs.map(obj => [obj.txHash, obj])).values()
@@ -152,6 +157,9 @@ async function getTxs(wallet) {
 
     stats[wallet].txcount = uniqueTxs.length
 
+    let turboTapCreateTx
+    let turboTapCount = 0
+
     Object.values(uniqueTxs).forEach(tx => {
         const date = new Date(tx.blockTime * 1000)
         uniqueDays.add(date.toDateString())
@@ -159,7 +167,40 @@ async function getTxs(wallet) {
         uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
 
         volume += parseInt(tx.sol_value)
+
+        if (tx.programIds.includes('turboe9kMc3mSR8BosPkVzoHUfn5RVNzZhkrT2hdGxN')) {
+            if (!turboTapCreateTx) {
+                turboTapCreateTx = tx
+            }
+        }
     })
+
+    if (turboTapCreateTx) {
+        let turboTapAccount
+        await axios.get(`https://api.eclipsescan.xyz/v1/transaction/detail?tx=${turboTapCreateTx.txHash}`, {
+            signal: newAbortSignal(cancelTimeout),
+            httpsAgent: getProxy(),
+            headers: reqHeaders
+        }).then(async response => {
+            turboTapAccount = response.data.data.signer[1]
+        }).catch(function (error) {
+            if (config.debug) console.log(error.toString())
+        })
+
+        if (turboTapAccount) {
+            await axios.get(`https://api.eclipsescan.xyz/v1/account/balance_change/total?address=${turboTapAccount}`, {
+                signal: newAbortSignal(cancelTimeout),
+                httpsAgent: getProxy(),
+                headers: reqHeaders
+            }).then(async response => {
+                turboTapCount = response.data.data
+            }).catch(function (error) {
+                if (config.debug) console.log(error.toString())
+            })
+        }
+    }
+
+    stats[wallet].turbotap = turboTapCount
 
     const numUniqueDays = uniqueDays.size
     const numUniqueWeeks = uniqueWeeks.size
@@ -182,6 +223,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         stats[wallet] = {
             txcount: 0,
             volume: 0,
+            turbotap: 0,
             balances: { ETH: 0 },
         }
 
@@ -198,6 +240,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         wallet: wallet,
         'Domain': stats[wallet].domain,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
+        'TurboTap': stats[wallet].turbotap,
         'TX Count': stats[wallet].txcount,
         'Volume': stats[wallet].volume.toFixed(2),
         'Days': stats[wallet].unique_days ?? 0,
@@ -212,6 +255,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
         wallet: wallet,
         'Domain': stats[wallet].domain,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
+        'TurboTap': stats[wallet].turbotap,
         'ETH USDVALUE': usdEthValue,
         'TX Count': stats[wallet].txcount,
         'Volume': stats[wallet].volume.toFixed(2),
