@@ -143,11 +143,25 @@ async function getTxs(wallet) {
         })
     }
 
-    stats[wallet].domain = await axios.get(`https://api.eclipsescan.xyz/v1/account/domain?address=${wallet}`, {
-        signal: newAbortSignal(cancelTimeout),
-        httpsAgent: getProxy(),
-        headers: reqHeaders
-    }).then(response => response.data.data.favorite).catch(error => console.log(error))
+    let isDomainCollected = false, domainRetry = 0
+
+    while (!isDomainCollected && domainRetry < 3) {
+        await axios.get(`https://api.eclipsescan.xyz/v1/account/domain?address=${wallet}`, {
+            signal: newAbortSignal(cancelTimeout),
+            httpsAgent: getProxy(),
+            headers: reqHeaders
+        })
+        .then(response => {
+            stats[wallet].domain = response.data.data.favorite
+
+            isDomainCollected = true
+        })
+        .catch(error => {
+            if (config.debug) console.log(error)
+
+            domainRetry++
+        })
+    }
 
     if (txs.length > 0) {
         uniqueTxs = Array.from(
@@ -157,7 +171,7 @@ async function getTxs(wallet) {
 
     stats[wallet].txcount = uniqueTxs.length
 
-    let turboTapCreateTx
+    let turboTapCreateTxs = []
     let turboTapCount = 0
 
     Object.values(uniqueTxs).forEach(tx => {
@@ -169,13 +183,11 @@ async function getTxs(wallet) {
         volume += parseInt(tx.sol_value)
 
         if (tx.programIds.includes('turboe9kMc3mSR8BosPkVzoHUfn5RVNzZhkrT2hdGxN')) {
-            if (!turboTapCreateTx) {
-                turboTapCreateTx = tx
-            }
+            turboTapCreateTxs.push(tx)
         }
     })
 
-    if (turboTapCreateTx) {
+    for (const turboTapCreateTx of turboTapCreateTxs) {
         let turboTapAccount
         await axios.get(`https://api.eclipsescan.xyz/v1/transaction/detail?tx=${turboTapCreateTx.txHash}`, {
             signal: newAbortSignal(cancelTimeout),
@@ -193,7 +205,7 @@ async function getTxs(wallet) {
                 httpsAgent: getProxy(),
                 headers: reqHeaders
             }).then(async response => {
-                turboTapCount = response.data.data
+                turboTapCount += response.data.data
             }).catch(function (error) {
                 if (config.debug) console.log(error.toString())
             })
