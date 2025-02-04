@@ -32,6 +32,7 @@
                     <td :class="tdClass">{{ item['IP'] }}</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Badge Count'] }}</td>
+                    <td :class="tdClass">{{ item['Community'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['Main'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['OKX'] ? '✅' : '❌' }}</td>
                     <td :class="tdClass">{{ item['StoryHunt'] ? '✅' : '❌' }}</td>
@@ -105,6 +106,7 @@ export default {
                 'IP',
                 'TX Count',
                 'Badge Count',
+                'Community',
                 'Main',
                 'OKX',
                 'StoryHunt',
