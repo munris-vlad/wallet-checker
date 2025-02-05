@@ -32,6 +32,45 @@ let iteration = 1
 let iterations = 1
 let progressBar
 
+async function berachain(wallet) {
+    let isFetched = false
+    let retries = 0
+
+    stats[wallet].airdrop = 0
+
+    while (!isFetched) {
+        await axios.get(`https://checker-api.berachain.com/whitelist/wallet/allocation?address=${wallet}`, {
+            timeout: 5000,
+            httpsAgent: getProxy(),
+            "headers": {
+                "accept": "application/json, text/plain, */*",
+                "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+                "priority": "u=1, i",
+                "sec-ch-ua": "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-site",
+                "Referer": "https://checker.berachain.com/",
+                "Referrer-Policy": "strict-origin-when-cross-origin"
+            },
+        }).then(async response => {
+            stats[wallet].airdrop = response.data.tokenQualified ? parseFloat(response.data.tokenQualified) : 0
+            total += parseInt(stats[wallet].airdrop)
+            isFetched = true
+        }).catch(e => {
+            if (config.debug) console.log('berachain', e.toString())
+
+            retries++
+
+            if (retries >= 3) {
+                isFetched = true
+            }
+        })
+    }
+}
+
 async function jupiter(wallet) {
     let isFetched = false
     let retries = 0
@@ -111,6 +150,7 @@ async function fetchWallet(wallet, index, project, isFetch = false) {
 
         if (project === 'jupiter') await jupiter(wallet)
         if (project === 'plume') await plume(wallet)
+        if (project === 'berachain') await berachain(wallet)
     }
 
     p.addRow({
@@ -141,6 +181,7 @@ async function fetchBatch(batch, project) {
 async function fetchWallets(project) {
     if (project === 'jupiter') wallets = readWallets('./user_data/addresses/solana.txt')
     if (project === 'plume') wallets = readWallets('./user_data/addresses/evm.txt')
+    if (project === 'berachain') wallets = readWallets('./user_data/addresses/evm.txt')
     
     jsonData = []
     iteration = 1
@@ -199,6 +240,7 @@ async function saveToCsv() {
 export async function airdropFetchDataAndPrintTable(project) {
     if (project === 'jupiter') wallets = readWallets('./user_data/addresses/solana.txt')
     if (project === 'plume') wallets = readWallets('./user_data/addresses/evm.txt')
+    if (project === 'berachain') wallets = readWallets('./user_data/addresses/evm.txt')
     iterations = wallets.length
     progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
     progressBar.start(iterations, 0)

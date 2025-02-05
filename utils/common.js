@@ -515,6 +515,10 @@ export const airdropChecker = async () => {
             message: "Project:",
             choices: [
                 {
+                    name: "Berachain (addresses/evm.txt)",
+                    value: "berachain",
+                },
+                {
                     name: "Plume (addresses/evm.txt)",
                     value: "plume",
                 },
@@ -523,7 +527,7 @@ export const airdropChecker = async () => {
                     value: "jupiter",
                 },
             ],
-            default: "jupiter",
+            default: "berachain",
             loop: false,
         },
     ]
