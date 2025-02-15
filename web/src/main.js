@@ -29,6 +29,7 @@ import EclipseView from './views/EclipseView.vue'
 import PointsView from './views/PointsView.vue'
 import AirdropView from './views/AirdropView.vue'
 import MorphView from './views/MorphView.vue'
+import SoneiumView from './views/SoneiumView.vue'
 
 const app = createApp(App)
 
@@ -86,6 +87,12 @@ const routes = [
         name: 'Eclipse',
         component: EclipseView,
         meta: { requiresAuth: true, title: 'Eclipse' }
+    },
+    {
+        path: '/soneium',
+        name: 'Soneium',
+        component: SoneiumView,
+        meta: { requiresAuth: true, title: 'Soneium' }
     },
     {
         path: '/morph',

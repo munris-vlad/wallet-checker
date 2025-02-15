@@ -7,8 +7,7 @@ import {
     getProxy,
     newAbortSignal,
     ethPrice,
-    timestampToDate,
-    ipPrice
+    timestampToDate
 } from '../utils/common.js'
 import axios from "axios"
 import { Table } from 'console-table-printer'
@@ -22,7 +21,7 @@ import { formatEther, parseEther } from 'viem'
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'wallet', color: 'green', alignment: "right" },
-    { name: 'IP', alignment: 'right', color: 'cyan' },
+    { name: 'ETH', alignment: 'right', color: 'cyan' },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
     { name: 'Contracts', alignment: 'right', color: 'cyan' },
     { name: 'Days', alignment: 'right', color: 'cyan' },
@@ -35,7 +34,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№' },
     { id: 'wallet', title: 'wallet' },
-    { id: 'IP', title: 'IP' },
+    { id: 'ETH', title: 'ETH' },
     { id: 'TX Count', title: 'TX Count' },
     { id: 'Contracts', title: 'Contracts' },
     { id: 'Days', title: 'Days' },
@@ -47,20 +46,20 @@ const headers = [
 
 const args = process.argv.slice(2)
 if (args[1] === 'refresh') {
-    cleanByChecker('story')
+    cleanByChecker('soneium')
 }
 
 let p
 let csvWriter
 let stats = []
-let wallets = readWallets(config.modules.story.addresses)
+let wallets = config.modules.soneium ? readWallets(config.modules.soneium.addresses) : []
 let iterations = wallets.length
 let iteration = 1
 let csvData = []
 let jsonData = []
-let apiUrl = 'https://storyscan.xyz/api/v2/addresses'
+let apiUrl = 'https://soneium.blockscout.com/api/v2/addresses'
 let total = {
-    ip: 0
+    eth: 0
 }
 const cancelTimeout = 15000
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
@@ -90,7 +89,7 @@ async function getBalances(wallet) {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
         }).then(async response => {
-            stats[wallet].balances['IP'] = formatEther(parseEther(response.data.coin_balance)) / Math.pow(10, 18)
+            stats[wallet].balances['ETH'] = formatEther(parseEther(response.data.coin_balance)) / Math.pow(10, 18)
             ipBalanceDone = true
         }).catch(function (error) {
             if (config.debug) console.log(error)
@@ -193,7 +192,7 @@ async function getTxs(wallet) {
 }
 
 async function fetchWallet(wallet, index, isFetch = false) {
-    const existingData = await getWalletFromDB(wallet, 'story')
+    const existingData = await getWalletFromDB(wallet, 'soneium')
     if (existingData && !isFetch) {
         stats[wallet] = JSON.parse(existingData)
     } else {
@@ -207,13 +206,14 @@ async function fetchWallet(wallet, index, isFetch = false) {
     }
 
     progressBar.update(iteration)
-    total.ip += stats[wallet].balances['IP'] ? parseFloat(stats[wallet].balances['IP']) : 0
-    let usdIpValue = (stats[wallet].balances['IP']*ipPrice).toFixed(2)
+    total.eth += stats[wallet].balances['ETH'] ? parseFloat(stats[wallet].balances['ETH']) : 0
+    
+    let usdEthValue = (stats[wallet].balances['ETH']*ethPrice).toFixed(2)
 
     p.addRow({
         n: parseInt(index) + 1,
         wallet: wallet,
-        'IP': parseFloat(stats[wallet].balances['IP']).toFixed(4) + ` ($${usdIpValue})`,
+        'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'TX Count': stats[wallet].txcount,
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
@@ -226,8 +226,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
     jsonData.push({
         n: parseInt(index) + 1,
         wallet: wallet,
-        'IP': parseFloat(stats[wallet].balances['IP']).toFixed(4),
-        'IP USDVALUE': usdIpValue,
+        'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
+        'ETH USDVALUE': usdEthValue,
         'TX Count': stats[wallet].txcount,
         'Contracts': stats[wallet].unique_contracts ?? 0,
         'Days': stats[wallet].unique_days ?? 0,
@@ -238,7 +238,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     })
 
     if (stats[wallet].txcount > 0) {
-        await saveWalletToDB(wallet, 'story', JSON.stringify(stats[wallet]))
+        await saveWalletToDB(wallet, 'soneium', JSON.stringify(stats[wallet]))
     }
 
     iteration++
@@ -249,17 +249,17 @@ async function fetchBatch(batch) {
 }
 
 async function fetchWallets() {
-    wallets = readWallets(config.modules.story.addresses)
+    wallets = config.modules.soneium ? readWallets(config.modules.soneium.addresses) : []
     iterations = wallets.length
     csvData = []
     jsonData = []
     iteration = 1
     total = {
-        ip: 0
+        eth: 0
     }
 
     csvWriter = createObjectCsvWriter({
-        path: './results/story.csv',
+        path: './results/soneium.csv',
         header: headers
     })
 
@@ -271,7 +271,7 @@ async function fetchWallets() {
     let batchSize = 10
     let timeout = 5000
 
-    const walletsInDB = await getCountByChecker('story')
+    const walletsInDB = await getCountByChecker('soneium')
 
     if (walletsInDB === wallets.length) {
         batchSize = walletsInDB
@@ -310,11 +310,11 @@ async function addTotalRow() {
     p.addRow({})
     p.addRow({
         wallet: 'Total',
-        'IP': total.ip.toFixed(4) + ` ($${(total.ip*ipPrice).toFixed(2)})`,
+        'ETH': total.eth.toFixed(4) + ` ($${(total.eth*ethPrice).toFixed(2)})`,
     })
 }
 
-export async function storyFetchDataAndPrintTable() {
+export async function soneiumFetchDataAndPrintTable() {
     progressBar.start(iterations, 0)
     await fetchWallets()
     await addTotalRow()
@@ -323,24 +323,24 @@ export async function storyFetchDataAndPrintTable() {
     p.printTable()
 }
 
-export async function storyData() {
+export async function soneiumData() {
     await fetchWallets()
     await addTotalRow()
     await saveToCsv()
 
     jsonData.push({
         wallet: 'Total',
-        'IP': total.ip.toFixed(4),
-        'IP USDVALUE': (total.ip*ipPrice).toFixed(2),
+        'ETH': total.eth.toFixed(4),
+        'ETH USDVALUE': (total.eth*ethPrice).toFixed(2),
     })
 
     return jsonData
 }
 
-export async function storyFetchWallet(wallet) {
+export async function soneiumFetchWallet(wallet) {
     return fetchWallet(wallet, getKeyByValue(wallets, wallet), true)
 }
 
-export async function storyClean() {
-    await cleanByChecker('story')
+export async function soneiumClean() {
+    await cleanByChecker('soneium')
 }

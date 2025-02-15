@@ -270,6 +270,10 @@ export const entryPoint = async () => {
                     value: "eclipse",
                 },
                 {
+                    name: "Soneium",
+                    value: "soneium",
+                },
+                {
                     name: "Morph",
                     value: "morph",
                 },
@@ -774,7 +778,7 @@ export function isEvmAddress(address) {
 }
 
 
-const prices = await getTokensPrice('APT,ETH,MATIC,BNB,AVAX,CORE,CELO,KLAY,FTM,GLMR,MOVR')
+const prices = await getTokensPrice('APT,ETH,MATIC,BNB,AVAX,CORE,CELO,KLAY,FTM,GLMR,MOVR,IP')
 export const aptPrice = prices.APT ? prices.APT.USD : 0
 export const ethPrice = prices.ETH ? prices.ETH.USD : 0
 export const maticPrice = prices.MATIC ? prices.MATIC.USD : 0
@@ -786,3 +790,4 @@ export const klayPrice = prices.KLAY ? prices.KLAY.USD : 0
 export const ftmPrice = prices.FTM ? prices.FTM.USD : 0
 export const glmrPrice = prices.GLMR ? prices.GLMR.USD : 0
 export const movrPrice = prices.MOVR ? prices.MOVR.USD : 0
+export const ipPrice = prices.IP ? prices.IP.USD : 0

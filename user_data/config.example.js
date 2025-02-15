@@ -17,6 +17,11 @@ export const config = {
                 },
             }
         },
+        soneium: {
+            enabled: true,
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.001
+        },
         eclipse: {
             enabled: true,
             addresses: './user_data/addresses/eclipse.txt',

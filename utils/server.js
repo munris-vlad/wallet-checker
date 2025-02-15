@@ -30,6 +30,7 @@ import { eclipseClean, eclipseData, eclipseFetchWallet } from '../checkers/eclip
 import { pointsClean, pointsData, pointsFetchWallet } from '../checkers/points.js'
 import { airdropClean, airdropData, airdropFetchDataAndPrintTable, airdropFetchWallet } from '../checkers/airdrop.js'
 import { morphClean, morphData, morphFetchDataAndPrintTable, morphFetchWallet } from '../checkers/morph.js'
+import { soneiumClean, soneiumData, soneiumFetchWallet } from '../checkers/soneium.js'
 
 const app = express()
 const port = config.port
@@ -101,6 +102,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const storyWallets = readWallets(config.modules.story.addresses)
     const eclipseWallets = readWallets(config.modules.eclipse.addresses)
     const morphWallets = config.modules.morph ? readWallets(config.modules.morph.addresses) : []
+    const soneiumWallets = config.modules.soneium ? readWallets(config.modules.soneium.addresses) : []
     const pointsWallets = readWallets(config.modules.points.addresses)
 
     res.json({
@@ -128,7 +130,25 @@ apiRoutes.get('/stats', async (req, res) => {
         'eclipse_wallets': eclipseWallets,
         'points_wallets': pointsWallets,
         'morph_wallets': morphWallets,
+        'soneium_wallets': soneiumWallets,
     })
+})
+
+// JUMPER API
+apiRoutes.get('/soneium', isAuthenticated, async (req, res) => {
+    const responseData = await soneiumData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/soneium/refresh', isAuthenticated, async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await soneiumFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/soneium/clean', isAuthenticated, async (req, res) => {
+    await soneiumClean()
+    res.json(true)
 })
 
 // JUMPER API

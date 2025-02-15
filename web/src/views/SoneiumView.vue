@@ -1,7 +1,7 @@
 <template>
     <div class="pb-5">
         <div class="min-w-full text-center header pb-4 pt-4">
-            <h1 class="text-3xl">Story</h1>
+            <h1 class="text-3xl">Soneium</h1>
         </div>
         <div class="flex justify-between items-center pb-1 pt-4 pl-0" v-if="isDataLoaded && !isError">
             <div class="text-gray-500 hover:text-gray-600 px-2 cursor-pointer select-none pl-0 w-32"></div>
@@ -25,11 +25,10 @@
                                 <a target="_blank" :href="'https://debank.com/profile/'+item['wallet']"><img class="rounded-full mb-1" :src="'/debank.png'" alt=""></a>
                             </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'Total'">
-                                <a target="_blank" :href="'https://storyscan.xyz/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/story.svg'" alt=""></a>
+                                <a target="_blank" :href="'https://soneium.blockscout.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/soneium.svg'" alt=""></a>
                             </div>
                         </div>
-                    </td>
-                    <td :class="tdClass">{{ item['IP'] }} (${{ item['IP USDVALUE'] }})</td>
+                    </td><td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.soneium.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
@@ -77,7 +76,7 @@ export default {
             headers: [
                 'n',
                 'Wallet',
-                'IP',
+                'ETH',
                 'TX Count',
                 'Contracts',
                 'Days',
@@ -104,7 +103,7 @@ export default {
     methods: {
         formatDate,
         loadData() {
-            this.$axios.get('/api/story').then((response) => {
+            this.$axios.get('/api/soneium').then((response) => {
                 this.data = response.data.sort((a, b) => a.n - b.n)
                 this.isDataLoaded = true
             }).catch((error) => {
@@ -125,7 +124,7 @@ export default {
         },
         fetchWallet(wallet, index) {
             this.loading[index] = true
-            this.$axios.get('/api/story/refresh', {params: {wallet: wallet}}).then(() => {
+            this.$axios.get('/api/soneium/refresh', {params: {wallet: wallet}}).then(() => {
                 this.loadData()
                 this.loading[index] = false
             }).catch((error) => {
@@ -135,7 +134,7 @@ export default {
         },
         refreshData() {
             this.isDataLoaded = false
-            this.$axios.get('/api/story/clean').then(() => {
+            this.$axios.get('/api/soneium/clean').then(() => {
                 this.loadData()
             }).catch((error) => {
                 this.isError = true

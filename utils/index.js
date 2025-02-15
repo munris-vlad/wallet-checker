@@ -27,6 +27,7 @@ import { eclipseFetchDataAndPrintTable } from "../checkers/eclipse.js"
 import { pointsFetchDataAndPrintTable } from "../checkers/points.js"
 import { airdropFetchDataAndPrintTable } from "../checkers/airdrop.js"
 import { morphFetchDataAndPrintTable } from "../checkers/morph.js"
+import { soneiumFetchDataAndPrintTable } from "../checkers/soneium.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -94,6 +95,10 @@ async function startMenu(menu) {
             break
         case "eclipse":
             await eclipseFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
+            break
+        case "soneium":
+            await soneiumFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "story":
