@@ -17,6 +17,11 @@ export const config = {
                 },
             }
         },
+        monad: {
+            enabled: true,
+            addresses: './user_data/addresses/evm.txt',
+            minBalanceHighlight: 0.001
+        },
         soneium: {
             enabled: true,
             addresses: './user_data/addresses/evm.txt',

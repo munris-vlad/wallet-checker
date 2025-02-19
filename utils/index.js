@@ -1,4 +1,8 @@
 import { airdropChecker, chooiceNetwork, compareVersions, entryPoint, evmNetwork, pointsChecker, sleep } from "./common.js"
+import fs from "fs"
+import axios from "axios"
+import { exec } from "child_process"
+import { config } from '../user_data/config.js'
 import { zkSyncFetchDataAndPrintTable } from "../checkers/zksync.js"
 import { aptosFetchDataAndPrintTable } from "../checkers/aptos.js"
 import { zoraFetchDataAndPrintTable } from "../checkers/zora.js"
@@ -11,14 +15,10 @@ import { baseFetchDataAndPrintTable } from "../checkers/base.js"
 import { wormholeFetchDataAndPrintTable } from "../checkers/wormhole.js"
 import { zkbridgeFetchDataAndPrintTable } from "../checkers/zkbridge.js"
 import { hyperlaneFetchDataAndPrintTable } from "../checkers/hyperlane.js"
-import { exec } from "child_process"
-import fs from "fs"
-import axios from "axios"
 import { clustersFetchDataAndPrintTable } from "../checkers/clusters.js"
 import { debridgeFetchDataAndPrintTable } from "../checkers/debridge.js"
 import { pohFetchDataAndPrintTable } from "../checkers/linea-poh-checker.js"
 import { rabbyFetchDataAndPrintTable } from "../checkers/rabby.js"
-import { config } from '../user_data/config.js'
 import { galxeFetchDataAndPrintTable } from "../checkers/galxe.js"
 import { polygonzkevmFetchDataAndPrintTable } from "../checkers/polygonzkevm.js"
 import { jumperFetchDataAndPrintTable } from "../checkers/jumper.js"
@@ -28,6 +28,7 @@ import { pointsFetchDataAndPrintTable } from "../checkers/points.js"
 import { airdropFetchDataAndPrintTable } from "../checkers/airdrop.js"
 import { morphFetchDataAndPrintTable } from "../checkers/morph.js"
 import { soneiumFetchDataAndPrintTable } from "../checkers/soneium.js"
+import { monadFetchDataAndPrintTable } from "../checkers/monad.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -49,7 +50,7 @@ function startExpressServer() {
 async function checkVersion() {
     fs.readFile('./package.json', 'utf8', async (err, content) => {
         if (err) {
-            console.error('Error reading file:', err)
+            // console.error('Error reading file:', err)
             return
         }
         const packageInfo = JSON.parse(content)
@@ -92,6 +93,10 @@ async function startMenu(menu) {
     switch (mode) {
         case "web":
             startExpressServer()
+            break
+        case "monad":
+            await monadFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
             break
         case "eclipse":
             await eclipseFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })

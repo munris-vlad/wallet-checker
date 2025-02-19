@@ -21,7 +21,7 @@ export function readWallets(filePath) {
         const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line !== '')
         return lines
     } catch (error) {
-        console.error('Error reading the file:', error.message)
+        // console.error('Error reading the file:', error.message)
         return []
     }
 }
@@ -264,6 +264,10 @@ export const entryPoint = async () => {
                 {
                     name: "Points",
                     value: "points",
+                },
+                {
+                    name: "Monad",
+                    value: "monad",
                 },
                 {
                     name: "Eclipse",

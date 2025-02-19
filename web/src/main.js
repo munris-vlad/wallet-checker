@@ -30,6 +30,7 @@ import PointsView from './views/PointsView.vue'
 import AirdropView from './views/AirdropView.vue'
 import MorphView from './views/MorphView.vue'
 import SoneiumView from './views/SoneiumView.vue'
+import MonadView from './views/MonadView.vue'
 
 const app = createApp(App)
 
@@ -63,6 +64,8 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$eclipse_count = data.eclipse_wallets.length
     app.config.globalProperties.$morph_count = data.morph_wallets.length
     app.config.globalProperties.$points_count = data.points_wallets.length
+    app.config.globalProperties.$soneium_count = data.soneium_wallets.length
+    app.config.globalProperties.$monad_count = data.monad_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -93,6 +96,12 @@ const routes = [
         name: 'Soneium',
         component: SoneiumView,
         meta: { requiresAuth: true, title: 'Soneium' }
+    },
+    {
+        path: '/monad',
+        name: 'Monad',
+        component: MonadView,
+        meta: { requiresAuth: true, title: 'Monad' }
     },
     {
         path: '/morph',
