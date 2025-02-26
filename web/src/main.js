@@ -31,6 +31,7 @@ import AirdropView from './views/AirdropView.vue'
 import MorphView from './views/MorphView.vue'
 import SoneiumView from './views/SoneiumView.vue'
 import MonadView from './views/MonadView.vue'
+import ConfigView from './views/ConfigView.vue'
 
 const app = createApp(App)
 
@@ -84,6 +85,12 @@ const routes = [
         name: 'Home',
         component: HomeView,
         meta: { requiresAuth: true, title: 'Wallet checker' }
+    },
+    {
+        path: '/config',
+        name: 'Config',
+        component: ConfigView,
+        meta: { requiresAuth: true, title: 'Config' }
     },
     {
         path: '/eclipse',

@@ -30,7 +30,7 @@ const TABLE_CONFIG = {
 
 class EVMBalanceChecker {
     constructor() {
-        this.wallets = readWallets(config.modules.evm.addresses)
+        this.wallets = readWallets(config.modules.balance.addresses)
         this.walletsData = []
         this.csvData = []
         this.isJson = false

@@ -25,10 +25,7 @@
 
 
             <ul class="pt-5">
-                <li class="pt-2">Author: <a href="https://t.me/by_munris" class="text-green-500 hover:text-green-600"
-                        target="_blank">by Munris</a></li>
-                <li class="pt-2"><a href="https://munris.tech/donate" class="text-green-500 hover:text-green-600"
-                        target="_blank">Donate</a></li>
+                <li class="pt-2"><a href="https://t.me/by_munris" class="text-green-500 hover:text-green-600" target="_blank">by Munris</a></li>
             </ul>
         </div>
     </div>

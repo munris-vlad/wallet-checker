@@ -267,4 +267,7 @@ export const chains = {
     'Ink': {
         'nativePrice': ethPrice
     },
+    'Soneium': {
+        'nativePrice': ethPrice
+    },
 }

@@ -160,7 +160,7 @@ async function getTxs(wallet) {
         })
     }
 
-    stats[wallet].txcount = txs.length
+    stats[wallet].txcount = 0
 
     Object.values(txs).forEach(tx => {
         const date = new Date(tx.timestamp)
@@ -170,6 +170,10 @@ async function getTxs(wallet) {
 
         if (tx.from) {
             if (tx.from.hash.toLowerCase() === wallet.toLowerCase()) {
+                if (tx.result === 'success') {
+                    stats[wallet].txcount++
+                }
+
                 if (tx.to) {
                     uniqueContracts.add(tx.to.hash)
                 }

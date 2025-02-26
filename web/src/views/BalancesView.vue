@@ -26,6 +26,7 @@
                 <button v-if="appconfig.modules.balance.networks['Manta'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Manta'}" @click="loadNetwork('Manta')">Manta</button>
                 <button v-if="appconfig.modules.balance.networks['Zero'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Zero'}" @click="loadNetwork('Zero')">Zero</button>
                 <button v-if="appconfig.modules.balance.networks['Ink'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Ink'}" @click="loadNetwork('Ink')">Ink</button>
+                <button v-if="appconfig.modules.balance.networks['Soneium'].enabled" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" :class="{'bg-green-700' : activeNetwork === 'Soneium'}" @click="loadNetwork('Soneium')">Soneium</button>
             </div>
         </div>
         <table class="min-w-full border text-center text-sm font-light dark:border-gray-700" v-if="isDataLoaded && !isError">
@@ -108,6 +109,9 @@
                             </div>
                             <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Ink'">
                                 <a target="_blank" :href="'https://explorer.inkonchain.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/ink-scan.png'" alt=""></a>
+                            </div>
+                            <div class="h-4 w-4" v-if="item['wallet'] !== 'TOTAL' && activeNetwork === 'Soneium'">
+                                <a target="_blank" :href="'https://soneium.blockscout.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/soneium.svg'" alt=""></a>
                             </div>
                         </div>
                     </td>
