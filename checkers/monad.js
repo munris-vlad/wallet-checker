@@ -54,7 +54,7 @@ let iterations = wallets.length
 let iteration = 1
 let csvData = []
 let jsonData = []
-let apiUrl = 'https://monad-api.blockvision.org/testnet/api/account'
+let apiUrl = 'https://api.socialscan.io/monad-testnet/v1/explorer/address/'
 let total = {
     eth: 0
 }
@@ -62,17 +62,18 @@ const cancelTimeout = 15000
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 const reqHeaders = {
-    "accept": "application/json, text/plain, */*",
-    "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
-    "priority": "u=1, i",
-    "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Google Chrome\";v=\"133\", \"Chromium\";v=\"133\"",
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": "\"Windows\"",
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "cross-site",
-    "Referer": "https://testnet.monadexplorer.com/",
-    "Referrer-Policy": "strict-origin-when-cross-origin"
+    "accept": "*/*",
+      "accept-language": "en-US,en;q=0.9,ru;q=0.8,bg;q=0.7",
+      "content-type": "application/json",
+      "priority": "u=1, i",
+      "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Google Chrome\";v=\"133\", \"Chromium\";v=\"133\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-site",
+      "Referer": "https://monad-testnet.socialscan.io/",
+      "Referrer-Policy": "strict-origin-when-cross-origin"
 }
 
 async function getBalances(wallet) {
@@ -80,11 +81,11 @@ async function getBalances(wallet) {
     let monBalanceRetry = 0
 
     while (!monBalanceDone && monBalanceRetry < 3) {
-        await axios.get(`${apiUrl}/tokenPortfolio?address=${wallet}`, {
+        await axios.get(`${apiUrl}/${wallet}/profile`, {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
         }).then(async response => {
-            stats[wallet].balances['MON'] = parseFloat(response.data.result.data[0].balance).toFixed(2)
+            stats[wallet].balances['MON'] = parseFloat(response.data.balance).toFixed(2)
             monBalanceDone = true
         }).catch(function (error) {
             if (config.debug) console.log(error)
@@ -106,23 +107,19 @@ async function getTxs(wallet) {
     let isAllTxCollected = false, retry = 0
 
     while (!isAllTxCollected && retry < 3) {
-        await axios.get(`${apiUrl}/transactions?address=${wallet}`, {
+        await axios.get(`${apiUrl}/${wallet}/transactions?size=10000`, {
             params: params.cursor === '' ? {} : params,
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
             headers: reqHeaders
         }).then(async response => {
-            let items = response.data.result.data
+            let items = response.data.data
 
             Object.values(items).forEach(tx => {
                 txs.push(tx)
             })
 
-            if (response.data.result.nextPageCursor === 0) {
-                isAllTxCollected = true
-            } else {
-                params.cursor = response.data.result.nextPageCursor
-            }
+            isAllTxCollected = true
         }).catch(function (error) {
             if (config.debug) console.log(error)
 
@@ -131,10 +128,10 @@ async function getTxs(wallet) {
     }
 
     Object.values(txs).forEach(tx => {
-        if (tx.from) {
-            if (tx.from.toLowerCase() === wallet.toLowerCase()) {
+        if (tx.address) {
+            if (tx.address.toLowerCase() === wallet.toLowerCase()) {
                 stats[wallet].txcount++
-                const date = new Date(tx.timestamp)
+                const date = new Date(tx.create_time)
                 uniqueDays.add(date.toDateString())
                 uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
                 uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
@@ -150,8 +147,8 @@ async function getTxs(wallet) {
     const numUniqueMonths = uniqueMonths.size
     const numUniqueContracts = uniqueContracts.size
     if (txs.length) {
-        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].timestamp)
-        stats[wallet].last_tx_date = new Date(txs[0].timestamp)
+        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].create_time)
+        stats[wallet].last_tx_date = new Date(txs[0].create_time)
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
