@@ -32,6 +32,7 @@ import MorphView from './views/MorphView.vue'
 import SoneiumView from './views/SoneiumView.vue'
 import MonadView from './views/MonadView.vue'
 import ConfigView from './views/ConfigView.vue'
+import PolymarketView from './views/PolymarketView.vue'
 
 const app = createApp(App)
 
@@ -67,6 +68,7 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$points_count = data.points_wallets.length
     app.config.globalProperties.$soneium_count = data.soneium_wallets.length
     app.config.globalProperties.$monad_count = data.monad_wallets.length
+    app.config.globalProperties.$polymarket_count = data.polymarket_wallets.length
 }).catch((error) => {
     console.error('Ошибка при загрузке данных:', error)
 })
@@ -91,6 +93,12 @@ const routes = [
         name: 'Config',
         component: ConfigView,
         meta: { requiresAuth: true, title: 'Config' }
+    },
+    {
+        path: '/polymarket',
+        name: 'Polymarket',
+        component: PolymarketView,
+        meta: { requiresAuth: true, title: 'Polymarket' }
     },
     {
         path: '/eclipse',

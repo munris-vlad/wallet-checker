@@ -274,6 +274,10 @@ export const entryPoint = async () => {
                     value: "eclipse",
                 },
                 {
+                    name: "Polymarket",
+                    value: "polymarket",
+                },
+                {
                     name: "Soneium",
                     value: "soneium",
                 },

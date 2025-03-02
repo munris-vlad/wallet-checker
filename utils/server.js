@@ -30,6 +30,7 @@ import { airdropClean, airdropData, airdropFetchDataAndPrintTable, airdropFetchW
 import { morphClean, morphData, morphFetchDataAndPrintTable, morphFetchWallet } from '../checkers/morph.js'
 import { soneiumClean, soneiumData, soneiumFetchWallet } from '../checkers/soneium.js'
 import { monadClean, monadData, monadFetchWallet } from '../checkers/monad.js'
+import { polymarketClean, polymarketData, polymarketFetchWallet } from '../checkers/polymarket.js'
 
 const app = express()
 const port = config.port
@@ -103,6 +104,7 @@ apiRoutes.get('/stats', async (req, res) => {
     const morphWallets = config.modules.morph ? readWallets(config.modules.morph.addresses) : []
     const soneiumWallets = config.modules.soneium ? readWallets(config.modules.soneium.addresses) : []
     const monadWallets = config.modules.monad ? readWallets(config.modules.monad.addresses) : []
+    const polymarketWallets = config.modules.polymarket ? readWallets(config.modules.polymarket.addresses) : []
     const pointsWallets = readWallets(config.modules.points.addresses)
 
     res.json({
@@ -132,7 +134,25 @@ apiRoutes.get('/stats', async (req, res) => {
         'morph_wallets': morphWallets,
         'soneium_wallets': soneiumWallets,
         'monad_wallets': monadWallets,
+        'polymarket_wallets': polymarketWallets,
     })
+})
+
+// Polymarket API
+apiRoutes.get('/polymarket', isAuthenticated, async (req, res) => {
+    const responseData = await polymarketData()
+    res.json(responseData)
+})
+
+apiRoutes.get('/polymarket/refresh', isAuthenticated, async (req, res) => {
+    const wallet = req.query.wallet ? req.query.wallet : ''
+    await polymarketFetchWallet(wallet)
+    res.json(true)
+})
+
+apiRoutes.get('/polymarket/clean', isAuthenticated, async (req, res) => {
+    await polymarketClean()
+    res.json(true)
 })
 
 // MONAD API

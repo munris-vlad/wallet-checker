@@ -29,6 +29,7 @@ import { airdropFetchDataAndPrintTable } from "../checkers/airdrop.js"
 import { morphFetchDataAndPrintTable } from "../checkers/morph.js"
 import { soneiumFetchDataAndPrintTable } from "../checkers/soneium.js"
 import { monadFetchDataAndPrintTable } from "../checkers/monad.js"
+import { polymarketFetchDataAndPrintTable } from "../checkers/polymarket.js"
 
 function startExpressServer() {
     const expressServer = exec('node ./utils/server.js', (error, stdout, stderr) => {
@@ -93,6 +94,10 @@ async function startMenu(menu) {
     switch (mode) {
         case "web":
             startExpressServer()
+            break
+        case "polymarket":
+            await polymarketFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
+            if (startOver) await startMenu()
             break
         case "monad":
             await monadFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })

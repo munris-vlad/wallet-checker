@@ -17,6 +17,10 @@ export const config = {
                 },
             }
         },
+        polymarket: {
+            enabled: true,
+            addresses: './user_data/addresses/polymarket.txt',
+        },
         monad: {
             enabled: true,
             addresses: './user_data/addresses/evm.txt',
