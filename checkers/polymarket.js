@@ -82,7 +82,8 @@ async function getBalances(wallet) {
     })
 
     const balance = formatUnits(amount, 6)
-    return parseFloat(balance)
+    
+    stats[wallet].balances['USDC'] = parseFloat(balance).toFixed(2)
 }
 
 async function getData(wallet) {
