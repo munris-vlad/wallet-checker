@@ -28,7 +28,9 @@
                                 <a target="_blank" :href="'https://soneium.blockscout.com/address/'+item['wallet']"><img class="rounded-full mb-1" :src="'/soneium.svg'" alt=""></a>
                             </div>
                         </div>
-                    </td><td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.soneium.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
+                    </td>
+                    <td :class="tdClass">{{ item['OG Badge'] }}</td>
+                    <td :class="[tdClass, parseFloat(item['ETH']) < appconfig.modules.soneium.minBalanceHighlight ? 'text-red-500' : '']">{{ item['ETH'] }} (${{ item['ETH USDVALUE'] }})</td>
                     <td :class="tdClass">{{ item['TX Count'] }}</td>
                     <td :class="tdClass">{{ item['Contracts'] }}</td>
                     <td :class="tdClass">{{ item['Days'] }}</td>
@@ -76,6 +78,7 @@ export default {
             headers: [
                 'n',
                 'Wallet',
+                'OG Badge',
                 'ETH',
                 'TX Count',
                 'Contracts',

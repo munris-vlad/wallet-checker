@@ -21,6 +21,7 @@ import { formatEther, parseEther } from 'viem'
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'wallet', color: 'green', alignment: "right" },
+    { name: 'OG Badge', color: 'green', alignment: "right" },
     { name: 'ETH', alignment: 'right', color: 'cyan' },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
     { name: 'Contracts', alignment: 'right', color: 'cyan' },
@@ -34,6 +35,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№' },
     { id: 'wallet', title: 'wallet' },
+    { id: 'OG Badge', title: 'OG Badge' },
     { id: 'ETH', title: 'ETH' },
     { id: 'TX Count', title: 'TX Count' },
     { id: 'Contracts', title: 'Contracts' },
@@ -78,36 +80,38 @@ const reqHeaders = {
 }
 
 async function getBalances(wallet) {
-    let ipBalanceDone
-    let ipBalanceRetry = 0
+    let balanceDone
+    let balanceRetry = 0
 
     let badgeBalanceDone
     let badgeBalanceRetry = 0
 
-    while (!ipBalanceDone) {
+    while (!balanceDone) {
         await axios.get(`${apiUrl}/${wallet}`, {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
         }).then(async response => {
-            stats[wallet].balances['ETH'] = formatEther(parseEther(response.data.coin_balance)) / Math.pow(10, 18)
-            ipBalanceDone = true
+            stats[wallet].balances['ETH'] = response.data.coin_balance ? formatEther(parseEther(response.data.coin_balance)) / Math.pow(10, 18) : 0
+            balanceDone = true
         }).catch(function (error) {
             if (config.debug) console.log(error)
-            ipBalanceRetry++
-            if (ipBalanceRetry > 3) {
-                ipBalanceDone = true
+            balanceRetry++
+            if (balanceRetry > 3) {
+                balanceDone = true
             }
         })
     }
 
     while (!badgeBalanceDone) {
-        await axios.get(`${apiUrl}/${wallet}/tokens?type=ERC-721`, {
+        await axios.get(`${apiUrl}/${wallet}/tokens?type=ERC-1155`, {
             signal: newAbortSignal(cancelTimeout),
             httpsAgent: getProxy(0, true),
         }).then(async response => {
             const tokens = response.data.items
             for (const token of tokens) {
-                stats[wallet].balances[token.token.symbol] = 1
+                if (token.token.symbol === 'BADGE') {
+                    stats[wallet].og_badge = true
+                }
             }
             badgeBalanceDone = true
         }).catch(function (error) {
@@ -202,7 +206,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
     } else {
         stats[wallet] = {
             txcount: 0,
-            balances: { IP: 0 },
+            og_badge: false,
+            balances: { ETH: 0 },
         }
 
         await getBalances(wallet)
@@ -217,6 +222,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     p.addRow({
         n: parseInt(index) + 1,
         wallet: wallet,
+        'OG Badge': stats[wallet].og_badge ? 'Yes' : 'No',
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'TX Count': stats[wallet].txcount,
         'Contracts': stats[wallet].unique_contracts ?? 0,
@@ -230,6 +236,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     jsonData.push({
         n: parseInt(index) + 1,
         wallet: wallet,
+        'OG Badge': stats[wallet].og_badge ? '✅' : '❌',
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'TX Count': stats[wallet].txcount,
