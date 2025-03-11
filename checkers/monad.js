@@ -83,7 +83,7 @@ async function getBalances(wallet) {
     while (!monBalanceDone && monBalanceRetry < 3) {
         await axios.get(`${apiUrl}/${wallet}/profile`, {
             signal: newAbortSignal(cancelTimeout),
-            httpsAgent: getProxy(0, true),
+            httpsAgent: getProxy(),
         }).then(async response => {
             stats[wallet].balances['MON'] = parseFloat(response.data.balance).toFixed(2)
             monBalanceDone = true
@@ -107,10 +107,10 @@ async function getTxs(wallet) {
     let isAllTxCollected = false, retry = 0
 
     while (!isAllTxCollected && retry < 3) {
-        await axios.get(`${apiUrl}/${wallet}/transactions?size=10000`, {
+        await axios.get(`https://api.socialscan.io/monad-testnet/v1/explorer/transactions?size=10000&page=1&address=${wallet}`, {
             params: params.cursor === '' ? {} : params,
             signal: newAbortSignal(cancelTimeout),
-            httpsAgent: getProxy(0, true),
+            httpsAgent: getProxy(),
             headers: reqHeaders
         }).then(async response => {
             let items = response.data.data
@@ -128,8 +128,8 @@ async function getTxs(wallet) {
     }
 
     Object.values(txs).forEach(tx => {
-        if (tx.address) {
-            if (tx.address.toLowerCase() === wallet.toLowerCase()) {
+        if (tx.from_address) {
+            if (tx.from_address.toLowerCase() === wallet.toLowerCase()) {
                 stats[wallet].txcount++
                 const date = new Date(tx.create_time)
                 uniqueDays.add(date.toDateString())
