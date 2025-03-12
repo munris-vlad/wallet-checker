@@ -126,12 +126,13 @@ async function getTxs(wallet) {
             retry++
         })
     }
-
+    let ownTxs = []
     Object.values(txs).forEach(tx => {
         if (tx.from_address) {
             if (tx.from_address.toLowerCase() === wallet.toLowerCase()) {
+                ownTxs.push(tx)
                 stats[wallet].txcount++
-                const date = new Date(tx.create_time)
+                const date = new Date(tx.block_timestamp)
                 uniqueDays.add(date.toDateString())
                 uniqueWeeks.add(date.getFullYear() + '-' + date.getWeek())
                 uniqueMonths.add(date.getFullYear() + '-' + date.getMonth())
@@ -146,9 +147,9 @@ async function getTxs(wallet) {
     const numUniqueWeeks = uniqueWeeks.size
     const numUniqueMonths = uniqueMonths.size
     const numUniqueContracts = uniqueContracts.size
-    if (txs.length) {
-        stats[wallet].first_tx_date = new Date(txs[txs.length - 1].create_time)
-        stats[wallet].last_tx_date = new Date(txs[0].create_time)
+    if (ownTxs.length) {
+        stats[wallet].first_tx_date = new Date(ownTxs[ownTxs.length - 1].block_timestamp)
+        stats[wallet].last_tx_date = new Date(ownTxs[0].block_timestamp)
         stats[wallet].unique_days = numUniqueDays
         stats[wallet].unique_weeks = numUniqueWeeks
         stats[wallet].unique_months = numUniqueMonths
