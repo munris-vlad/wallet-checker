@@ -11,6 +11,7 @@ import { cleanByChecker, getCountByChecker, getWalletFromDB, saveWalletToDB } fr
 const columns = [
     { name: 'n', color: 'green', alignment: "right" },
     { name: 'Wallet', color: 'green', alignment: "right" },
+    { name: 'Airdrop', color: 'green', alignment: "right" },
     { name: 'TX Count', alignment: 'right', color: 'cyan' },
     { name: 'Source chains', alignment: 'right', color: 'cyan' },
     { name: 'Dest chains', alignment: 'right', color: 'cyan' },
@@ -24,6 +25,7 @@ const columns = [
 const headers = [
     { id: 'n', title: '№' },
     { id: 'Wallet', title: 'Wallet' },
+    { id: 'Airdrop', title: 'Airdrop' },
     { id: 'TX Count', title: 'TX Count' },
     { id: 'Source chains', title: 'Source chains' },
     { id: 'Dest chains', title: 'Dest chains' },
@@ -46,6 +48,7 @@ let iterations = wallets.length
 let iteration = 1
 let csvData = []
 let jsonData = []
+let totalAirdrop = 0
 const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
 
 async function fetchWallet(wallet, index, isFetch = false) {
@@ -53,6 +56,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
 
     let data = {
         wallet: wallet,
+        airdrop: 0,
         tx_count: 0,
         source_chain_count: 0,
         dest_chain_count: 0,
@@ -145,11 +149,35 @@ async function fetchWallet(wallet, index, isFetch = false) {
         }
     }
 
+    let isAirdropParsed = false
+    let retryAirdrop = 0
+
+    while (!isAirdropParsed && retryAirdrop < 3) {
+        await axios.get(`https://claim.hyperlane.foundation/api/check-eligibility?address=${wallet}`, {
+            httpsAgent: agent,
+            signal: newAbortSignal(15000)
+        }).then(response => {
+            data.airdrop = response.data.response.eligibilities.length ? parseFloat(response.data.response.eligibilities[0].amount).toFixed(2) : 0
+            isAirdropParsed = true
+        }).catch(async error => {
+            if (config.debug) console.error(wallet, error.toString(), '| Get random proxy')
+            retryAirdrop++
+    
+            agent = getProxy(index, true)
+            await sleep(3000)
+    
+            if (retry >= 3) {
+                isAirdropParsed = true
+            }
+        })
+    }
+    
     progressBar.update(iteration)
     
     let row = {
         n: parseInt(index) + 1,
         Wallet: wallet,
+        'Airdrop': data.airdrop,
         'TX Count': data.tx_count,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
@@ -163,6 +191,7 @@ async function fetchWallet(wallet, index, isFetch = false) {
     jsonData.push({
         n: parseInt(index) + 1,
         Wallet: wallet,
+        'Airdrop': data.airdrop,
         'TX Count': data.tx_count,
         'Source chains': data.source_chain_count,
         'Dest chains': data.dest_chain_count,
@@ -176,6 +205,8 @@ async function fetchWallet(wallet, index, isFetch = false) {
     })
 
     p.addRow(row)
+    
+    totalAirdrop += parseFloat(data.airdrop)
     if (data.tx_count > 0) {
         await saveWalletToDB(wallet, 'hyperlane', JSON.stringify(data))
     }
@@ -242,10 +273,20 @@ async function saveToCsv() {
     csvWriter.writeRecords(csvData).then().catch()
 }
 
+
+async function addTotalRow() {
+    p.addRow({})
+    p.addRow({
+        Wallet: 'Total',
+        'Airdrop': parseFloat(totalAirdrop).toFixed(2)
+    })
+}
+
 export async function hyperlaneFetchDataAndPrintTable() {
     progressBar.start(iterations, 0)
 
     await fetchWallets()
+    await addTotalRow()
     progressBar.stop()
 
     p.printTable()
@@ -256,6 +297,11 @@ export async function hyperlaneFetchDataAndPrintTable() {
 export async function hyperlaneData() {
     await fetchWallets()
     await saveToCsv()
+
+    jsonData.push({
+        Wallet: 'Total',
+        'Airdrop': parseFloat(totalAirdrop).toFixed(2),
+    })
 
     return jsonData
 }
