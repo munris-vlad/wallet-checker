@@ -224,6 +224,7 @@ async function fetchWallets() {
     iteration = 1
     csvData = []
     jsonData = []
+    totalAirdrop = 0
 
     csvWriter = createObjectCsvWriter({
         path: './results/hyperlane.csv',
