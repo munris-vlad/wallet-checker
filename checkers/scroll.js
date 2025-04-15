@@ -14,8 +14,6 @@ const columns = [
     { name: 'n', color: 'green', alignment: "right"},
     { name: 'wallet', color: 'green', alignment: "right"},
     { name: 'Marks', color: 'green', alignment: "right"},
-    { name: 'Badges', color: 'green', alignment: "right"},
-    { name: 'Origins NFT', color: 'green', alignment: "right"},
     { name: 'ETH', alignment: 'right', color: 'cyan'},
     { name: 'USDC', alignment: 'right', color: 'cyan'},
     { name: 'USDT', alignment: 'right', color: 'cyan'},
@@ -37,8 +35,6 @@ const headers = [
     { id: 'n', title: '№'},
     { id: 'wallet', title: 'wallet'},
     { id: 'Marks', title: 'Marks'},
-    { id: 'Badges', title: 'Badges'},
-    { id: 'Origins NFT', title: 'Origins NFT'},
     { id: 'ETH', title: 'ETH'},
     { id: 'USDC', title: 'USDC'},
     { id: 'USDT', title: 'USDT'},
@@ -57,7 +53,7 @@ const headers = [
 ]
 
 const apiUrl = "https://api.scrollscan.com/api"
-const marksApi = "https://www.data-openblocklabs.com/scroll/wallet-points-s2?walletAddress="
+const marksApi = "https://mainnet-api-sessions.scroll.io/v1/session2-marks/"
 
 const args = process.argv.slice(2)
 if (args[1] === 'refresh') {
@@ -218,9 +214,6 @@ async function getTxs(wallet, index) {
     let isMarksCollected = false
     let marksRetry = 0
     let marks = 0
-    let isBadgesCollected = false
-    let badgesRetry = 0
-    let badges = 0
 
     while (!isAllTxCollected) {
         try {
@@ -262,11 +255,7 @@ async function getTxs(wallet, index) {
             httpsAgent: agent,
             signal: newAbortSignal(15000)
         }).then(response => {
-            if (response.data) {
-                Object.values(response.data).forEach(marksCategory => {
-                    marks += marksCategory.points ? marksCategory.points : 0
-                })
-            }
+            marks = response.data.result.marks ? parseFloat(response.data.result.marks).toFixed(2) : 0
 
             isMarksCollected = true
         }).catch(error => {
@@ -277,30 +266,6 @@ async function getTxs(wallet, index) {
 
             if (marksRetry > 3) {
                 isMarksCollected = true
-            }
-        })
-    }
-
-    while (!isBadgesCollected) {
-        await axios.post('https://scroll.easscan.org/graphql', {
-            query: `\n query Attestation {\n  attestations(\n where: {\nschemaId: { equals: \"0xd57de4f41c3d3cc855eadef68f98c0d4edd22d57161d96b7c06d2f4336cc3b49\" },\n recipient: { equals: \"${wallet}\" },\n  revoked: { equals: false },\n }\n ) {\n attester\n  data\n id\n time\n txid\n }\n }\n`
-        }, {
-            httpsAgent: agent,
-            signal: newAbortSignal(15000)
-        }).then(response => {
-            if (response.data) {
-                badges = response.data.data.attestations.length
-            }
-
-            isBadgesCollected = true
-        }).catch(error => {
-            if (config.debug) console.log(error.toString())
-            agent = getProxy(index, true)
-
-            badgesRetry++
-
-            if (badgesRetry > 3) {
-                isBadgesCollected = true
             }
         })
     }
@@ -427,7 +392,6 @@ async function getTxs(wallet, index) {
         stats[wallet].bridge_to = bridgeTo
         stats[wallet].bridge_from = bridgeFrom
         stats[wallet].marks = parseFloat(marks).toFixed(2)
-        stats[wallet].badges = badges
     }
 }
 
@@ -462,8 +426,6 @@ async function fetchWallet(wallet, index, isFetch = false) {
         n: parseInt(index)+1,
         wallet: wallet,
         'Marks': stats[wallet].marks,
-        'Badges': stats[wallet].badges,
-        'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? 'Yes' : 'No',
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4) + ` ($${usdEthValue})`,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
         'USDT': parseFloat(stats[wallet].balances['USDT']).toFixed(2),
@@ -485,8 +447,6 @@ async function fetchWallet(wallet, index, isFetch = false) {
         n: parseInt(index)+1,
         wallet: wallet,
         'Marks': stats[wallet].marks,
-        'Badges': stats[wallet].badges,
-        'Origins NFT': parseInt(stats[wallet].balances['Origins NFT']) > 0 ? true : false,
         'ETH': parseFloat(stats[wallet].balances['ETH']).toFixed(4),
         'ETH USDVALUE': usdEthValue,
         'USDC': parseFloat(stats[wallet].balances['USDC']).toFixed(2),
