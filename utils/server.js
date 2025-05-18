@@ -12,21 +12,14 @@ import { zoraClean, zoraData, zoraFetchWallet } from "../checkers/zora.js"
 import { baseClean, baseData, baseFetchWallet } from "../checkers/base.js"
 import { aptosClean, aptosData, aptosFetchWallet } from "../checkers/aptos.js"
 import { lineaClean, lineaData, lineaFetchWallet } from "../checkers/linea.js"
-import { scrollClean, scrollData, scrollFetchWallet } from "../checkers/scroll.js"
 import { layerzeroClean, layerzeroData, layerzeroFetchWallet } from "../checkers/layerzero.js"
 import { wormholeClean, wormholeData, wormholeFetchWallet } from '../checkers/wormhole.js'
 import { zkbridgeClean, zkbridgeData, zkbridgeFetchWallet } from '../checkers/zkbridge.js'
 import { hyperlaneClean, hyperlaneData, hyperlaneFetchWallet } from '../checkers/hyperlane.js'
-import { clustersClean, clustersData, clustersFetchWallet } from '../checkers/clusters.js'
 import { debridgeClean, debridgeData, debridgeFetchWallet } from '../checkers/debridge.js'
-import { chainFetchData, rabbyClean, rabbyData, rabbyFetchWallet } from '../checkers/rabby.js'
-import { nftClean, nftData, nftFetchWallet } from '../checkers/nft.js'
-import { polygonzkevmClean, polygonzkevmData, polygonzkevmFetchWallet } from '../checkers/polygonzkevm.js'
 import { jumperClean, jumperData, jumperFetchWallet } from '../checkers/jumper.js'
 import { storyClean, storyData, storyFetchWallet } from '../checkers/story.js'
 import { eclipseClean, eclipseData, eclipseFetchWallet } from '../checkers/eclipse.js'
-import { pointsClean, pointsData, pointsFetchWallet } from '../checkers/points.js'
-import { airdropClean, airdropData, airdropFetchDataAndPrintTable, airdropFetchWallet } from '../checkers/airdrop.js'
 import { morphClean, morphData, morphFetchDataAndPrintTable, morphFetchWallet } from '../checkers/morph.js'
 import { soneiumClean, soneiumData, soneiumFetchWallet } from '../checkers/soneium.js'
 import { monadClean, monadData, monadFetchWallet } from '../checkers/monad.js'
@@ -90,13 +83,8 @@ apiRoutes.get('/stats', async (req, res) => {
     const baseWallets = readWallets(config.modules.base.addresses)
     const aptosWallets = readWallets(config.modules.aptos.addresses)
     const lineaWallets = readWallets(config.modules.linea.addresses)
-    const scrollWallets = readWallets(config.modules.scroll.addresses)
-    const polygonzkevmWallets = readWallets(config.modules.polygonzkevm.addresses)
-    const clustersWallets = readWallets(config.modules.clusters.addresses)
-    const rabbyWallets = readWallets(config.modules.rabby.addresses)
     const evmWallets = readWallets(config.modules.evm.addresses)
     const balanceWallets = readWallets(config.modules.balance.addresses)
-    const nftWallets = readWallets(config.modules.nft.addresses)
     const galxeWallets = readWallets(config.modules.galxe.addresses)
     const jumperWallets = readWallets(config.modules.jumper.addresses)
     const storyWallets = readWallets(config.modules.story.addresses)
@@ -105,7 +93,6 @@ apiRoutes.get('/stats', async (req, res) => {
     const soneiumWallets = config.modules.soneium ? readWallets(config.modules.soneium.addresses) : []
     const monadWallets = config.modules.monad ? readWallets(config.modules.monad.addresses) : []
     const polymarketWallets = config.modules.polymarket ? readWallets(config.modules.polymarket.addresses) : []
-    const pointsWallets = readWallets(config.modules.points.addresses)
 
     res.json({
         'config': config,
@@ -119,18 +106,12 @@ apiRoutes.get('/stats', async (req, res) => {
         'base_wallets': baseWallets,
         'aptos_wallets': aptosWallets,
         'linea_wallets': lineaWallets,
-        'scroll_wallets': scrollWallets,
-        'polygonzkevm_wallets': polygonzkevmWallets,
-        'clusters_wallets': clustersWallets,
-        'rabby_wallets': rabbyWallets,
         'evm_wallets': evmWallets,
         'balance_wallets': balanceWallets,
-        'nft_wallets': nftWallets,
         'galxe_wallets': galxeWallets,
         'jumper_wallets': jumperWallets,
         'story_wallets': storyWallets,
         'eclipse_wallets': eclipseWallets,
-        'points_wallets': pointsWallets,
         'morph_wallets': morphWallets,
         'soneium_wallets': soneiumWallets,
         'monad_wallets': monadWallets,
@@ -376,56 +357,6 @@ apiRoutes.get('/linea/clean', isAuthenticated, async (req, res) => {
     res.json(true)
 })
 
-// SCROLL API
-apiRoutes.get('/scroll', isAuthenticated, async (req, res) => {
-    const responseData = await scrollData()
-    res.json(responseData)
-})
-
-apiRoutes.get('/scroll/refresh', isAuthenticated, async (req, res) => {
-    const wallet = req.query.wallet ? req.query.wallet : ''
-    await scrollFetchWallet(wallet)
-    res.json(true)
-})
-
-apiRoutes.get('/scroll/clean', isAuthenticated, async (req, res) => {
-    await scrollClean()
-    res.json(true)
-})
-
-// POLYGONZKEVM API
-apiRoutes.get('/polygonzkevm', isAuthenticated, async (req, res) => {
-    const responseData = await polygonzkevmData()
-    res.json(responseData)
-})
-
-apiRoutes.get('/polygonzkevm/refresh', isAuthenticated, async (req, res) => {
-    const wallet = req.query.wallet ? req.query.wallet : ''
-    await polygonzkevmFetchWallet(wallet)
-    res.json(true)
-})
-
-apiRoutes.get('/polygonzkevm/clean', isAuthenticated, async (req, res) => {
-    await polygonzkevmClean()
-    res.json(true)
-})
-
-// CLUSTERS API
-apiRoutes.get('/clusters', isAuthenticated, async (req, res) => {
-    const responseData = await clustersData()
-    res.json(responseData)
-})
-
-apiRoutes.get('/clusters/refresh', isAuthenticated, async (req, res) => {
-    const wallet = req.query.wallet ? req.query.wallet : ''
-    await clustersFetchWallet(wallet)
-    res.json(true)
-})
-
-apiRoutes.get('/clusters/clean', isAuthenticated, async (req, res) => {
-    await clustersClean()
-    res.json(true)
-})
 
 // STORY API
 apiRoutes.get('/story', isAuthenticated, async (req, res) => {
@@ -461,47 +392,6 @@ apiRoutes.get('/eclipse/clean', isAuthenticated, async (req, res) => {
     res.json(true)
 })
 
-// RABBY API
-apiRoutes.get('/rabby', isAuthenticated, async (req, res) => {
-    const responseData = await rabbyData()
-    res.json(responseData)
-})
-
-apiRoutes.get('/rabby-chain', isAuthenticated, async (req, res) => {
-    const wallet = req.query.wallet
-    const chainId = req.query.chainId
-    const responseData = await chainFetchData(wallet, chainId)
-    res.json(responseData)
-})
-
-apiRoutes.get('/rabby/refresh', isAuthenticated, async (req, res) => {
-    const wallet = req.query.wallet ? req.query.wallet : ''
-    await rabbyFetchWallet(wallet)
-    res.json(true)
-})
-
-apiRoutes.get('/rabby/clean', isAuthenticated, async (req, res) => {
-    await rabbyClean()
-    res.json(true)
-})
-
-// NFT API
-apiRoutes.get('/nft', isAuthenticated, async (req, res) => {
-    const responseData = await nftData()
-    res.json(responseData)
-})
-
-apiRoutes.get('/nft/refresh', isAuthenticated, async (req, res) => {
-    const wallet = req.query.wallet ? req.query.wallet : ''
-    await nftFetchWallet(wallet)
-    res.json(true)
-})
-
-apiRoutes.get('/nft/clean', isAuthenticated, async (req, res) => {
-    await nftClean()
-    res.json(true)
-})
-
 // BALANCES API
 apiRoutes.get('/balances', isAuthenticated, async (req, res) => {
     const network = req.query.network ? req.query.network : 'eth'
@@ -514,46 +404,6 @@ apiRoutes.get('/evm', isAuthenticated, async (req, res) => {
     const network = req.query.network ? req.query.network : 'eth'
     const responseData = await evmData(network)
     res.json(responseData)
-})
-
-// POINTS API
-apiRoutes.get('/points', isAuthenticated, async (req, res) => {
-    const project = req.query.project ? req.query.project : 'zerion'
-    const responseData = await pointsData(project)
-    res.json(responseData)
-})
-
-apiRoutes.get('/points/refresh', isAuthenticated, async (req, res) => {
-    const project = req.query.project ? req.query.project : 'zerion'
-    const wallet = req.query.wallet ? req.query.wallet : ''
-    await pointsFetchWallet(wallet, project)
-    res.json(true)
-})
-
-apiRoutes.get('/points/clean', isAuthenticated, async (req, res) => {
-    const project = req.query.project ? req.query.project : 'zerion'
-    await pointsClean(project)
-    res.json(true)
-})
-
-// AIRDROP API
-apiRoutes.get('/airdrop', isAuthenticated, async (req, res) => {
-    const project = req.query.project ? req.query.project : 'jupiter'
-    const responseData = await airdropData(project)
-    res.json(responseData)
-})
-
-apiRoutes.get('/airdrop/refresh', isAuthenticated, async (req, res) => {
-    const project = req.query.project ? req.query.project : 'jupiter'
-    const wallet = req.query.wallet ? req.query.wallet : ''
-    await airdropFetchWallet(wallet, project)
-    res.json(true)
-})
-
-apiRoutes.get('/airdrop/clean', isAuthenticated, async (req, res) => {
-    const project = req.query.project ? req.query.project : 'jupiter'
-    await airdropClean(project)
-    res.json(true)
 })
 
 // MORPH API

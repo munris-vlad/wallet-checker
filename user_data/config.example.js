@@ -5,18 +5,6 @@ export const config = {
         password: 'test',
     },
     modules: {
-        airdrop: {
-            enabled: true
-        },
-        points: {
-            enabled: true,
-            projects: {
-                'zerion': {
-                    enabled: true,
-                    addresses: './user_data/addresses/evm.txt',
-                },
-            }
-        },
         polymarket: {
             enabled: true,
             addresses: './user_data/addresses/polymarket.txt',
@@ -50,10 +38,6 @@ export const config = {
             addresses: './user_data/addresses/evm.txt',
             minBalanceHighlight: 0.005
         },
-        clusters: {
-            enabled: false,
-            addresses: './user_data/addresses/clusters.txt'
-        },
         debridge: {
             enabled: false,
             addresses: './user_data/addresses/debridge.txt'
@@ -74,11 +58,6 @@ export const config = {
         linea: {
             enabled: true,
             addresses: './user_data/addresses/linea.txt',
-            minBalanceHighlight: 0.01
-        },
-        scroll: {
-            enabled: false,
-            addresses: './user_data/addresses/scroll.txt',
             minBalanceHighlight: 0.01
         },
         wormhole: {
@@ -169,25 +148,11 @@ export const config = {
                 },
             }
         },
-        rabby: {
-            enabled: true,
-            addresses: './user_data/addresses/evm.txt',
-        },        
-        nft: {
-            enabled: false,
-            minCollectionPriceUSD: 10,
-            addresses: './user_data/addresses/nft.txt',
-        },     
         galxe: {
             enabled: true,
             addresses: './user_data/addresses/evm.txt',
             spaces: ['LagrangeLabs']
         }, 
-        polygonzkevm: {
-            enabled: false,
-            addresses: './user_data/addresses/evm.txt',
-            minBalanceHighlight: 0.005
-        },
         jumper: {
             enabled: true,
             addresses: './user_data/addresses/evm.txt'

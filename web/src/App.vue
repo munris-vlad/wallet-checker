@@ -3,8 +3,6 @@
         <header class="p-3 text-center border-b dark:border-neutral-500" v-if="isAuthenticated">
             <nav class="flex justify-center items-center space-x-3">
                 <router-link class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/"><img class="rounded-full w-6 h-6 mr-2" :src="'/munrisik.png'" alt=""> Home</router-link>
-                <router-link v-if="appconfig.modules.airdrop.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/airdrop"><img class="rounded-full w-6 h-6 mr-2" :src="'/airdrop.png'" alt=""> Airdrops</router-link>
-                <router-link v-if="appconfig.modules.points.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/points"><img class="rounded-full w-6 h-6 mr-2" :src="'/points.png'" alt=""> Points</router-link>
                 <router-link v-if="appconfig.modules.soneium ? appconfig.modules.soneium.enabled : false" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/soneium"><img class="rounded-full w-6 h-6 mr-2" :src="'/soneium.svg'" alt=""> Soneium</router-link>
                 <router-link v-if="appconfig.modules.monad ? appconfig.modules.monad.enabled : false" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/monad"><img class="rounded-full w-6 h-6 mr-2" :src="'/monad.png'" alt=""> Monad</router-link>
                 <router-link v-if="appconfig.modules.story.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/story"><img class="rounded-full w-6 h-6 mr-2" :src="'/story.svg'" alt=""> Story</router-link>
@@ -21,16 +19,10 @@
                 <router-link v-if="appconfig.modules.base.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/base"><img class="rounded-full w-6 h-6 mr-2" :src="'/base.png'" alt=""> Base</router-link>
                 <router-link v-if="appconfig.modules.aptos.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/aptos"><img class="rounded-full w-6 h-6 mr-2" :src="'/aptos.png'" alt=""> Aptos</router-link>
                 <router-link v-if="appconfig.modules.linea.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/linea"><img class="rounded-full w-6 h-6 mr-2" :src="'/linea-scan.png'" alt=""> Linea</router-link>
-                <router-link v-if="appconfig.modules.scroll.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/scroll"><img class="rounded-full w-6 h-6 mr-2" :src="'/scroll-scan.png'" alt=""> Scroll</router-link>
-                <router-link v-if="appconfig.modules.polygonzkevm.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/polygonzkevm"><img class="rounded-full w-6 h-6 mr-2" :src="'/polygon-scan.png'" alt=""> Polygon ZKEVM</router-link>
                 <router-link v-if="appconfig.modules.polymarket ? appconfig.modules.polymarket.enabled : false" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/polymarket"><img class="rounded-full w-6 h-6 mr-2" :src="'/polymarket.png'" alt=""> Polymarket</router-link>
                 <router-link v-if="appconfig.modules.balance.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/balances"><img class="rounded-full w-6 h-6 mr-2" :src="'/coin.png'" alt=""> Balance</router-link>
                 <router-link v-if="appconfig.modules.evm.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/evm"><img class="rounded-full w-6 h-6 mr-2" :src="'/eth.png'" alt=""> EVM</router-link>
-                <router-link v-if="appconfig.modules.clusters.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/clusters"><img class="rounded-full w-6 h-6 mr-2" :src="'/clusters.jfif'" alt=""> Clusters</router-link>
-                <router-link v-if="appconfig.modules.rabby.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/rabby"><img class="rounded-full w-6 h-6 mr-2" :src="'/rabby.png'" alt=""> Rabby</router-link>
-                <router-link v-if="appconfig.modules.nft.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/nft"><img class="rounded-full w-6 h-6 mr-2" :src="'/nft.png'" alt=""> NFT</router-link>
                 <router-link v-if="appconfig.modules.galxe.enabled" class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/galxe"><img class="rounded-full w-6 h-6 mr-2" :src="'/galxe.png'" alt=""> Galxe</router-link>
-                <!-- <router-link class="flex items-center text-gray-500 hover:text-gray-600 px-2" to="/config"><img class="rounded-full w-6 h-6 mr-2" :src="'/config.png'" alt=""> Config</router-link> -->
             </nav>
         </header>
 

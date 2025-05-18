@@ -8,7 +8,6 @@ import HomeView from "@/views/HomeView"
 import ZoraView from "@/views/ZoraView"
 import AptosView from "@/views/AptosView"
 import LineaView from "@/views/LineaView"
-import ScrollView from "@/views/ScrollView"
 import BalancesView from "@/views/BalancesView"
 import EvmView from "@/views/EvmView"
 import LayerzeroView from "@/views/LayerzeroView"
@@ -16,22 +15,15 @@ import WormholeView from "@/views/WormholeView"
 import BaseView from "@/views/BaseView"
 import ZkbridgeView from "@/views/ZkbridgeView"
 import HyperlaneView from "@/views/HyperlaneView"
-import ClustersView from './views/ClustersView.vue'
 import DebridgeView from './views/DebridgeView.vue'
-import RabbyView from './views/RabbyView.vue'
-import NftView from './views/NftView.vue'
 import GalxeView from './views/GalxeView.vue'
-import PolygonzkevmView from './views/PolygonzkevmView.vue'
 import JumperView from './views/JumperView.vue'
 import AuthView from './views/AuthView.vue'
 import StoryView from './views/StoryView.vue'
 import EclipseView from './views/EclipseView.vue'
-import PointsView from './views/PointsView.vue'
-import AirdropView from './views/AirdropView.vue'
 import MorphView from './views/MorphView.vue'
 import SoneiumView from './views/SoneiumView.vue'
 import MonadView from './views/MonadView.vue'
-import ConfigView from './views/ConfigView.vue'
 import PolymarketView from './views/PolymarketView.vue'
 
 const app = createApp(App)
@@ -54,18 +46,13 @@ await app.config.globalProperties.$axios.get('/api/stats').then((response) => {
     app.config.globalProperties.$base_count = data.base_wallets.length
     app.config.globalProperties.$aptos_count = data.aptos_wallets.length
     app.config.globalProperties.$linea_count = data.linea_wallets.length
-    app.config.globalProperties.$scroll_count = data.scroll_wallets.length
-    app.config.globalProperties.$polygonzkevm_count = data.polygonzkevm_wallets.length
     app.config.globalProperties.$balance_count = data.balance_wallets.length
     app.config.globalProperties.$evm_count = data.evm_wallets.length
-    app.config.globalProperties.$clusters_count = data.clusters_wallets.length
-    app.config.globalProperties.$rabby_count = data.rabby_wallets.length
     app.config.globalProperties.$galxe_count = data.galxe_wallets.length
     app.config.globalProperties.$jumper_count = data.jumper_wallets.length
     app.config.globalProperties.$story_count = data.story_wallets.length
     app.config.globalProperties.$eclipse_count = data.eclipse_wallets.length
     app.config.globalProperties.$morph_count = data.morph_wallets.length
-    app.config.globalProperties.$points_count = data.points_wallets.length
     app.config.globalProperties.$soneium_count = data.soneium_wallets.length
     app.config.globalProperties.$monad_count = data.monad_wallets.length
     app.config.globalProperties.$polymarket_count = data.polymarket_wallets.length
@@ -87,12 +74,6 @@ const routes = [
         name: 'Home',
         component: HomeView,
         meta: { requiresAuth: true, title: 'Wallet checker' }
-    },
-    {
-        path: '/config',
-        name: 'Config',
-        component: ConfigView,
-        meta: { requiresAuth: true, title: 'Config' }
     },
     {
         path: '/polymarket',
@@ -185,12 +166,6 @@ const routes = [
         meta: { requiresAuth: true, title: 'Base' }
     },
     {
-        path: '/scroll',
-        name: 'Scroll',
-        component: ScrollView,
-        meta: { requiresAuth: true, title: 'Scroll' }
-    },
-    {
         path: '/aptos',
         name: 'Aptos',
         component: AptosView,
@@ -215,46 +190,10 @@ const routes = [
         meta: { requiresAuth: true, title: 'EVM' }
     },
     {
-        path: '/clusters',
-        name: 'Clusters',
-        component: ClustersView,
-        meta: { requiresAuth: true, title: 'Clusters' }
-    },
-    {
-        path: '/rabby',
-        name: 'Rabby',
-        component: RabbyView,
-        meta: { requiresAuth: true, title: 'Rabby' }
-    },
-    {
-        path: '/nft',
-        name: 'NFT',
-        component: NftView,
-        meta: { requiresAuth: true, title: 'NFT' }
-    },
-    {
         path: '/galxe',
         name: 'Galxe',
         component: GalxeView,
         meta: { requiresAuth: true, title: 'Galxe' }
-    },
-    {
-        path: '/polygonzkevm',
-        name: 'Polygonzkevm',
-        component: PolygonzkevmView,
-        meta: { requiresAuth: true, title: 'Polygon ZKEVM' }
-    },
-    {
-        path: '/points',
-        name: 'Points',
-        component: PointsView,
-        meta: { requiresAuth: true, title: 'Points' }
-    },
-    {
-        path: '/airdrop',
-        name: 'Airdrop',
-        component: AirdropView,
-        meta: { requiresAuth: true, title: 'Airdrop' }
     },
 ]
 

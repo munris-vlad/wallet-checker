@@ -1,4 +1,4 @@
-import { airdropChecker, chooiceNetwork, compareVersions, entryPoint, evmNetwork, pointsChecker, sleep } from "./common.js"
+import { chooiceNetwork, compareVersions, entryPoint, evmNetwork, sleep } from "./common.js"
 import fs from "fs"
 import axios from "axios"
 import { exec } from "child_process"
@@ -7,7 +7,6 @@ import { zkSyncFetchDataAndPrintTable } from "../checkers/zksync.js"
 import { aptosFetchDataAndPrintTable } from "../checkers/aptos.js"
 import { zoraFetchDataAndPrintTable } from "../checkers/zora.js"
 import { lineaFetchDataAndPrintTable } from "../checkers/linea.js"
-import { scrollFetchDataAndPrintTable } from "../checkers/scroll.js"
 import { balancesFetchDataAndPrintTable } from "../checkers/balances.js"
 import { evmFetchDataAndPrintTable } from "../checkers/evm.js"
 import { layerzeroFetchDataAndPrintTable } from "../checkers/layerzero.js"
@@ -15,17 +14,12 @@ import { baseFetchDataAndPrintTable } from "../checkers/base.js"
 import { wormholeFetchDataAndPrintTable } from "../checkers/wormhole.js"
 import { zkbridgeFetchDataAndPrintTable } from "../checkers/zkbridge.js"
 import { hyperlaneFetchDataAndPrintTable } from "../checkers/hyperlane.js"
-import { clustersFetchDataAndPrintTable } from "../checkers/clusters.js"
 import { debridgeFetchDataAndPrintTable } from "../checkers/debridge.js"
 import { pohFetchDataAndPrintTable } from "../checkers/linea-poh-checker.js"
-import { rabbyFetchDataAndPrintTable } from "../checkers/rabby.js"
 import { galxeFetchDataAndPrintTable } from "../checkers/galxe.js"
-import { polygonzkevmFetchDataAndPrintTable } from "../checkers/polygonzkevm.js"
 import { jumperFetchDataAndPrintTable } from "../checkers/jumper.js"
 import { storyFetchDataAndPrintTable } from "../checkers/story.js"
 import { eclipseFetchDataAndPrintTable } from "../checkers/eclipse.js"
-import { pointsFetchDataAndPrintTable } from "../checkers/points.js"
-import { airdropFetchDataAndPrintTable } from "../checkers/airdrop.js"
 import { morphFetchDataAndPrintTable } from "../checkers/morph.js"
 import { soneiumFetchDataAndPrintTable } from "../checkers/soneium.js"
 import { monadFetchDataAndPrintTable } from "../checkers/monad.js"
@@ -81,8 +75,8 @@ async function startMenu(menu) {
         fs.mkdirSync('./results')
     }
     
-    await checkVersion()
-    await sleep(1000)
+    // await checkVersion()
+    // await sleep(1000)
 
     let startOver = true
     if (menu === undefined) {
@@ -121,14 +115,6 @@ async function startMenu(menu) {
             break
         case "jumper":
             await jumperFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
-            if (startOver) await startMenu()
-            break
-        case "rabby":
-            await rabbyFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
-            if (startOver) await startMenu()
-            break
-        case "clusters":
-            await clustersFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "zksync":
@@ -175,10 +161,6 @@ async function startMenu(menu) {
             await lineaFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
-        case "scroll":
-            await scrollFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
-            if (startOver) await startMenu()
-            break
         case "evm":
             let chain = await evmNetwork()
             await evmFetchDataAndPrintTable(chain).catch(error => { console.error('Error: ', error) })
@@ -189,26 +171,12 @@ async function startMenu(menu) {
             await balancesFetchDataAndPrintTable(network).catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
-        case "points":
-            let project = await pointsChecker()
-            await pointsFetchDataAndPrintTable(project).catch(error => { console.error('Error: ', error) })
-            if (startOver) await startMenu()
-            break
-        case "airdrop":
-            let airdropProject = await airdropChecker()
-            await airdropFetchDataAndPrintTable(airdropProject).catch(error => { console.error('Error: ', error) })
-            if (startOver) await startMenu()
-            break
         case "linea-poh":
             await pohFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
         case "galxe":
             await galxeFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
-            if (startOver) await startMenu()
-            break
-        case "polygonzkevm":
-            await polygonzkevmFetchDataAndPrintTable().catch(error => { console.error('Error: ', error) })
             if (startOver) await startMenu()
             break
     }
@@ -218,8 +186,8 @@ const args = process.argv.slice(2)
 let mode = args[0]
 
 if (mode === 'web') {
-    await checkVersion()
-    await sleep(1000)
+    // await checkVersion()
+    // await sleep(1000)
     startExpressServer()
 } else {
     await startMenu(mode)

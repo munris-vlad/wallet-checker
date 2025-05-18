@@ -258,14 +258,6 @@ export const entryPoint = async () => {
                     value: "web",
                 },
                 {
-                    name: "Airdrop",
-                    value: "airdrop",
-                },
-                {
-                    name: "Points",
-                    value: "points",
-                },
-                {
                     name: "Monad",
                     value: "monad",
                 },
@@ -326,10 +318,6 @@ export const entryPoint = async () => {
                     value: "base",
                 },
                 {
-                    name: "Polygon ZK EVM",
-                    value: "polygonzkevm",
-                },
-                {
                     name: "Aptos",
                     value: "aptos",
                 },
@@ -342,20 +330,12 @@ export const entryPoint = async () => {
                     value: "linea-poh",
                 },
                 {
-                    name: "Scroll",
-                    value: "scroll",
-                },
-                {
                     name: "EVM checker",
                     value: "evm",
                 },
                 {
                     name: "Balances",
                     value: "balances",
-                },
-                {
-                    name: "Rabby",
-                    value: "rabby",
                 },
                 {
                     name: "Galxe",
